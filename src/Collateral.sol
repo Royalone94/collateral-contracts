@@ -13,12 +13,15 @@ contract Collateral {
     mapping(address => uint256) private collateralUnderPendingReclaims;
     mapping(address => address) public validatorOfMiner;
 
+    mapping(address => mapping(bytes16 => uint256)) public collateralPerExecutor;
+
     uint256 private nextReclaimId;
 
     struct Reclaim {
         address miner;
         uint256 amount;
         uint256 denyTimeout;
+        bytes16 executorUuid;
     }
 
     event Deposit(address indexed account, uint256 amount);
@@ -91,7 +94,7 @@ contract Collateral {
     /// @dev The deposited amount must be greater than or equal to MIN_COLLATERAL_INCREASE
     /// @dev If it's not revert with InsufficientAmount error
     /// @dev Emits a Deposit event with the sender's address and deposited amount
-    function deposit(address validator) external payable {
+    function deposit(address validator, bytes16 executorUuid) external payable {
         if (msg.value < MIN_COLLATERAL_INCREASE) {
             revert InsufficientAmount();
         }
@@ -113,6 +116,8 @@ contract Collateral {
         }
 
         collaterals[msg.sender] += msg.value;
+        collateralPerExecutor[msg.sender][executorUuid] += msg.value;
+
         emit Deposit(msg.sender, msg.value);
     }
 
@@ -127,7 +132,7 @@ contract Collateral {
     /// @dev Emits ReclaimProcessStarted event with reclaim details and timeout
     /// @dev Reverts with ReclaimAmountTooSmall if amount is 0 or doesn't meet minimum requirements
     /// @dev Reverts with ReclaimAmountTooLarge if there's insufficient collateral available
-    function reclaimCollateral(uint256 amount, string calldata url, bytes16 urlContentMd5Checksum) external {
+    function reclaimCollateral(uint256 amount, string calldata url, bytes16 urlContentMd5Checksum, bytes16 executorUuid) external {
         if (amount == 0) {
             revert AmountZero();
         }
@@ -143,7 +148,7 @@ contract Collateral {
         }
 
         uint64 expirationTime = uint64(block.timestamp) + DECISION_TIMEOUT;
-        reclaims[++nextReclaimId] = Reclaim(msg.sender, amount, expirationTime);
+        reclaims[++nextReclaimId] = Reclaim(msg.sender, amount, expirationTime, executorUuid);
         collateralUnderPendingReclaims[msg.sender] += amount;
 
         emit ReclaimProcessStarted(nextReclaimId, msg.sender, amount, expirationTime, url, urlContentMd5Checksum);
@@ -172,6 +177,7 @@ contract Collateral {
 
         delete reclaims[reclaimRequestId];
         collateralUnderPendingReclaims[reclaim.miner] -= reclaim.amount;
+        collateralPerExecutor[reclaim.miner][reclaim.executorUuid] -= reclaim.amount;
 
         if (collaterals[reclaim.miner] < reclaim.amount) {
             // miner got slashed and can't withdraw
