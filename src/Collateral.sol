@@ -102,17 +102,18 @@ contract Collateral {
         require(validator != address(0), "Validator address must be non-zero");
 
         // Handle validator switch
-        if (currentValidator != address(0) && currentValidator != newValidator) {
+        address currentValidator = validatorOfMiner[msg.sender];
+        if (currentValidator != address(0) && currentValidator != validator) {
             // Only allow switch if miner has no pending reclaim
             require(collateralUnderPendingReclaims[msg.sender] == 0, "Cannot switch validator with pending reclaim");
 
-            validatorOfMiner[msg.sender] = newValidator;
+            validatorOfMiner[msg.sender] = validator;
 
             // Optional: emit an event for validator switch
-            // emit ValidatorChanged(msg.sender, currentValidator, newValidator);
+            // emit ValidatorChanged(msg.sender, currentValidator, validator);
         } else if (currentValidator == address(0)) {
             // First time deposit
-            validatorOfMiner[msg.sender] = newValidator;
+            validatorOfMiner[msg.sender] = validator;
         }
 
         collaterals[msg.sender] += msg.value;
