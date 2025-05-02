@@ -33,6 +33,7 @@ def slash_collateral(
     amount_tao,
     contract_address,
     url,
+    executor_uuid,
 ):
     """Slash collateral from a miner.
 
@@ -43,6 +44,7 @@ def slash_collateral(
         amount_tao (float): Amount of TAO to slash
         contract_address (str): Address of the collateral contract
         url (str): URL containing information about the slash
+        executor_uuid (str): Executor UUID for the slashing operation
 
     Returns:
         dict: Transaction receipt with slash event details
@@ -67,6 +69,7 @@ def slash_collateral(
             w3.to_wei(amount_tao, "ether"),
             url,
             bytes.fromhex(md5_checksum),
+            executor_uuid
         ),
         account,
         gas_limit=200000,  # Higher gas limit for this function
@@ -101,6 +104,10 @@ def main():
         "url",
         help="URL containing information about the slash"
     )
+    parser.add_argument(
+        "executor_uuid",
+        help="Executor UUID for the slashing operation"
+    )
 
     args = parser.parse_args()
 
@@ -117,6 +124,7 @@ def main():
         args.amount_tao,
         args.contract_address,
         args.url,
+        args.executor_uuid
     )
 
     print(f"Successfully slashed {args.amount_tao} TAO from {args.miner_address}")

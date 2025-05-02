@@ -32,6 +32,7 @@ def reclaim_collateral(
     amount_tao,
     contract_address,
     url,
+    executor_uuid,
 ):
     """Reclaim collateral from the contract.
 
@@ -41,6 +42,7 @@ def reclaim_collateral(
         amount_tao (float): Amount of TAO to reclaim
         contract_address (str): Address of the collateral contract
         url (str): URL for reclaim information
+        executor_uuid (str): Executor UUID for the reclaim operation
 
     Returns:
         dict: Transaction receipt with reclaim event details
@@ -66,6 +68,7 @@ def reclaim_collateral(
             amount_wei,
             url,
             bytes.fromhex(md5_checksum),
+            executor_uuid
         ),
         account,
         gas_limit=200000,  # Higher gas limit for this function
@@ -98,6 +101,10 @@ def main():
         "url",
         help="URL for reclaim information"
     )
+    parser.add_argument(
+        "executor_uuid",
+        help="Executor UUID for the reclaim operation"
+    )
 
     args = parser.parse_args()
 
@@ -107,7 +114,7 @@ def main():
     account = get_account()
 
     receipt, event = reclaim_collateral(
-        w3, account, args.amount_tao, args.contract_address, args.url)
+        w3, account, args.amount_tao, args.contract_address, args.url, args.executor_uuid)
 
     print(f"Successfully initiated reclaim of {args.amount_tao} TAO")
     print("Event details:")

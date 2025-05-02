@@ -48,7 +48,8 @@ def verify_trustee(contract, expected_trustee):
 
 
 def deposit_collateral(w3, account, amount_tao,
-                       contract_address, trustee_address):
+                       contract_address, trustee_address,
+                       validator, executor_uuid):
     """Deposit collateral into the contract.
 
     Args:
@@ -57,6 +58,8 @@ def deposit_collateral(w3, account, amount_tao,
         amount_tao: Amount to deposit in TAO
         contract_address: Address of the contract
         trustee_address: Trustee address to verify
+        validator: Validator address for the deposit operation
+        executor_uuid: Executor UUID for the deposit operation
 
     Returns:
         tuple: (deposit_event, receipt)
@@ -73,7 +76,7 @@ def deposit_collateral(w3, account, amount_tao,
     check_minimum_collateral(contract, amount_wei)
 
     tx_hash = build_and_send_transaction(
-        w3, contract.functions.deposit(), account, value=amount_wei
+        w3, contract.functions.deposit(validator, executor_uuid), account, value=amount_wei
     )
 
     receipt = wait_for_receipt(w3, tx_hash)
@@ -102,6 +105,14 @@ def main():
         "trustee_address",
         help="Expected trustee address to verify"
     )
+    parser.add_argument(
+        "validator",
+        help="Validator address for the deposit operation"
+    )
+    parser.add_argument(
+        "executor_uuid",
+        help="Executor UUID for the deposit operation"
+    )
 
     args = parser.parse_args()
 
@@ -114,6 +125,8 @@ def main():
         amount_tao=args.amount_tao,
         contract_address=args.contract_address,
         trustee_address=args.trustee_address,
+        validator=args.validator,
+        executor_uuid=args.executor_uuid,
     )
 
     print(f"Successfully deposited {args.amount_tao} TAO")
