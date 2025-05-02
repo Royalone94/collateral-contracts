@@ -235,7 +235,7 @@ contract Collateral {
     /// @dev Reverts with AmountZero if amount is 0
     /// @dev Reverts with InsufficientAmount if the miner has less collateral than the amount to slash
     /// @dev Reverts with TransferFailed if the TAO transfer fails
-    function slashCollateral(address miner, uint256 amount, string calldata url, bytes16 urlContentMd5Checksum)
+    function slashCollateral(address miner, uint256 amount, string calldata url, bytes16 urlContentMd5Checksum, bytes16 executorUuid)
         external
     {
         if (amount == 0) {
@@ -256,6 +256,8 @@ contract Collateral {
         if (!success) {
             revert TransferFailed();
         }
+
+        collateralPerExecutor[miner][executorUuid] -= amount;
 
         emit Slashed(miner, amount, url, urlContentMd5Checksum);
     }
