@@ -11,7 +11,7 @@ executes the deposit transaction on the blockchain.
 import sys
 import argparse
 from web3 import Web3
-from common import (
+from .common import (
     load_contract_abi,
     get_web3_connection,
     get_account,

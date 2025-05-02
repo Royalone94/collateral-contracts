@@ -10,7 +10,7 @@ URLs for verification purposes.
 
 import sys
 import argparse
-from common import (
+from .common import (
     load_contract_abi,
     get_web3_connection,
     get_account,

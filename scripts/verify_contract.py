@@ -13,7 +13,7 @@ import subprocess
 import sys
 import time
 from web3 import Web3
-from common import get_web3_connection
+from .common import get_web3_connection
 
 ANVIL_PORT = 8555
 ANVIL_RPC_URL = f"http://127.0.0.1:{ANVIL_PORT}"

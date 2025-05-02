@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-from address_conversion import h160_to_ss58
+from .address_conversion import h160_to_ss58
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

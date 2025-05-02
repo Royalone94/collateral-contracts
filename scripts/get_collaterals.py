@@ -10,7 +10,7 @@ import argparse
 import csv
 import sys
 from collections import defaultdict
-from common import load_contract_abi, get_web3_connection, get_miner_collateral
+from .common import load_contract_abi, get_web3_connection, get_miner_collateral
 from dataclasses import dataclass
 
 
