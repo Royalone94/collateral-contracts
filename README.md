@@ -74,10 +74,11 @@ Below is a typical sequence for integrating and using this collateral contract w
    - Each miner **creates an Ethereum (H160) wallet**, links it to their hotkey, and funds it with enough TAO for transaction fees.
    - Miners **retrieve** the validator's contract address from the chain or another trusted source.
    - They **verify** the contract is indeed associated with the intended validator.
-   - Upon confirmation, miners **deposit** collateral by calling the contract's `deposit()` function.
+   - Upon confirmation, miners **deposit** collateral by calling the contract's `deposit(validator, executorUuid)` function.
+   - Confirm on-chain that your collateral has been successfully locked for that validator - [`scripts/get_miners_collateral.py`](/scripts/get_miners_collateral.py)
 
 - **Slashing Misbehaving Miners**
-   - If a miner is found violating subnet rules (e.g., returning invalid responses), the validator **calls** `slashCollateral()` to penalize the miner by reducing their staked amount.
+   - If a miner is found violating subnet rules (e.g., returning invalid responses), the validator **calls** `slashCollateral()` with the `miner`, `slashAmount`, and `executorUuid` to penalize the miner by reducing their staked amount.
 
 - **Reclaiming Collateral**
    - When miners wish to withdraw their stake, they **initiate a reclaim** by calling `reclaimCollateral()`.
@@ -129,7 +130,7 @@ Refer to the repository's [`scripts/`](/scripts/) folder for sample implementati
 
 - **Manually Slash Collateral**
   - Confirm miner misconduct based on subnetwork rules (e.g., invalid blocks, spam, protocol violations).
-  - Use [`scripts/slash_collateral.py`](/scripts/slash_collateral.py) (calling the contract's `slashCollateral(miner, slashAmount)`) to penalize the miner by reducing their staked amount.
+  - Use [`scripts/slash_collateral.py`](/scripts/slash_collateral.py) (calling the contract's `slashCollateral(miner, slashAmount, executorUuid)`) to penalize the miner by reducing their staked amount.
   - Verify the transaction on-chain and confirm the miner's `collaterals[miner]` value has changed.
 
 ### As a Subnet Owner, you can
