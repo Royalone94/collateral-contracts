@@ -66,13 +66,6 @@ contract Collateral {
         DECISION_TIMEOUT = decisionTimeout;
     }
 
-    modifier onlyTrustee() {
-        if (msg.sender != TRUSTEE) {
-            revert NotTrustee();
-        }
-        _;
-    }
-
     modifier onlyAssignedValidator(address miner) {
         if (validatorOfMiner[miner] != msg.sender) {
             revert NotTrustee();
