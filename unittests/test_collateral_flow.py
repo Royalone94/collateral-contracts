@@ -20,27 +20,44 @@ class TestCollateralContractLifecycle(unittest.TestCase):
 
     def test_lifecycle(self):
         # === Step 1: Create Validator Account ===
-        validator = Account.create("extra entropy collateral contract ComputeHorde")
-        validator_address = validator.address
-        validator_key = validator.key.hex()
+        # validator = Account.create("extra entropy collateral contract ComputeHorde")
+        # validator_address = validator.address
+        # validator_key = validator.key.hex()
+        # validator_ss58 = h160_to_ss58(validator_address)
+        # print("Validator Address:", validator_address)
+        # print("Validator Key:", validator_key)
+
+
+        # # === Step 2: Create Miner Account ===
+        # miner = Account.create("extra entropy MINER ComputeHorde")
+        # miner_address = miner.address
+        # miner_key = miner.key.hex()
+        # miner_ss58 = h160_to_ss58(miner_address)
+
+        # print("Miner Address:", miner_address)
+        # print("Miner Key:", miner_key)
+        # Validator Address: 0x94C54725D6c8500aFf59716F33EdE6AA1FaD86CF
+        # Validator Key: 618e740bdba177da3624f0fd16a6fff1eed21c8b11c7b2d232ea7f71d88bc172
+        # Miner Address: 0x6b21765A50CfacE104333F7eB0731aB0F002B6d7
+        # Miner Key: 0ced2debe3d770b4405bb673b3d05836a3d1c4ad1ce14f744a5af52ea2202924
+        validator_address = "0x94C54725D6c8500aFf59716F33EdE6AA1FaD86CF"
+        validator_key = "618e740bdba177da3624f0fd16a6fff1eed21c8b11c7b2d232ea7f71d88bc172"
+        miner_address = "0x6b21765A50CfacE104333F7eB0731aB0F002B6d7"
+        miner_key = "0ced2debe3d770b4405bb673b3d05836a3d1c4ad1ce14f744a5af52ea2202924"
         validator_ss58 = h160_to_ss58(validator_address)
+        miner_ss58 = h160_to_ss58(miner_address)
         print("Validator Address:", validator_address)
         print("Validator Key:", validator_key)
-
-
-        # === Step 2: Create Miner Account ===
-        miner = Account.create("extra entropy MINER ComputeHorde")
-        miner_address = miner.address
-        miner_key = miner.key.hex()
-        miner_ss58 = h160_to_ss58(miner_address)
-
         print("Miner Address:", miner_address)
         print("Miner Key:", miner_key)
+        print("Validator SS58:", validator_ss58)
+        print("Miner SS58:", miner_ss58)
 
+        
         balance = self.w3.eth.get_balance(validator_address)
         print("Validator Balance:", self.w3.from_wei(balance, 'ether'))
         # === Step 3: Fund Validator ===
-        subprocess.run(["btcli", "w", "transfer", "--network", "local", "--dest", validator_ss58, "--amount", "1"])
+        # subprocess.run(["btcli", "w", "transfer", "--network", "local", "--dest", validator_ss58, "--amount", "1"])
         time.sleep(3)
 
         # === Step 4: Deploy Contract ===
@@ -48,7 +65,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         os.environ["DEPLOYER_PRIVATE_KEY"] = validator_key  # Setting the deployer's private key
         
         # Define the arguments for deployment
-        netuid = 51  # Example netuid
+        netuid = 1  # Example netuid
         trustee_address = validator_address
         min_collateral_increase = 1000000000000000  # Example amount in wei
         deny_timeout = 120  # Example deny timeout in seconds
