@@ -11,7 +11,7 @@ executes the deposit transaction on the blockchain.
 import sys
 import argparse
 from web3 import Web3
-from .common import (
+from common import (
     load_contract_abi,
     get_web3_connection,
     get_account,
@@ -48,8 +48,8 @@ def verify_trustee(contract, expected_trustee):
 
 
 def deposit_collateral(w3, account, amount_tao,
-                       contract_address, trustee_address,
-                       validator, executor_uuid):
+                       contract_address,
+                       validator_address, executor_uuid):
     """Deposit collateral into the contract.
 
     Args:
@@ -57,7 +57,6 @@ def deposit_collateral(w3, account, amount_tao,
         account: Account to use for the transaction
         amount_tao: Amount to deposit in TAO
         contract_address: Address of the contract
-        trustee_address: Trustee address to verify
         validator: Validator address for the deposit operation
         executor_uuid: Executor UUID for the deposit operation
 
@@ -65,18 +64,18 @@ def deposit_collateral(w3, account, amount_tao,
         tuple: (deposit_event, receipt)
     """
     validate_address_format(contract_address)
-    validate_address_format(trustee_address)
+    validate_address_format(validator_address)
 
     contract_abi = load_contract_abi()
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
-    verify_trustee(contract, trustee_address)
+    # verify_trustee(contract, trustee_address)
 
     amount_wei = w3.to_wei(amount_tao, "ether")
     check_minimum_collateral(contract, amount_wei)
 
     tx_hash = build_and_send_transaction(
-        w3, contract.functions.deposit(validator, executor_uuid), account, value=amount_wei
+        w3, contract.functions.deposit(validator_address, executor_uuid), account, value=amount_wei
     )
 
     receipt = wait_for_receipt(w3, tx_hash)
@@ -102,11 +101,7 @@ def main():
         help="Amount of TAO to deposit"
     )
     parser.add_argument(
-        "trustee_address",
-        help="Expected trustee address to verify"
-    )
-    parser.add_argument(
-        "validator",
+        "validator_address",
         help="Validator address for the deposit operation"
     )
     parser.add_argument(
@@ -119,13 +114,17 @@ def main():
     w3 = get_web3_connection()
     account = get_account()
 
+    print("args.contract_address:", args.contract_address)
+    print("args.amount_tao:", args.amount_tao)
+    print("args.validator_address:", args.validator_address)
+    print("args.executor_uuid:", args.executor_uuid)
+    
     deposit_event, receipt = deposit_collateral(
         w3=w3,
         account=account,
         amount_tao=args.amount_tao,
         contract_address=args.contract_address,
-        trustee_address=args.trustee_address,
-        validator=args.validator,
+        validator_address=args.validator_address,
         executor_uuid=args.executor_uuid,
     )
 

@@ -12,7 +12,7 @@ import sys
 import csv
 import argparse
 from dataclasses import dataclass
-from .common import get_web3_connection, load_contract_abi
+from common import get_web3_connection, load_contract_abi
 
 
 @dataclass
