@@ -24,6 +24,9 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         validator_address = validator.address
         validator_key = validator.key.hex()
         validator_ss58 = h160_to_ss58(validator_address)
+        print("Validator Address:", validator_address)
+        print("Validator Key:", validator_key)
+
 
         # === Step 2: Create Miner Account ===
         miner = Account.create("extra entropy MINER ComputeHorde")
@@ -31,10 +34,14 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         miner_key = miner.key.hex()
         miner_ss58 = h160_to_ss58(miner_address)
 
+        print("Miner Address:", miner_address)
+        print("Miner Key:", miner_key)
+
+        balance = self.w3.eth.get_balance(validator_address)
+        print("Validator Balance:", self.w3.from_wei(balance, 'ether'))
         # === Step 3: Fund Validator ===
         subprocess.run(["btcli", "w", "transfer", "--network", "local", "--dest", validator_ss58, "--amount", "1"])
         time.sleep(3)
-        # self.assertGreater(self.w3.eth.get_balance(validator_address), 0, "Validator not funded")
 
         # === Step 4: Deploy Contract ===
         os.environ["RPC_URL"] = self.RPC_URL  # Setting the RPC URL for deployment
