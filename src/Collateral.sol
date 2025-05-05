@@ -14,6 +14,7 @@ contract Collateral {
     mapping(address => address) public validatorOfMiner;
 
     mapping(address => mapping(bytes16 => uint256)) public collateralPerExecutor;
+    mapping(address => bytes16[]) private knownExecutorUuids;
 
     uint256 private nextReclaimId;
 
@@ -110,6 +111,11 @@ contract Collateral {
         }
 
         collaterals[msg.sender] += msg.value;
+
+        if (collateralPerExecutor[msg.sender][executorUuid] == 0) {
+            knownExecutorUuids[msg.sender].push(executorUuid);
+        }
+
         collateralPerExecutor[msg.sender][executorUuid] += msg.value;
 
         emit Deposit(msg.sender, msg.value);
@@ -262,29 +268,26 @@ contract Collateral {
     /// @return A dynamic array of `bytes16` UUIDs representing executors with more than 0 TAO in collateral for the specified miner.
     /// @notice Returns a list of eligible executors for a specific miner that have more than 0 TAO in collateral and have not been slashed or penalized.
     function getEligibleExecutors(address miner) external view returns (bytes16[] memory) {
-        uint256 totalExecutors = 0;
+        bytes16[] memory allExecutors = knownExecutorUuids[miner];
+        uint256 count = 0;
 
-        // Count the number of executors with more than 0 collateral for the given miner and who are not slashed
-        for (uint128 executorIdx = 0; executorIdx <= type(uint128).max; executorIdx++) {
-            bytes16 executorUuid = bytes16(executorIdx); // Convert uint128 to bytes16
-            if (collateralPerExecutor[miner][executorUuid] > 0) {
-                totalExecutors++;
+        // First pass to count
+        for (uint256 i = 0; i < allExecutors.length; i++) {
+            if (collateralPerExecutor[miner][allExecutors[i]] > 0) {
+                count++;
             }
         }
 
-        bytes16[] memory executors = new bytes16[](totalExecutors);
-        uint256 idx = 0;
-
-        for (uint128 executorIdx = 0; executorIdx <= type(uint128).max; executorIdx++) {
-            bytes16 executorUuid = bytes16(executorIdx); // Convert uint128 to bytes16
-            // Ensure the executor has positive collateral and is not slashed (collateralPerExecutor > 0)
-            if (collateralPerExecutor[miner][executorUuid] > 0) {
-                executors[idx] = executorUuid;
-                idx++;
+        // Second pass to collect
+        bytes16[] memory eligible = new bytes16[](count);
+        uint256 index = 0;
+        for (uint256 i = 0; i < allExecutors.length; i++) {
+            if (collateralPerExecutor[miner][allExecutors[i]] > 0) {
+                eligible[index++] = allExecutors[i];
             }
         }
 
-        return executors;
+        return eligible;
     }
 
 
