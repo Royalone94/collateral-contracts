@@ -51,7 +51,7 @@ def get_transferrable_balance(w3: Web3, sender: str, recipient: str):
     return transferrable
     
 class TestCollateralContractLifecycle(unittest.TestCase):
-    USE_EXISTING_ACCOUNTS = True
+    USE_EXISTING_ACCOUNTS = False
     DEPLOY_CONTRACT = False
     def setUp(self):
         # Use the local RPC URL here
@@ -89,12 +89,15 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             miner_address = miner.address
             miner_key = miner.key.hex()
             miner_ss58 = h160_to_ss58(miner_address)
+            print("Miner Address:", miner_address)
+            print("Miner Key:", miner_key)
 
-            balance = self.w3.eth.get_balance(validator_address)
-            print("Validator Balance:", self.w3.from_wei(balance, 'ether'))
             # === Step 3: Fund Validator ===
             subprocess.run(["btcli", "w", "transfer", "--network", "test", "--dest", validator_ss58, "--amount", "0.5"])
             time.sleep(3)
+
+            balance = self.w3.eth.get_balance(validator_address)
+            print("Validator Balance:", self.w3.from_wei(balance, 'ether'))
 
             # === Step 4: Deploy Contract ===
             os.environ["DEPLOYER_PRIVATE_KEY"] = validator_key  # Setting the deployer's private key
@@ -137,6 +140,9 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             subprocess.run(["btcli", "w", "transfer", "--network", "test", "--dest", miner_ss58, "--amount", "0.5"])
             time.sleep(3)
             self.assertGreater(self.w3.eth.get_balance(miner_address), 0, "Miner not funded")
+
+            balance = self.w3.eth.get_balance(miner_address)
+            print("Miner Balance:", self.w3.from_wei(balance, 'ether'))
     
         # === Step 6: Miner Deposits Collateral ===
         env["PRIVATE_KEY"] = miner_key
