@@ -151,12 +151,26 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         contract_address = "0xD1fE39b5c584D9761E99DbCc5961484F2696F94f"
         # === Step 6: Miner Deposits Collateral ===
         env["PRIVATE_KEY"] = miner_key
+
         executor_uuid = "3a5ce92a-a066-45f7-b07d-58b3b7986464"
         executor_uuid = uuid_to_bytes16(executor_uuid)  # Convert UUID to bytes32
+        print(f"Starting deposit collateral for this executor {executor_uuid}...")
+        check = subprocess.run(["python", "scripts/deposit_collateral.py", contract_address, "0.01", validator_address, executor_uuid], capture_output=True, text=True, env=env)
+        time.sleep(1)
+        print(check.stdout.strip())
+        self.assertIn("0.01", check.stdout, f"Deposit failed: {check.stdout}")
 
-        print(f"UUID as bytes32: {executor_uuid}")
+        executor_uuid = "72a1d228-3c8c-45cb-8b84-980071592589"
+        executor_uuid = uuid_to_bytes16(executor_uuid)  # Convert UUID to bytes32
+        print(f"Starting deposit collateral for this executor {executor_uuid}...")
+        check = subprocess.run(["python", "scripts/deposit_collateral.py", contract_address, "0.01", validator_address, executor_uuid], capture_output=True, text=True, env=env)
+        time.sleep(1)
+        print(check.stdout.strip())
+        self.assertIn("0.01", check.stdout, f"Deposit failed: {check.stdout}")
 
-        print("Starting deposit collateral...")
+        executor_uuid = "15c2ff27-0a4d-4987-bbc9-fa009ef9f7d2"
+        executor_uuid = uuid_to_bytes16(executor_uuid)  # Convert UUID to bytes32
+        print(f"Starting deposit collateral for this executor {executor_uuid}...")
         check = subprocess.run(["python", "scripts/deposit_collateral.py", contract_address, "0.01", validator_address, executor_uuid], capture_output=True, text=True, env=env)
         time.sleep(1)
         print(check.stdout.strip())
