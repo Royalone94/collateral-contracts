@@ -51,6 +51,8 @@ def get_transferrable_balance(w3: Web3, sender: str, recipient: str):
     return transferrable
     
 class TestCollateralContractLifecycle(unittest.TestCase):
+    USE_EXISTING_ACCOUNTS = True
+    DEPLOY_CONTRACT = False
     def setUp(self):
         # Use the local RPC URL here
         self.RPC_URL = "https://test.chain.opentensor.ai"
@@ -60,74 +62,82 @@ class TestCollateralContractLifecycle(unittest.TestCase):
 
     def test_lifecycle(self):
         os.environ["RPC_URL"] = self.RPC_URL  # Setting the RPC URL for deployment
-        env = os.environ.copy()
-        # === Step 1: Create Validator Account ===
-        validator = Account.create("extra entropy collateral contract Cellium")
-        validator_address = validator.address
-        validator_key = validator.key.hex()
-        validator_ss58 = h160_to_ss58(validator_address)
-        print("Validator Address:", validator_address)
-        print("Validator Key:", validator_key)
+        env = os.environ.copy() 
 
-        # === Step 2: Create Miner Account ===
-        miner = Account.create("extra entropy MINER Cellium")
-        miner_address = miner.address
-        miner_key = miner.key.hex()
-        miner_ss58 = h160_to_ss58(miner_address)
+        if self.USE_EXISTING_ACCOUNTS:
+            validator_address = "0xe127BE0a5AACBE179fF7CAcf6496fd130B90579d"
+            validator_key = "87f39c306f5315dfa2458ae883344b775f6b727fc51b86149a30848e76cbb9e8"
+            miner_address = "0xD2448e4B5C1bb68A5EF50687F12bd9dBFff8AeEc"
+            miner_key = "5075fac9176884602301e5ca215d821f9a9c4ba5c6e69d0066faea32acea400c"
+            validator_ss58 = h160_to_ss58(validator_address)
+            miner_ss58 = h160_to_ss58(miner_address)
+            print("Validator SS58:", validator_ss58)
+            print("Miner SS58:", miner_ss58)
+            
+            contract_address = "0xA8Ada431876C5fC5be7AA002C53Cda229039e8e5"
+        else:
+            # === Step 1: Create Validator Account ===
+            validator = Account.create("extra entropy collateral contract Cellium")
+            validator_address = validator.address
+            validator_key = validator.key.hex()
+            validator_ss58 = h160_to_ss58(validator_address)
+            print("Validator Address:", validator_address)
+            print("Validator Key:", validator_key)
 
-        balance = self.w3.eth.get_balance(validator_address)
-        print("Validator Balance:", self.w3.from_wei(balance, 'ether'))
-        # === Step 3: Fund Validator ===
-        subprocess.run(["btcli", "w", "transfer", "--network", "test", "--dest", validator_ss58, "--amount", "0.5"])
-        time.sleep(3)
+            # === Step 2: Create Miner Account ===
+            miner = Account.create("extra entropy MINER Cellium")
+            miner_address = miner.address
+            miner_key = miner.key.hex()
+            miner_ss58 = h160_to_ss58(miner_address)
 
-        # === Step 4: Deploy Contract ===
-        os.environ["DEPLOYER_PRIVATE_KEY"] = validator_key  # Setting the deployer's private key
-        
-        # Define the arguments for deployment
-        netuid = 1  # Example netuid
-        trustee_address = validator_address
-        min_collateral_increase = 1000000000000000  # Example amount in wei
-        deny_timeout = 120  # Example deny timeout in seconds
+            balance = self.w3.eth.get_balance(validator_address)
+            print("Validator Balance:", self.w3.from_wei(balance, 'ether'))
+            # === Step 3: Fund Validator ===
+            subprocess.run(["btcli", "w", "transfer", "--network", "test", "--dest", validator_ss58, "--amount", "0.5"])
+            time.sleep(3)
 
-        # Validate the required environment variables
-        if not os.environ.get("RPC_URL"):
-            raise ValueError("RPC_URL environment variable not set.")
-        if not os.environ.get("DEPLOYER_PRIVATE_KEY"):
-            raise ValueError("DEPLOYER_PRIVATE_KEY environment variable not set.")
-        
-        # Deploy using the `forge` command directly
-        deploy_result = subprocess.run(
-            [
-                "forge", "create", "src/Collateral.sol:Collateral",
-                "--broadcast",
-                "--rpc-url", self.RPC_URL,
-                "--private-key", validator_key,
-                "--constructor-args", str(netuid), trustee_address, str(min_collateral_increase), str(deny_timeout)
-            ],
-            capture_output=True, text=True
-        )
-        self.assertIn("Deployed to:", deploy_result.stdout, deploy_result.stderr)
-        contract_line = [line for line in deploy_result.stdout.splitlines() if "Deployed to:" in line][0]
-        contract_address = contract_line.split(": ")[-1]
-        print("Contract Address:", contract_address)
-        self.assertTrue(Web3.is_address(contract_address))
-        os.environ["CONTRACT_ADDRESS"] = contract_address
+            # === Step 4: Deploy Contract ===
+            os.environ["DEPLOYER_PRIVATE_KEY"] = validator_key  # Setting the deployer's private key
+            
+            # Define the arguments for deployment
+            netuid = 1  # Example netuid
+            trustee_address = validator_address
+            min_collateral_increase = 1000000000000000  # Example amount in wei
+            deny_timeout = 120  # Example deny timeout in seconds
 
-        # === Step 5: Fund Miner ===
-        subprocess.run(["btcli", "w", "transfer", "--network", "test", "--dest", miner_ss58, "--amount", "0.5"])
-        time.sleep(3)
-        self.assertGreater(self.w3.eth.get_balance(miner_address), 0, "Miner not funded")
-        # validator_address = "0xF0f435fD02770E0628Ca899A9a4fee0A24d2dCfE"
-        # validator_key = "0e0a09fb4dc0799fa1d3fbdf1012cfc446839f643cccbbf637105550fdbd6be7"
-        # miner_address = "0xD2448e4B5C1bb68A5EF50687F12bd9dBFff8AeEc"
-        # miner_key = "5075fac9176884602301e5ca215d821f9a9c4ba5c6e69d0066faea32acea400c"
-        # validator_ss58 = h160_to_ss58(validator_address)
-        # miner_ss58 = h160_to_ss58(miner_address)
-        # print("Validator SS58:", validator_ss58)
-        # print("Miner SS58:", miner_ss58)
-        
-        # contract_address = "0xD1fE39b5c584D9761E99DbCc5961484F2696F94f"
+            # Validate the required environment variables
+            if not os.environ.get("RPC_URL"):
+                raise ValueError("RPC_URL environment variable not set.")
+            if not os.environ.get("DEPLOYER_PRIVATE_KEY"):
+                raise ValueError("DEPLOYER_PRIVATE_KEY environment variable not set.")
+            
+            # Deploy using the `forge` command directly
+
+            if self.DEPLOY_CONTRACT:
+                deploy_result = subprocess.run(
+                    [
+                        "forge", "create", "src/Collateral.sol:Collateral",
+                        "--broadcast",
+                        "--rpc-url", self.RPC_URL,
+                        "--private-key", validator_key,
+                        "--constructor-args", str(netuid), trustee_address, str(min_collateral_increase), str(deny_timeout)
+                    ],
+                    capture_output=True, text=True
+                )
+                self.assertIn("Deployed to:", deploy_result.stdout, deploy_result.stderr)
+                contract_line = [line for line in deploy_result.stdout.splitlines() if "Deployed to:" in line][0]
+                contract_address = contract_line.split(": ")[-1]
+                print("Deployed Contract Address:", contract_address)
+                self.assertTrue(Web3.is_address(contract_address))
+                os.environ["CONTRACT_ADDRESS"] = contract_address
+            else:
+                contract_address = "0xA8Ada431876C5fC5be7AA002C53Cda229039e8e5"
+
+            # === Step 5: Fund Miner ===
+            subprocess.run(["btcli", "w", "transfer", "--network", "test", "--dest", miner_ss58, "--amount", "0.5"])
+            time.sleep(3)
+            self.assertGreater(self.w3.eth.get_balance(miner_address), 0, "Miner not funded")
+    
         # === Step 6: Miner Deposits Collateral ===
         env["PRIVATE_KEY"] = miner_key
 
