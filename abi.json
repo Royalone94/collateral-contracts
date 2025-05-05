@@ -184,6 +184,25 @@
   },
   {
     "type": "function",
+    "name": "getEligibleExecutors",
+    "inputs": [
+      {
+        "name": "miner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes16[]",
+        "internalType": "bytes16[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "reclaimCollateral",
     "inputs": [
       {

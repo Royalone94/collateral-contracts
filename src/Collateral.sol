@@ -255,4 +255,37 @@ contract Collateral {
 
         emit Slashed(miner, amount, url, urlContentMd5Checksum);
     }
+
+    /// @notice Returns a list of executors for a specific miner that have more than 0 TAO in collateral
+    /// @dev This function checks the `collateralPerExecutor` mapping for the specified miner's executors.
+    /// @param miner The address of the miner for whom the executors are to be fetched.
+    /// @return A dynamic array of `bytes16` UUIDs representing executors with more than 0 TAO in collateral for the specified miner.
+    /// @notice Returns a list of eligible executors for a specific miner that have more than 0 TAO in collateral and have not been slashed or penalized.
+    function getEligibleExecutors(address miner) external view returns (bytes16[] memory) {
+        uint256 totalExecutors = 0;
+
+        // Count the number of executors with more than 0 collateral for the given miner and who are not slashed
+        for (uint128 executorIdx = 0; executorIdx <= type(uint128).max; executorIdx++) {
+            bytes16 executorUuid = bytes16(executorIdx); // Convert uint128 to bytes16
+            if (collateralPerExecutor[miner][executorUuid] > 0) {
+                totalExecutors++;
+            }
+        }
+
+        bytes16[] memory executors = new bytes16[](totalExecutors);
+        uint256 idx = 0;
+
+        for (uint128 executorIdx = 0; executorIdx <= type(uint128).max; executorIdx++) {
+            bytes16 executorUuid = bytes16(executorIdx); // Convert uint128 to bytes16
+            // Ensure the executor has positive collateral and is not slashed (collateralPerExecutor > 0)
+            if (collateralPerExecutor[miner][executorUuid] > 0) {
+                executors[idx] = executorUuid;
+                idx++;
+            }
+        }
+
+        return executors;
+    }
+
+
 }
