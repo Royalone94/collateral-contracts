@@ -293,4 +293,23 @@ class TestCollateralContractLifecycle(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    # If running via unittest discovery, custom flags will not be recognized.
+    if any(arg.startswith("--use_existing_accounts") or arg.startswith("--deploy_contract")
+           for arg in sys.argv[1:]):
+        print("WARNING: Custom flags are not supported when using 'python -m unittest'.")
+        print("Run this file directly instead, for example:")
+        print("  python unittests/test_collateral_flow.py --use_existing_accounts False")
+
+    import argparse
+    parser = argparse.ArgumentParser(description="Override test parameters")
+    parser.add_argument("--use_existing_accounts", choices=["True", "False"],
+                        help="Override USE_EXISTING_ACCOUNTS", default=None)
+    parser.add_argument("--deploy_contract", choices=["True", "False"],
+                        help="Override DEPLOY_CONTRACT", default=None)
+    args, remaining = parser.parse_known_args()
+    if args.use_existing_accounts is not None:
+        TestCollateralContractLifecycle.USE_EXISTING_ACCOUNTS = (args.use_existing_accounts == "True")
+    if args.deploy_contract is not None:
+        TestCollateralContractLifecycle.DEPLOY_CONTRACT = (args.deploy_contract == "True")
+    sys.argv = [sys.argv[0]] + remaining
     unittest.main()
