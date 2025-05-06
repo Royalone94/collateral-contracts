@@ -120,5 +120,4 @@ def get_miner_collateral(w3, contract_address, miner_address):
     """
     contract_abi = load_contract_abi()
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
-
     return contract.functions.collaterals(miner_address).call()
