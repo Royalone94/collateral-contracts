@@ -289,6 +289,4 @@ contract Collateral {
 
         return eligible;
     }
-
-
 }

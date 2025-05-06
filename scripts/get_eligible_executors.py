@@ -43,7 +43,7 @@ def get_eligible_executors(w3, contract_address, miner_address):
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
     try:
-        executors = contract.functions.getEligibleExecutors(miner_address).call()
+        executors = contract.functions.getEligibleExecutors(miner_address).call({'gas': 3000000})
         return executors
     except Exception as e:
         raise GetEligibleExecutorsError(f"Error getting eligible executors for miner {miner_address}: {str(e)}")
