@@ -3,7 +3,6 @@ pragma solidity ^0.8.28;
 
 contract Collateral {
     uint16 public immutable NETUID;
-    address public immutable TRUSTEE;
     uint64 public immutable DECISION_TIMEOUT;
     uint256 public immutable MIN_COLLATERAL_INCREASE;
 
@@ -51,18 +50,15 @@ contract Collateral {
 
     /// @notice Initializes a new Collateral contract with specified parameters
     /// @param netuid The netuid of the subnet
-    /// @param trustee H160 address of the trustee who has permissions to slash collateral or deny reclaim requests
     /// @param minCollateralIncrease The minimum amount that can be deposited or reclaimed
-    /// @param decisionTimeout The time window (in seconds) for the trustee to deny a reclaim request
+    /// @param decisionTimeout The time window (in seconds) for the validator to deny a reclaim request
     /// @dev Reverts if any of the arguments is zero
-    constructor(uint16 netuid, address trustee, uint256 minCollateralIncrease, uint64 decisionTimeout) {
+    constructor(uint16 netuid, uint256 minCollateralIncrease, uint64 decisionTimeout) {
         // custom errors are not used here because it's a 1-time setup
-        require(trustee != address(0), "Trustee address must be non-zero");
         require(minCollateralIncrease > 0, "Min collateral increase must be greater than 0");
         require(decisionTimeout > 0, "Decision timeout must be greater than 0");
 
         NETUID = netuid;
-        TRUSTEE = trustee;
         MIN_COLLATERAL_INCREASE = minCollateralIncrease;
         DECISION_TIMEOUT = decisionTimeout;
     }
@@ -122,7 +118,7 @@ contract Collateral {
     }
 
     /// @notice Initiates a process to reclaim message sender's collateral from the contract
-    /// @dev If it's not denied by the trustee, the collateral will be available for withdrawal after DECISION_TIMEOUT
+    /// @dev If it's not denied by the validator, the collateral will be available for withdrawal after DECISION_TIMEOUT
     /// @dev The amount reclaimed must be greater than 0
     /// @dev The amount reclaimed must be greater than or equal to MIN_COLLATERAL_INCREASE untless it's a full collateral withdrawal
     /// @dev The total amount under pending reclaims cannot exceed the user's total collateral
@@ -191,15 +187,13 @@ contract Collateral {
         // Otherwise miner got slashed: reclaim request is deleted without transferring funds
     }
 
-    /// @notice Allows the trustee to deny a pending reclaim request before the timeout expires
-    /// @dev Can only be called by the trustee (address set in constructor)
+    /// @notice Allows the validator to deny a pending reclaim request before the timeout expires
+    /// @dev Can only be called by the assigned validator
     /// @dev Must be called before the deny timeout expires
-    /// @dev Removes the reclaim request and frees up the collateral for other reclaims
     /// @param reclaimRequestId The ID of the reclaim request to deny
     /// @param url URL containing the reason of denial
     /// @param urlContentMd5Checksum MD5 checksum of the content at the provided URL
     /// @dev Emits Denied event with the reclaim request ID
-    /// @dev Reverts with NotTrustee if called by non-trustee address
     /// @dev Reverts with ReclaimNotFound if the reclaim request doesn't exist
     /// @dev Reverts with PastDenyTimeout if the timeout has already expired
     function denyReclaimRequest(uint256 reclaimRequestId, string calldata url, bytes16 urlContentMd5Checksum)
@@ -224,11 +218,13 @@ contract Collateral {
         delete reclaims[reclaimRequestId];
     }
 
-    /// @notice Allows the trustee to slash a miner's collateral
-    /// @dev Can only be called by the trustee (address set in constructor)
-    /// @dev Removes the collateral from the miner and burns it
+    /// @notice Allows the validator to slash a miner's collateral
+    /// @dev Can only be called by the assigned validator
     /// @param miner The address of the miner to slash
     /// @param amount The amount of collateral to slash, must be greater than 0
+    /// @param url URL containing the reason for slashing
+    /// @param urlContentMd5Checksum MD5 checksum of the content at the provided URL
+    /// @param executorUuid The UUID of the executor associated with the slashed collateral
     /// @dev Emits Slashed event with the miner's address and the amount slashed
     /// @dev Reverts with AmountZero if amount is 0
     /// @dev Reverts with InsufficientAmount if the miner has less collateral than the amount to slash
