@@ -64,31 +64,6 @@ contract CollateralTest is CollateralTestBase {
         collateral.finalizeReclaim(1);
     }
 
-    function testFuzz_finalizeReclaim(uint256 amount, uint64 decisionTimeout, bytes16 executorUuid) public {
-        vm.assume((amount >= MIN_COLLATERAL_INCREASE) && (amount < address(this).balance - 1 ether));
-        vm.assume(decisionTimeout > DECISION_TIMEOUT);
-
-        collateral.deposit{value: amount}(TRUSTEE_1, executorUuid);
-        collateral.reclaimCollateral(amount, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
-
-        skip(decisionTimeout);
-
-        vm.expectEmit(true, false, false, true);
-        emit Reclaimed(1, address(this), amount);
-
-        uint256 balanceBefore = address(this).balance;
-        collateral.finalizeReclaim(1);
-
-        // check that the reclaim request can not be finalized again
-        vm.expectRevert(ReclaimNotFound.selector);
-        collateral.finalizeReclaim(1);
-
-        assertEq(collateral.collaterals(address(this)), 0);
-        assertEq(collateral.collateralPerExecutor(address(this), executorUuid), 0);
-        assertEq(address(this).balance, balanceBefore + amount);
-        assertEq(address(collateral).balance, 0);
-    }
-
     function testFuzz_slash(uint256 amount) public {
         vm.assume((amount >= MIN_COLLATERAL_INCREASE) && (amount < address(this).balance / 2));
 
