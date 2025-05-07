@@ -8,11 +8,6 @@
         "internalType": "uint16"
       },
       {
-        "name": "trustee",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
         "name": "minCollateralIncrease",
         "type": "uint256",
         "internalType": "uint256"
@@ -68,19 +63,6 @@
         "name": "",
         "type": "uint16",
         "internalType": "uint16"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "TRUSTEE",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
       }
     ],
     "stateMutability": "view"

@@ -111,7 +111,6 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             
             # Define the arguments for deployment
             netuid = 1  # Example netuid
-            trustee_address = validator_address
             min_collateral_increase = 1000000000000000  # Example amount in wei
             deny_timeout = 120  # Example deny timeout in seconds
 
@@ -130,7 +129,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                         "--broadcast",
                         "--rpc-url", self.RPC_URL,
                         "--private-key", validator_key,
-                        "--constructor-args", str(netuid), trustee_address, str(min_collateral_increase), str(deny_timeout)
+                        "--constructor-args", str(netuid), str(min_collateral_increase), str(deny_timeout)
                     ],
                     capture_output=True, text=True
                 )
