@@ -52,7 +52,7 @@ def get_transferrable_balance(w3: Web3, sender: str, recipient: str):
     
 class TestCollateralContractLifecycle(unittest.TestCase):
     USE_EXISTING_ACCOUNTS = True
-    DEPLOY_CONTRACT = True
+    DEPLOY_CONTRACT = False
 
     # Add a helper to run subprocess commands with a sleep delay
     def run_cmd(self, cmd, env, capture=True, sleep_time=1):

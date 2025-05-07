@@ -16,8 +16,10 @@ import sys
 import json
 import hashlib
 import requests
+import web3.providers.auto
 from web3 import Web3
 from eth_account import Account
+from web3.exceptions import ContractLogicError
 
 
 def load_contract_abi():
@@ -26,13 +28,13 @@ def load_contract_abi():
     return json.loads(abi_file.read_text())
 
 
-def get_web3_connection():
+def get_web3_connection(rpc_url=None):
     """Get Web3 connection from RPC_URL environment variable."""
-    rpc_url = os.getenv("RPC_URL")
+    rpc_url = rpc_url or os.getenv("RPC_URL")
     if not rpc_url:
         raise KeyError("RPC_URL environment variable is not set")
 
-    w3 = Web3(Web3.HTTPProvider(rpc_url))
+    w3 = Web3(web3.providers.auto.load_provider_from_uri(rpc_url))
     if not w3.is_connected():
         raise ConnectionError("Failed to connect to the network")
     return w3
@@ -120,4 +122,38 @@ def get_miner_collateral(w3, contract_address, miner_address):
     """
     contract_abi = load_contract_abi()
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
+
     return contract.functions.collaterals(miner_address).call()
+
+
+def get_revert_reason(w3, tx_hash, block_number):
+    """Returns the custom Solidity error name for a failed transaction, or 'Could not parse error' if not decodable."""
+    tx = w3.eth.get_transaction(tx_hash)
+    try:
+        w3.eth.call({
+            'to': tx['to'],
+            'from': tx['from'],
+            'data': tx['input'],
+            'value': tx['value'],
+        }, block_identifier=block_number)
+    except ContractLogicError as e:
+        print("ContractLogicError")
+        import re
+        msg = str(e)
+       
+        hex_pattern = re.compile(r'(0x[a-fA-F0-9]{8,})')
+        match = hex_pattern.search(msg)
+        revert_data = match.group(1) if match else None
+        if revert_data and len(revert_data) >= 10:
+            selector = revert_data[:10]
+            contract_abi = load_contract_abi()
+            for item in contract_abi:
+                if item.get('type') == 'error':
+                    sig = item['name'] + '(' + ','.join([input['type'] for input in item.get('inputs', [])]) + ')'
+                    import eth_utils
+                    selector_bytes = eth_utils.keccak(text=sig)[:4]
+                    selector_hex = '0x' + selector_bytes.hex()
+                    if selector == selector_hex:
+                        return item['name']
+        return "Could not parse error"
+    return "Could not parse error"
