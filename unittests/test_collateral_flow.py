@@ -51,7 +51,7 @@ def get_transferrable_balance(w3: Web3, sender: str, recipient: str):
     return transferrable
     
 class TestCollateralContractLifecycle(unittest.TestCase):
-    USE_EXISTING_ACCOUNTS = False
+    USE_EXISTING_ACCOUNTS = True
     DEPLOY_CONTRACT = True
 
     # Add a helper to run subprocess commands with a sleep delay
@@ -63,6 +63,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
     def setUp(self):
         # Use the local RPC URL here
         self.RPC_URL = "https://test.chain.opentensor.ai"
+        # self.RPC_URL = "http://127.0.0.1:8545"
         self.w3 = Web3(Web3.HTTPProvider(self.RPC_URL))
         self.assertTrue(self.w3.is_connected(), "Cannot connect to Bittensor RPC")
         print("Connected to Bittensor RPC")
@@ -77,22 +78,26 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         print("Validator Balance:", self.w3.from_wei(balance, 'ether'))
 
         if self.USE_EXISTING_ACCOUNTS:
-            validator_address = "0xd32f06A8D938B6399648d9be354Bb8863DFD78A3"
-            validator_key = "1b30a69d31a0e8865322c413bebcf1c110e3e4389ccce94c5047478cfec95d11"
-            miner_address = "0xBC724B0F6dD8603305dAb7d829F4B9E0130cB804"
-            miner_key = "ef17b41407acf02e383f674015d242474ddc26a1cf0ff8587a5416701fdfb904"
+            validator_address = "0xE1A07A44ac6f8423bA3b734F0cAfC6F87fd385Fc"
+            validator_key = "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
+            miner_address = "0x19F71e76B34A8Dc01944Cf3B76478B45DE05B75b"
+            miner_key = "259e0eded00353f71eb6be89d8749ad12bf693cbd8aeb6b80cd3a343c0dc8faf"
             validator_ss58 = h160_to_ss58(validator_address)
             miner_ss58 = h160_to_ss58(miner_address)
             print("Validator SS58:", validator_ss58)
             print("Miner SS58:", miner_ss58)
+
+            # subprocess.run(["btcli", "w", "transfer", "--network", "local", "--dest", validator_ss58, "--amount", "0.5"])
+            # time.sleep(3)
+
+            # subprocess.run(["btcli", "w", "transfer", "--network", "local", "--dest", miner_ss58, "--amount", "3.5"])
+            # time.sleep(3)
+
+            balance = self.w3.eth.get_balance(validator_address)
+            print("Validator Balance:", self.w3.from_wei(balance, 'ether'))
             
-            contract_address = "0xfE7Bf1a8FC8b087E2a08997c3C41e0f4c1680c08"
-
-            subprocess.run(["btcli", "w", "transfer", "--network", "test", "--dest", validator_ss58, "--amount", "0.5"])
-            time.sleep(3)
-
-            subprocess.run(["btcli", "w", "transfer", "--network", "test", "--dest", miner_ss58, "--amount", "3.5"])
-            time.sleep(3)
+            balance = self.w3.eth.get_balance(miner_address)
+            print("Miner Balance:", self.w3.from_wei(balance, 'ether'))
 
         else:
             # === Step 1: Create Validator Account ===
@@ -123,39 +128,12 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             # === Step 4: Deploy Contract ===
             os.environ["DEPLOYER_PRIVATE_KEY"] = validator_key  # Setting the deployer's private key
             
-            # Define the arguments for deployment
-            netuid = 1  # Example netuid
-            min_collateral_increase = 1000000000000000  # Example amount in wei
-            deny_timeout = 120  # Example deny timeout in seconds
-
             # Validate the required environment variables
             if not os.environ.get("RPC_URL"):
                 raise ValueError("RPC_URL environment variable not set.")
             if not os.environ.get("DEPLOYER_PRIVATE_KEY"):
                 raise ValueError("DEPLOYER_PRIVATE_KEY environment variable not set.")
             
-            # Deploy using the `forge` command directly
-            print("Deploying contract...", self.RPC_URL)
-            if self.DEPLOY_CONTRACT:
-                print("Deploying contract with forge...")
-                deploy_result = subprocess.run(
-                    [
-                        "forge", "create", "src/Collateral.sol:Collateral",
-                        "--broadcast",
-                        "--rpc-url", self.RPC_URL,
-                        "--private-key", validator_key,
-                        "--constructor-args", str(netuid), str(min_collateral_increase), str(deny_timeout)
-                    ],
-                    capture_output=True, text=True
-                )
-                self.assertIn("Deployed to:", deploy_result.stdout, deploy_result.stderr)
-                contract_line = [line for line in deploy_result.stdout.splitlines() if "Deployed to:" in line][0]
-                contract_address = contract_line.split(": ")[-1]
-                print("Deployed Contract Address:", contract_address)
-                self.assertTrue(Web3.is_address(contract_address))
-            else:
-                contract_address = "0xfE7Bf1a8FC8b087E2a08997c3C41e0f4c1680c08"
-
             # === Step 5: Fund Miner ===
             subprocess.run(["btcli", "w", "transfer", "--network", "test", "--dest", miner_ss58, "--amount", "3.5"])
             time.sleep(3)
@@ -163,7 +141,34 @@ class TestCollateralContractLifecycle(unittest.TestCase):
 
             balance = self.w3.eth.get_balance(miner_address)
             print("Miner Balance:", self.w3.from_wei(balance, 'ether'))
-    
+
+         # Deploy using the `forge` command directly
+        print("Deploying contract...", self.RPC_URL)
+          # Define the arguments for deployment
+        netuid = 1  # Example netuid
+        min_collateral_increase = 10  # Example amount in wei
+        deny_timeout = 120  # Example deny timeout in seconds
+
+        if self.DEPLOY_CONTRACT:
+            print("Deploying contract with forge...")
+            deploy_result = subprocess.run(
+                [
+                    "forge", "create", "src/Collateral.sol:Collateral",
+                    "--broadcast",
+                    "--rpc-url", self.RPC_URL,
+                    "--private-key", validator_key,
+                    "--constructor-args", str(netuid), str(min_collateral_increase), str(deny_timeout)
+                ],
+                capture_output=True, text=True
+            )
+            self.assertIn("Deployed to:", deploy_result.stdout, deploy_result.stderr)
+            contract_line = [line for line in deploy_result.stdout.splitlines() if "Deployed to:" in line][0]
+            contract_address = contract_line.split(": ")[-1]
+            self.assertTrue(Web3.is_address(contract_address))
+        else:
+            contract_address = "0x94F67bdDB5Fa01f7Fa586e9D84D889eF9167579F"
+
+        print("Deployed Contract Address:", contract_address)
         # === Step 6: Miner Deposits Collateral ===
         env["PRIVATE_KEY"] = miner_key
 
@@ -173,17 +178,18 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         print("Miner Address:", miner_address)
         print("Miner Key:", miner_key)
 
+        executor_uuid = uuid_to_bytes16("72a1d228-3c8c-45cb-8b84-980071592589")  # Example UUID
         # Refactored deposit collateral steps as a loop
         deposit_tasks = [
-            ("3a5ce92a-a066-45f7-b07d-58b3b7986464", True),
-            ("72a1d228-3c8c-45cb-8b84-980071592589", True),
+            ("3a5ce92a-a066-45f7-b07d-58b3b7986464", False),
+            ("72a1d228-3c8c-45cb-8b84-980071592589", False),
             ("15c2ff27-0a4d-4987-bbc9-fa009ef9f7d2", False)
         ]
         for uuid_str, capture_output in deposit_tasks:
             executor_uuid = uuid_to_bytes16(uuid_str)  # Convert UUID to bytes32
             print(f"Starting deposit collateral for this executor {executor_uuid}...")
             result = self.run_cmd(
-                ["python", "scripts/deposit_collateral.py", contract_address, "1", validator_address, executor_uuid],
+                ["python", "scripts/deposit_collateral.py", contract_address, "0.0001", validator_address, executor_uuid],
                 env=env, capture=capture_output
             )
             if capture_output:
@@ -198,26 +204,26 @@ class TestCollateralContractLifecycle(unittest.TestCase):
 
         print("Listing eligible executors before penalty...")
         result = self.run_cmd(["python", "scripts/get_eligible_executors.py", contract_address, miner_address], capture=True, env=env)
-
+        time.sleep(3)
         print("Result : ", result.stdout.strip())
 
-        print("Starting slash collateral...")
+        # print("Starting slash collateral...")
         # === Step 8: Validator Slashes Miner ===
-        env["PRIVATE_KEY"] = validator_key
-        self.run_cmd(["python", "scripts/slash_collateral.py", contract_address, miner_address, "0.01", "slashit", executor_uuid], env=env)
-        print("Slash collateral finished")
+        # env["PRIVATE_KEY"] = validator_key
+        # self.run_cmd(["python", "scripts/slash_collateral.py", contract_address, miner_address, "0.01", "slashit", executor_uuid], env=env)
+        # print("Slash collateral finished")
 
-        print("Listing eligible executors after penalty...")
-        result = self.run_cmd(["python", "scripts/get_eligible_executors.py", contract_address, miner_address], capture=True, env=env)
+        # print("Listing eligible executors after penalty...")
+        # result = self.run_cmd(["python", "scripts/get_eligible_executors.py", contract_address, miner_address], capture=True, env=env)
+        # time.sleep(3)
+        # print("Result : ", result.stdout.strip())
 
-        print("Result : ", result.stdout.strip())
+        # # === Step 9: Miner Reclaims Collateral ===
+        # print("Starting reclaim collateral...")
 
-        # === Step 9: Miner Reclaims Collateral ===
-        print("Starting reclaim collateral...")
-
-        env["PRIVATE_KEY"] = miner_key
+        # env["PRIVATE_KEY"] = miner_key
         # result = self.run_cmd(
-        #     ["python", "scripts/reclaim_collateral.py", contract_address, "0.003", "please gimme money back. this reclaim will be denied", executor_uuid],
+        #     ["python", "scripts/reclaim_collateral.py", contract_address, "0.00001", "please gimme money back. this reclaim will be denied", executor_uuid],
         #     env=env
         # )
         # print("Reclaim Result: ", result.stdout.strip())
@@ -229,7 +235,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         #     raise ValueError("Reclaim ID not found in the output.")
 
         # reclaim_result = self.run_cmd(
-        #     ["python", "scripts/reclaim_collateral.py", contract_address, "0.003", "please gimme money back. this reclaim will be finalized", executor_uuid],
+        #     ["python", "scripts/reclaim_collateral.py", contract_address, "0.00001", "please gimme money back. this reclaim will be finalized", executor_uuid],
         #     env=env
         # )
         # print("Reclaim Result: ", reclaim_result.stdout.strip())
@@ -250,15 +256,17 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             str(latest_block - 10), str(latest_block + 10)
         ], env=env)
 
+        deny_reclaim_id = 2
+        finalize_reclaim_id = 1
         # === Step 11: Validator Denies Request 1, Finalizes Request 2 ===
-        # env["PRIVATE_KEY"] = validator_key
-        # print("Starting deny reclaim request")
-        # self.run_cmd(["python", "scripts/deny_request.py", contract_address, str(deny_reclaim_id), "no, i will not"], env=env)
+        env["PRIVATE_KEY"] = validator_key
+        print("Starting deny reclaim request")
+        self.run_cmd(["python", "scripts/deny_request.py", contract_address, str(deny_reclaim_id), "no, i will not"], env=env)
 
-        # print("Deny reclaim request finished")
+        print("Deny reclaim request finished")
 
-        # print("Starting finalize reclaim request")
-        # self.run_cmd(["python", "scripts/finalize_reclaim.py", contract_address, str(finalize_reclaim_id)], env=env)
+        print("Starting finalize reclaim request")
+        self.run_cmd(["python", "scripts/finalize_reclaim.py", contract_address, str(finalize_reclaim_id)], env=env)
 
         # env["PRIVATE_KEY"] = miner_key
         # # === Step 12: Final Collateral Check ===
@@ -280,23 +288,23 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         print("Miner transferrable balance:", self.w3.from_wei(miner_transferrable, 'ether'))
 
         # # === Step 13: Send to SS58 Precompile ===
-        result = self.run_cmd([
-            "python", "scripts/send_to_ss58_precompile.py",
-            "5CoZwx53nNzfnDLqxYjntvggyPw3Xee1r9b68HFw1N6UEa1X",
-            str(miner_transferrable)
-        ], capture=True, env=env)
+        # result = self.run_cmd([
+        #     "python", "scripts/send_to_ss58_precompile.py",
+        #     "5CoZwx53nNzfnDLqxYjntvggyPw3Xee1r9b68HFw1N6UEa1X",
+        #     str(miner_transferrable)
+        # ], capture=True, env=env)
 
-        print("Send to celium testnet wallet from miner wallet:", result.stdout.strip())
+        # print("Send to celium testnet wallet from miner wallet:", result.stdout.strip())
 
-        env["PRIVATE_KEY"] = validator_key
+        # env["PRIVATE_KEY"] = validator_key
 
-        result = self.run_cmd([
-            "python", "scripts/send_to_ss58_precompile.py",
-            "5CoZwx53nNzfnDLqxYjntvggyPw3Xee1r9b68HFw1N6UEa1X",
-            str(validator_transferrable)
-        ], capture=True, env=env)
+        # result = self.run_cmd([
+        #     "python", "scripts/send_to_ss58_precompile.py",
+        #     "5CoZwx53nNzfnDLqxYjntvggyPw3Xee1r9b68HFw1N6UEa1X",
+        #     str(validator_transferrable)
+        # ], capture=True, env=env)
 
-        print("Send to celium testnet wallet from validator wallet:", result.stdout.strip())
+        # print("Send to celium testnet wallet from validator wallet:", result.stdout.strip())
 
         print("Checking account balances after transfer...")
 
