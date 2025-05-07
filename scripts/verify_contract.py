@@ -33,13 +33,6 @@ def get_contract_config(w3, contract_address):
         },
         {
             "inputs": [],
-            "name": "TRUSTEE",
-            "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-            "stateMutability": "view",
-            "type": "function",
-        },
-        {
-            "inputs": [],
             "name": "DECISION_TIMEOUT",
             "outputs": [{"internalType": "uint64", "name": "", "type": "uint64"}],
             "stateMutability": "view",
@@ -57,7 +50,6 @@ def get_contract_config(w3, contract_address):
     contract = w3.eth.contract(address=contract_address, abi=ABI)
 
     netuid = contract.functions.NETUID().call()
-    trustee = contract.functions.TRUSTEE().call()
     decision_timeout = contract.functions.DECISION_TIMEOUT().call()
     min_collateral_increase = contract.functions.MIN_COLLATERAL_INCREASE().call()
 
@@ -96,7 +88,6 @@ def deploy_on_devnet_and_get_bytecode(w3, contract_address):
             ANVIL_PRIVATE_KEY,
             "--constructor-args",
             f"{netuid}",
-            f"{trustee}",
             f"{min_collateral_increase}",
             f"{decision_timeout}",
         ]
@@ -121,16 +112,9 @@ def verify_contract(contract_address, expected_trustee, expected_netuid):
         w3 = get_web3_connection()
 
         # Get contract configuration
-        netuid, trustee, _decision_timeout, _min_collateral_increase = get_contract_config(w3, contract_address)
+        netuid, _decision_timeout, _min_collateral_increase = get_contract_config(w3, contract_address)
 
         # Verify expected values if provided
-        if expected_trustee is not None:
-            if Web3.to_checksum_address(trustee) != Web3.to_checksum_address(expected_trustee):
-                print(f"❌ Trustee verification failed!")
-                print(f"Expected: {expected_trustee}")
-                print(f"Actual: {trustee}")
-                return False
-            print(f"✅ Trustee verification successful!")
 
         if expected_netuid is not None:
             if int(netuid) != int(expected_netuid):

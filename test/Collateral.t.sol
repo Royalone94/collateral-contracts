@@ -22,46 +22,50 @@ contract CollateralTest is CollateralTestBase {
 
     function test_constructor_ConfigSetProperly() public view {
         assertEq(collateral.NETUID(), NETUID);
-        assertEq(collateral.TRUSTEE(), TRUSTEE);
         assertEq(collateral.MIN_COLLATERAL_INCREASE(), MIN_COLLATERAL_INCREASE);
         assertEq(collateral.DECISION_TIMEOUT(), DECISION_TIMEOUT);
     }
 
     function test_revert_constructor_RevertIfTrusteeIsZeroAddress() public {
         vm.expectRevert();
-        new Collateral(NETUID, address(0), MIN_COLLATERAL_INCREASE, DECISION_TIMEOUT);
+        new Collateral(NETUID, MIN_COLLATERAL_INCREASE, DECISION_TIMEOUT);
     }
 
     function test_revert_constructor_RevertIfMinCollateralIncreaseIsZero() public {
         vm.expectRevert();
-        new Collateral(NETUID, TRUSTEE, 0, DECISION_TIMEOUT);
+        new Collateral(NETUID, 0, DECISION_TIMEOUT);
     }
 
     function test_revert_constructor_RevertIfDecisionTimeoutIsZero() public {
         vm.expectRevert();
-        new Collateral(NETUID, TRUSTEE, MIN_COLLATERAL_INCREASE, 0);
+        new Collateral(NETUID, MIN_COLLATERAL_INCREASE, 0);
     }
 
     function test_deposit() public {
         vm.startPrank(DEPOSITOR1);
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
+
         vm.expectEmit(true, false, false, true);
         emit Deposit(DEPOSITOR1, 1 ether);
 
-        collateral.deposit{value: 1 ether}();
+        collateral.deposit{value: 1 ether}(TRUSTEE_1, executorUuid);
         assertEq(collateral.collaterals(DEPOSITOR1), 1 ether);
+        assertEq(collateral.collateralPerExecutor(DEPOSITOR1, executorUuid), 1 ether);
         assertEq(address(collateral).balance, 1 ether);
 
         vm.expectEmit(true, false, false, true);
         emit Deposit(DEPOSITOR1, 1 ether);
 
-        collateral.deposit{value: 1 ether}();
+        collateral.deposit{value: 1 ether}(TRUSTEE_1, executorUuid);
         assertEq(collateral.collaterals(DEPOSITOR1), 2 ether);
+        assertEq(collateral.collateralPerExecutor(DEPOSITOR1, executorUuid), 2 ether);
         assertEq(address(collateral).balance, 2 ether);
     }
 
     function test_revert_deposit_CanNotDepositWhenCollateralLessThanMinCollateralIncrease() public {
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
         vm.expectRevert(InsufficientAmount.selector);
-        collateral.deposit{value: 0.5 ether}();
+        collateral.deposit{value: 0.5 ether}(TRUSTEE_1, executorUuid);
     }
 
     function test_revert_CanNotDepositViaReceive() public {
@@ -78,7 +82,9 @@ contract CollateralTest is CollateralTestBase {
 
     function test_reclaim_CanStartReclaimProcess() public {
         vm.startPrank(DEPOSITOR1);
-        collateral.deposit{value: 1 ether}();
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
+
+        collateral.deposit{value: 1 ether}(TRUSTEE_1, executorUuid);
         uint256 expectedReclaimId = 1;
 
         vm.expectEmit(true, true, false, true);
@@ -91,19 +97,20 @@ contract CollateralTest is CollateralTestBase {
             URL_CONTENT_MD5_CHECKSUM
         );
 
-        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
 
-        // reclaim data is available in the contract
-        verifyReclaim(expectedReclaimId, DEPOSITOR1, 1 ether, block.timestamp + DECISION_TIMEOUT);
+        verifyReclaim(expectedReclaimId, DEPOSITOR1, 1 ether, block.timestamp + DECISION_TIMEOUT, executorUuid);
 
-        // depositor's funds are still locked
         assertEq(collateral.collaterals(DEPOSITOR1), 1 ether);
+        assertEq(collateral.collateralPerExecutor(DEPOSITOR1, executorUuid), 1 ether);
         assertEq(address(collateral).balance, 1 ether);
     }
 
     function test_reclaim_CanReclaimIfTotalReclaimAmountLessThanCollateral() public {
         vm.startPrank(DEPOSITOR1);
-        collateral.deposit{value: 2 ether}();
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
+
+        collateral.deposit{value: 2 ether}(TRUSTEE_1, executorUuid);
 
         for (uint256 i = 1; i < 3; ++i) {
             vm.expectEmit(true, true, false, true);
@@ -111,42 +118,43 @@ contract CollateralTest is CollateralTestBase {
                 i, DEPOSITOR1, 1 ether, uint64(block.timestamp + DECISION_TIMEOUT), URL, URL_CONTENT_MD5_CHECKSUM
             );
 
-            collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+            collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
 
-            // reclaim data is available in the contract
-            verifyReclaim(i, DEPOSITOR1, 1 ether, block.timestamp + DECISION_TIMEOUT);
+            verifyReclaim(i, DEPOSITOR1, 1 ether, block.timestamp + DECISION_TIMEOUT, executorUuid);
         }
 
-        // depositor's funds are still locked
         assertEq(collateral.collaterals(DEPOSITOR1), 2 ether);
         assertEq(address(collateral).balance, 2 ether);
     }
 
     function test_reclaim_MultipleUsersCanStartReclaimProcess() public {
-        vm.prank(DEPOSITOR1);
-        collateral.deposit{value: 1 ether}();
-        vm.prank(DEPOSITOR2);
-        collateral.deposit{value: 1 ether}();
+        bytes16 executorUuid1 = 0x11111111111111111111111111111111;
+        bytes16 executorUuid2 = 0x22222222222222222222222222222222;
 
         vm.prank(DEPOSITOR1);
-        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.deposit{value: 1 ether}(TRUSTEE_1, executorUuid1);
         vm.prank(DEPOSITOR2);
-        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.deposit{value: 1 ether}(TRUSTEE_2, executorUuid2);
+
+        vm.prank(DEPOSITOR1);
+        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid1);
+        vm.prank(DEPOSITOR2);
+        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid2);
 
         uint256 expectedDenyTimeout = block.timestamp + DECISION_TIMEOUT;
-        verifyReclaim(1, DEPOSITOR1, 1 ether, expectedDenyTimeout);
-        verifyReclaim(2, DEPOSITOR2, 1 ether, expectedDenyTimeout);
+        verifyReclaim(1, DEPOSITOR1, 1 ether, expectedDenyTimeout, executorUuid1);
+        verifyReclaim(2, DEPOSITOR2, 1 ether, expectedDenyTimeout, executorUuid2);
 
-        // all the funds are still locked
         assertEq(address(collateral).balance, 2 ether);
     }
 
     function test_reclaim_CanReclaimLessThanMinIncreaseIfItsTheWholeCollateral() public {
         vm.startPrank(DEPOSITOR1);
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
         uint256 reclaimRequestId = 1;
-        collateral.deposit{value: 2.5 ether}();
-        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
-        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.deposit{value: 2.5 ether}(TRUSTEE_1, executorUuid);
+        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
+        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
 
         // 1 request is finalized
         skip(DECISION_TIMEOUT + 1);
@@ -164,18 +172,19 @@ contract CollateralTest is CollateralTestBase {
         );
 
         // 1 request is pending, we start another to withdraw all the remaining collateral
-        collateral.reclaimCollateral(0.5 ether, URL, URL_CONTENT_MD5_CHECKSUM);
-        verifyReclaim(nextReclaimId, DEPOSITOR1, 0.5 ether, block.timestamp + DECISION_TIMEOUT);
+        collateral.reclaimCollateral(0.5 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
+        verifyReclaim(nextReclaimId, DEPOSITOR1, 0.5 ether, block.timestamp + DECISION_TIMEOUT, executorUuid);
     }
 
     function test_reclaim_CanReclaimAgainAfterDenial() public {
         vm.startPrank(DEPOSITOR1);
-        collateral.deposit{value: 2 ether}();
-        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
-        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
+        collateral.deposit{value: 2 ether}(TRUSTEE_1, executorUuid);
+        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
+        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
 
         vm.stopPrank();
-        vm.prank(TRUSTEE);
+        vm.prank(TRUSTEE_1);
         collateral.denyReclaimRequest(1, URL, URL_CONTENT_MD5_CHECKSUM);
 
         skip(DECISION_TIMEOUT + 1);
@@ -190,50 +199,55 @@ contract CollateralTest is CollateralTestBase {
 
         // bond can be reclaimed again
         vm.prank(DEPOSITOR1);
-        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
     }
 
     function test_revert_CanNotReclaimZero() public {
         vm.startPrank(DEPOSITOR1);
-        collateral.deposit{value: 1 ether}();
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
+        collateral.deposit{value: 1 ether}(TRUSTEE_1, executorUuid);
 
         vm.expectRevert(AmountZero.selector);
-        collateral.reclaimCollateral(0, URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.reclaimCollateral(0, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
     }
 
     function test_revert_reclaim_CanNotReclaimIfCollateralIsLessThanMinCollateralIncrease() public {
         vm.startPrank(DEPOSITOR1);
-        collateral.deposit{value: 1 ether}();
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
+        collateral.deposit{value: 1 ether}(TRUSTEE_1, executorUuid);
 
         vm.expectRevert(ReclaimAmountTooSmall.selector);
-        collateral.reclaimCollateral(0.5 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.reclaimCollateral(0.5 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
     }
 
     function test_revert_reclaim_CanNotReclaimMoreThanCollateral() public {
         vm.startPrank(DEPOSITOR1);
-        collateral.deposit{value: 1 ether}();
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
+        collateral.deposit{value: 1 ether}(TRUSTEE_1, executorUuid);
 
         vm.expectRevert(ReclaimAmountTooLarge.selector);
-        collateral.reclaimCollateral(2 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.reclaimCollateral(2 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
     }
 
     function test_revert_reclaim_CollateralUnderReclaimCanNotBeGreaterThanCollateral() public {
         vm.startPrank(DEPOSITOR1);
-        collateral.deposit{value: 3 ether}();
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
+        collateral.deposit{value: 3 ether}(TRUSTEE_1, executorUuid);
 
-        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
-        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
+        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
 
         // This reclaim pushes collateral under reclaim over total collateral
         vm.expectRevert(ReclaimAmountTooLarge.selector);
-        collateral.reclaimCollateral(2 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.reclaimCollateral(2 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
     }
 
     function test_finalizeReclaim() public {
         vm.startPrank(DEPOSITOR1);
-        collateral.deposit{value: 1 ether}();
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
+        collateral.deposit{value: 1 ether}(TRUSTEE_1, executorUuid);
 
-        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
         skip(DECISION_TIMEOUT + 1);
 
         uint256 depositorBalanceBefore = DEPOSITOR1.balance;
@@ -249,15 +263,16 @@ contract CollateralTest is CollateralTestBase {
         assertEq(contractBalanceAfter, contractBalanceBefore - 1 ether);
 
         // check that reclaim data is deleted after reclaim is finalized
-        verifyReclaim(1, address(0), 0, 0);
+        verifyReclaim(1, address(0), 0, 0, executorUuid);
     }
 
     function test_finalizeReclaim_CanBeCalledByAnyone() public {
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
         vm.prank(DEPOSITOR1);
-        collateral.deposit{value: 1 ether}();
+        collateral.deposit{value: 1 ether}(TRUSTEE_1, executorUuid);
 
         vm.prank(DEPOSITOR1);
-        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
         skip(DECISION_TIMEOUT + 1);
 
         uint256 depositorBalanceBefore = DEPOSITOR1.balance;
@@ -273,34 +288,36 @@ contract CollateralTest is CollateralTestBase {
         assertEq(contractBalanceAfter, contractBalanceBefore - 1 ether);
 
         // check that reclaim data is deleted after reclaim is finalized
-        verifyReclaim(1, address(0), 0, 0);
+        verifyReclaim(1, address(0), 0, 0, executorUuid);
     }
 
     function test_finalizeReclaim_CanStartNewReclaimAfterFinalized() public {
         vm.startPrank(DEPOSITOR1);
-        collateral.deposit{value: 2 ether}();
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
+        collateral.deposit{value: 2 ether}(TRUSTEE_1, executorUuid);
 
-        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
         skip(DECISION_TIMEOUT + 1);
 
         collateral.finalizeReclaim(1);
-        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
 
         // check that reclaim data is deleted after reclaim is finalized
-        verifyReclaim(2, DEPOSITOR1, 1 ether, block.timestamp + DECISION_TIMEOUT);
+        verifyReclaim(2, DEPOSITOR1, 1 ether, block.timestamp + DECISION_TIMEOUT, executorUuid);
     }
 
     function test_finalizeReclaim_DeletesReclaimRequestAndDoesNotReturnCollateralIfMinerGotCollateralSlashedBelowReclaimAmount(
     ) public {
         vm.startPrank(DEPOSITOR1);
-        collateral.deposit{value: 2 ether}();
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
+        collateral.deposit{value: 2 ether}(TRUSTEE_1, executorUuid);
 
-        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
         vm.stopPrank();
 
         skip(DECISION_TIMEOUT + 1);
-        vm.prank(TRUSTEE);
-        collateral.slashCollateral(DEPOSITOR1, 1.5 ether, SLASH_REASON_URL, URL_CONTENT_MD5_CHECKSUM);
+        vm.prank(TRUSTEE_1);
+        collateral.slashCollateral(DEPOSITOR1, 1.5 ether, SLASH_REASON_URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
 
         vm.prank(DEPOSITOR1);
 
@@ -316,9 +333,10 @@ contract CollateralTest is CollateralTestBase {
 
     function test_revert_finalizeReclaim_CanNotFinalizeUntilDenyTimeoutExpires() public {
         vm.startPrank(DEPOSITOR1);
-        collateral.deposit{value: 2 ether}();
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
+        collateral.deposit{value: 2 ether}(TRUSTEE_1, executorUuid);
 
-        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
 
         vm.expectRevert(BeforeDenyTimeout.selector);
         collateral.finalizeReclaim(1);
@@ -326,9 +344,10 @@ contract CollateralTest is CollateralTestBase {
 
     function test_revert_finalizeReclaim_CanNotFinalizeTheSameReclaimRequestMultipleTimes() public {
         vm.startPrank(DEPOSITOR1);
-        collateral.deposit{value: 2 ether}();
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
+        collateral.deposit{value: 2 ether}(TRUSTEE_1, executorUuid);
 
-        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
         skip(DECISION_TIMEOUT + 1);
 
         collateral.finalizeReclaim(1);
@@ -337,9 +356,10 @@ contract CollateralTest is CollateralTestBase {
     }
 
     function test_revert_finalizeReclaim_CanNotFinalizeReclaimIfTransferFails() public {
-        collateral.deposit{value: 1 ether}();
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
+        collateral.deposit{value: 1 ether}(TRUSTEE_1, executorUuid);
 
-        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
         skip(DECISION_TIMEOUT + 1);
 
         vm.expectRevert(TransferFailed.selector);
@@ -348,12 +368,13 @@ contract CollateralTest is CollateralTestBase {
 
     function test_denyReclaimRequest() public {
         vm.startPrank(DEPOSITOR1);
-        collateral.deposit{value: 1 ether}();
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
+        collateral.deposit{value: 1 ether}(TRUSTEE_1, executorUuid);
 
-        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
         vm.stopPrank();
 
-        vm.prank(TRUSTEE);
+        vm.prank(TRUSTEE_1);
         uint256 reclaimRequestId = 1;
         uint256 contractBalanceBefore = address(collateral).balance;
 
@@ -373,9 +394,10 @@ contract CollateralTest is CollateralTestBase {
 
     function test_revert_denyReclaimRequest_CanBeCalledOnlyByTrustee() public {
         vm.startPrank(DEPOSITOR1);
-        collateral.deposit{value: 1 ether}();
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
+        collateral.deposit{value: 1 ether}(TRUSTEE_1, executorUuid);
 
-        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
         skip(DECISION_TIMEOUT + 1);
 
         vm.expectRevert(NotTrustee.selector);
@@ -384,43 +406,47 @@ contract CollateralTest is CollateralTestBase {
 
     function test_revert_denyReclaimRequest_CanNotBeCalledForFinalizedReclaimRequest() public {
         vm.startPrank(DEPOSITOR1);
-        collateral.deposit{value: 1 ether}();
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
+        collateral.deposit{value: 1 ether}(TRUSTEE_1, executorUuid);
 
-        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
         skip(DECISION_TIMEOUT + 1);
         uint256 reclaimRequestId = 1;
         collateral.finalizeReclaim(reclaimRequestId);
 
         vm.stopPrank();
-        vm.prank(TRUSTEE);
+        vm.prank(TRUSTEE_1);
         vm.expectRevert(ReclaimNotFound.selector);
         collateral.denyReclaimRequest(reclaimRequestId, URL, URL_CONTENT_MD5_CHECKSUM);
     }
 
     function test_revert_denyReclaimRequest_CanNotBeCalledAfterDenyTimeoutExpires() public {
         vm.startPrank(DEPOSITOR1);
-        collateral.deposit{value: 1 ether}();
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
+        collateral.deposit{value: 1 ether}(TRUSTEE_1, executorUuid);
 
-        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.reclaimCollateral(1 ether, URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
         skip(DECISION_TIMEOUT + 1);
 
         vm.stopPrank();
-        vm.prank(TRUSTEE);
+        vm.prank(TRUSTEE_1);
         vm.expectRevert(PastDenyTimeout.selector);
         collateral.denyReclaimRequest(1, URL, URL_CONTENT_MD5_CHECKSUM);
     }
 
     function test_slashCollateral() public {
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
+
         vm.prank(DEPOSITOR1);
-        collateral.deposit{value: 2 ether}();
+        collateral.deposit{value: 2 ether}(TRUSTEE_1, executorUuid);
 
         uint256 bondPosterCollateralBeforeSlash = collateral.collaterals(DEPOSITOR1);
         uint256 contractBalanceBeforeSlash = address(collateral).balance;
 
-        vm.prank(TRUSTEE);
+        vm.prank(TRUSTEE_1);
         vm.expectEmit(true, false, false, true);
         emit Slashed(DEPOSITOR1, 1 ether, SLASH_REASON_URL, URL_CONTENT_MD5_CHECKSUM);
-        collateral.slashCollateral(DEPOSITOR1, 1 ether, SLASH_REASON_URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.slashCollateral(DEPOSITOR1, 1 ether, SLASH_REASON_URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
 
         uint256 bondPosterCollateralAfterSlash = collateral.collaterals(DEPOSITOR1);
         assertEq(bondPosterCollateralAfterSlash, bondPosterCollateralBeforeSlash - 1 ether);
@@ -430,16 +456,18 @@ contract CollateralTest is CollateralTestBase {
     }
 
     function test_revert_slashCollateral_CanBeCalledOnlyByTrustee() public {
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
         vm.prank(DEPOSITOR1);
-        collateral.deposit{value: 2 ether}();
+        collateral.deposit{value: 2 ether}(TRUSTEE_1, executorUuid);
 
         vm.expectRevert(NotTrustee.selector);
-        collateral.slashCollateral(DEPOSITOR1, 1 ether, SLASH_REASON_URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.slashCollateral(DEPOSITOR1, 1 ether, SLASH_REASON_URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
     }
 
     function test_revert_slashCollateral_CanNotSlashZero() public {
-        vm.prank(TRUSTEE);
+        vm.prank(TRUSTEE_1);
+        bytes16 executorUuid = 0x11111111111111111111111111111111;
         vm.expectRevert(AmountZero.selector);
-        collateral.slashCollateral(DEPOSITOR1, 0, SLASH_REASON_URL, URL_CONTENT_MD5_CHECKSUM);
+        collateral.slashCollateral(DEPOSITOR1, 0, SLASH_REASON_URL, URL_CONTENT_MD5_CHECKSUM, executorUuid);
     }
 }

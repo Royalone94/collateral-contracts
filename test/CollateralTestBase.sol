@@ -6,7 +6,9 @@ import {Collateral} from "../src/Collateral.sol";
 
 abstract contract CollateralTestBase is Test {
     uint16 constant NETUID = 1;
-    address constant TRUSTEE = address(0x1000);
+    address constant TRUSTEE_1 = address(0x1000);
+    address constant TRUSTEE_2 = address(0x1001);
+    address constant TRUSTEE_3 = address(0x1002);
     uint64 constant DECISION_TIMEOUT = 1 days;
     uint256 constant MIN_COLLATERAL_INCREASE = 1 ether;
     string constant URL = "https://reclaimreason.io";
@@ -42,20 +44,23 @@ abstract contract CollateralTestBase is Test {
     error TransferFailed();
 
     function setUp() public virtual {
-        collateral = new Collateral(NETUID, TRUSTEE, MIN_COLLATERAL_INCREASE, DECISION_TIMEOUT);
-        // give trustee some ether to pay gas fees
-        payable(TRUSTEE).transfer(3 ether);
+        collateral = new Collateral(NETUID, MIN_COLLATERAL_INCREASE, DECISION_TIMEOUT);
+        payable(TRUSTEE_1).transfer(3 ether);
+        payable(TRUSTEE_2).transfer(3 ether);
+        payable(TRUSTEE_3).transfer(3 ether);
     }
 
     function verifyReclaim(
         uint256 reclaimRequestId,
         address expectedAccount,
         uint256 expectedAmount,
-        uint256 expectedExpirationTime
+        uint256 expectedExpirationTime,
+        bytes16 expectedExecutorUuid
     ) internal view {
-        (address account, uint256 amount, uint256 expirationTime) = collateral.reclaims(reclaimRequestId);
+        (address account, uint256 amount, uint256 expirationTime, bytes16 executorUuid) = collateral.reclaims(reclaimRequestId);
         assertEq(account, expectedAccount);
         assertEq(amount, expectedAmount);
         assertEq(expirationTime, expectedExpirationTime);
+        assertEq(executorUuid, expectedExecutorUuid);
     }
 }
