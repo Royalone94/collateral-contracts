@@ -175,24 +175,20 @@ contract Collateral {
             revert NotTrustee();
         }
 
+        // Delete reclaim and update pending reclamation amount unconditionally
         delete reclaims[reclaimRequestId];
         collateralUnderPendingReclaims[reclaim.miner] -= reclaim.amount;
-        collateralPerExecutor[reclaim.miner][reclaim.executorUuid] -= reclaim.amount;
-
-        if (collaterals[reclaim.miner] < reclaim.amount) {
-            // miner got slashed and can't withdraw
-            return;
+        // Only if the miner still has enough collateral do we process the withdrawal
+        if (collaterals[reclaim.miner] >= reclaim.amount) {
+            collateralPerExecutor[reclaim.miner][reclaim.executorUuid] -= reclaim.amount;
+            collaterals[reclaim.miner] -= reclaim.amount;
+            emit Reclaimed(reclaimRequestId, reclaim.miner, reclaim.amount);
+            (bool success,) = payable(reclaim.miner).call{value: reclaim.amount}("");
+            if (!success) {
+                revert TransferFailed();
+            }
         }
-
-        collaterals[reclaim.miner] -= reclaim.amount;
-
-        emit Reclaimed(reclaimRequestId, reclaim.miner, reclaim.amount);
-
-        // check-effect-interact pattern used to prevent reentrancy attacks
-        (bool success,) = payable(reclaim.miner).call{value: reclaim.amount}("");
-        if (!success) {
-            revert TransferFailed();
-        }
+        // Otherwise miner got slashed: reclaim request is deleted without transferring funds
     }
 
     /// @notice Allows the trustee to deny a pending reclaim request before the timeout expires
@@ -213,13 +209,15 @@ contract Collateral {
         if (reclaim.amount == 0) {
             revert ReclaimNotFound();
         }
-        if (reclaim.denyTimeout < block.timestamp) {
-            revert PastDenyTimeout();
-        }
+
         if (validatorOfMiner[reclaim.miner] != msg.sender) {
             revert NotTrustee();
         }
 
+        if (reclaim.denyTimeout < block.timestamp) {
+            revert PastDenyTimeout();
+        }
+      
         collateralUnderPendingReclaims[reclaim.miner] -= reclaim.amount;
         emit Denied(reclaimRequestId, url, urlContentMd5Checksum);
 
