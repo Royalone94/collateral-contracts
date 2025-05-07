@@ -79,6 +79,8 @@ def deposit_collateral(w3, account, amount_tao,
     )
 
     receipt = wait_for_receipt(w3, tx_hash)
+    print("receipt", receipt)
+    
     if receipt['status'] == 0:
         raise DepositCollateralError(f"Transaction failed for depositing collateral")
     deposit_event = contract.events.Deposit().process_receipt(receipt)[0]

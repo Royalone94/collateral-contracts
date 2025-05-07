@@ -51,8 +51,8 @@ def get_transferrable_balance(w3: Web3, sender: str, recipient: str):
     return transferrable
     
 class TestCollateralContractLifecycle(unittest.TestCase):
-    USE_EXISTING_ACCOUNTS = True
-    DEPLOY_CONTRACT = False
+    USE_EXISTING_ACCOUNTS = False
+    DEPLOY_CONTRACT = True
 
     # Add a helper to run subprocess commands with a sleep delay
     def run_cmd(self, cmd, env, capture=True, sleep_time=1):
@@ -71,17 +71,29 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         os.environ["RPC_URL"] = self.RPC_URL  # Setting the RPC URL for deployment
         env = os.environ.copy() 
 
+        chain_id = self.w3.eth.chain_id
+        print(f"Verified chain ID: {chain_id}")
+        balance = self.w3.eth.get_balance("0xA2035D25d86bb68A9eFDfC718F1BDD60DCD9B4e2")
+        print("Validator Balance:", self.w3.from_wei(balance, 'ether'))
+
         if self.USE_EXISTING_ACCOUNTS:
-            validator_address = "0x506c2Fcb6BE37E696eE1670Dd3B2ECC90d192769"
-            validator_key = "456dd4c798df6d8df8ee241875377d9698ff08386e20e8a65729a88a8c1414b0"
-            miner_address = "0xb7D3ae1f87abC40a3004D19bA56b45b8852c548b"
-            miner_key = "be3d208cbdae38b14e201bd5a63a2ddd79f769bae6cc6a1e94989a64feb86556"
+            validator_address = "0xd32f06A8D938B6399648d9be354Bb8863DFD78A3"
+            validator_key = "1b30a69d31a0e8865322c413bebcf1c110e3e4389ccce94c5047478cfec95d11"
+            miner_address = "0xBC724B0F6dD8603305dAb7d829F4B9E0130cB804"
+            miner_key = "ef17b41407acf02e383f674015d242474ddc26a1cf0ff8587a5416701fdfb904"
             validator_ss58 = h160_to_ss58(validator_address)
             miner_ss58 = h160_to_ss58(miner_address)
             print("Validator SS58:", validator_ss58)
             print("Miner SS58:", miner_ss58)
             
-            contract_address = "0xb164909BCBe35a2283eD467E2B1bd479033D55ba"
+            contract_address = "0xfE7Bf1a8FC8b087E2a08997c3C41e0f4c1680c08"
+
+            subprocess.run(["btcli", "w", "transfer", "--network", "test", "--dest", validator_ss58, "--amount", "0.5"])
+            time.sleep(3)
+
+            subprocess.run(["btcli", "w", "transfer", "--network", "test", "--dest", miner_ss58, "--amount", "3.5"])
+            time.sleep(3)
+
         else:
             # === Step 1: Create Validator Account ===
             validator = Account.create("extra entropy collateral contract Cellium")
@@ -103,9 +115,11 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             subprocess.run(["btcli", "w", "transfer", "--network", "test", "--dest", validator_ss58, "--amount", "0.5"])
             time.sleep(3)
 
+            chain_id = self.w3.eth.chain_id
+            print(f"Verified chain ID: {chain_id}")
+
             balance = self.w3.eth.get_balance(validator_address)
             print("Validator Balance:", self.w3.from_wei(balance, 'ether'))
-
             # === Step 4: Deploy Contract ===
             os.environ["DEPLOYER_PRIVATE_KEY"] = validator_key  # Setting the deployer's private key
             
@@ -121,8 +135,9 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 raise ValueError("DEPLOYER_PRIVATE_KEY environment variable not set.")
             
             # Deploy using the `forge` command directly
-
+            print("Deploying contract...", self.RPC_URL)
             if self.DEPLOY_CONTRACT:
+                print("Deploying contract with forge...")
                 deploy_result = subprocess.run(
                     [
                         "forge", "create", "src/Collateral.sol:Collateral",
@@ -139,7 +154,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 print("Deployed Contract Address:", contract_address)
                 self.assertTrue(Web3.is_address(contract_address))
             else:
-                contract_address = "0xb164909BCBe35a2283eD467E2B1bd479033D55ba"
+                contract_address = "0xfE7Bf1a8FC8b087E2a08997c3C41e0f4c1680c08"
 
             # === Step 5: Fund Miner ===
             subprocess.run(["btcli", "w", "transfer", "--network", "test", "--dest", miner_ss58, "--amount", "3.5"])
