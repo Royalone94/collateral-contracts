@@ -11,7 +11,7 @@ This contract creates a **trust-minimized interaction** between miners and valid
 
 - **Miners Lock Collateral**
   
-  Miners demonstrate their commitment by staking collateral into the validator's contract.
+  Miners demonstrate their commitment by staking collateral into the validator's contract. Miners can now specify an **executor UUID** during deposit to associate their collateral with specific executors.
 
 - **Collateral-Based Prioritization**
 
@@ -23,7 +23,7 @@ This contract creates a **trust-minimized interaction** between miners and valid
 
 - **Automatic Release**
 
-  If a validator does not respond to a miner's reclaim request within a configured deadline, the miner can reclaim their stake, preventing indefinite lock-ups.
+  If a validator does not respond to a miner's reclaim request within a configured deadline, the miner can reclaim their stake, preventing indefinite lock-ups. Validators can now **finalize or deny reclaim requests** based on the **executor UUID** associated with the collateral.
 
 - **Trustless & Auditable**
   
@@ -74,14 +74,14 @@ Below is a typical sequence for integrating and using this collateral contract w
    - Each miner **creates an Ethereum (H160) wallet**, links it to their hotkey, and funds it with enough TAO for transaction fees.
    - Miners **retrieve** the validator's contract address from the chain or another trusted source.
    - They **verify** the contract is indeed associated with the intended validator.
-   - Upon confirmation, miners **deposit** collateral by calling the contract's `deposit(validator, executorUuid)` function.
+   - Upon confirmation, miners **deposit** collateral by calling the contract's `deposit(validator, executorUuid)` function, specifying the **executor UUID** to associate the collateral with specific executors.
    - Confirm on-chain that your collateral has been successfully locked for that validator - [`scripts/get_miners_collateral.py`](/scripts/get_miners_collateral.py)
 
 - **Slashing Misbehaving Miners**
-   - If a miner is found violating subnet rules (e.g., returning invalid responses), the validator **calls** `slashCollateral()` with the `miner`, `slashAmount`, and `executorUuid` to penalize the miner by reducing their staked amount.
+   - If a miner is found violating subnet rules (e.g., returning invalid responses), the validator **calls** `slashCollateral()` with the `miner`, `slashAmount`, `executorUuid`, and other details to penalize the miner by reducing their staked amount.
 
 - **Reclaiming Collateral**
-   - When miners wish to withdraw their stake, they **initiate a reclaim** by calling `reclaimCollateral()`.
+   - When miners wish to withdraw their stake, they **initiate a reclaim** by calling `reclaimCollateral()`, specifying the **executor UUID** associated with the collateral.
    - If the validator does not deny the request before the deadline, miners (or anyone) can **finalize** it using `finalizeReclaim()`, thus unlocking and returning the collateral.
 
 ## Usage Guides
@@ -166,3 +166,21 @@ Refer to the repository's [`scripts/`](/scripts/) folder for sample implementati
   - Reject miners who do not meet a minimum collateral requirement.
 
   By coupling task assignment with the collateral balance, the subnetwork ensures more consistent performance and discourages low-quality or malicious contributions.
+
+
+## FAQ
+
+### Why should miners deposit into the smart contract?
+Depositing collateral not only demonstrates a miner's commitment to the network and ensures accountability but also enables them to become eligible for mining rewards, as validators prioritize miners with collateral, incentivizing reliable performance and fostering trust within the ecosystem.
+
+### When will a miner's deposit be slashed?
+A miner's deposit may be slashed if they violate subnet rules, such as submitting invalid responses or engaging in malicious behavior. Validators must provide off-chain evidence for slashing.
+
+### When will a miner's reclaim request be declined?
+A reclaim request may be declined if the validator determines that the miner has unresolved issues, such as rented machines. Validators must provide a justification URL for the denial.
+
+### What will happen when a miner's deposit is slashed?
+When a miner's deposit is slashed, the specified amount is deducted from their collateral and burned. This reduces the miner's ability to get the reward in the subnet until they replenish their collateral.
+
+### How can we keep smart contract states during deployment?
+To preserve contract states during deployment, ensure that the contract's storage variables and mappings are migrated correctly. Use tools like `forge` or custom scripts to verify and transfer state data between deployments.
