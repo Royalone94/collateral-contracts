@@ -111,10 +111,6 @@ contract Collateral {
         collateralPerExecutor[msg.sender][executorUuid] += msg.value;
 
         emit Deposit(msg.sender, msg.value);
-
-        if (collateralPerExecutor[msg.sender][executorUuid] == 0) {
-            knownExecutorUuids[msg.sender].push(executorUuid);
-        }
     }
 
     /// @notice Initiates a process to reclaim message sender's collateral from the contract
