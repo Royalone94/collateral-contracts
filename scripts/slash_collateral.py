@@ -10,6 +10,7 @@ URLs for verification purposes.
 
 import sys
 import argparse
+from uuid import UUID  # Add import for UUID
 from common import (
     load_contract_abi,
     get_web3_connection,
@@ -62,6 +63,8 @@ def slash_collateral(
         md5_checksum = calculate_md5_checksum(url)
         print(f"MD5 checksum: {md5_checksum}", file=sys.stderr)
 
+    executor_uuid_bytes = UUID(executor_uuid).bytes
+
     tx_hash = build_and_send_transaction(
         w3,
         contract.functions.slashCollateral(
@@ -69,7 +72,7 @@ def slash_collateral(
             w3.to_wei(amount_tao, "ether"),
             url,
             bytes.fromhex(md5_checksum),
-            executor_uuid
+            executor_uuid_bytes
         ),
         account,
         gas_limit=200000,  # Higher gas limit for this function
