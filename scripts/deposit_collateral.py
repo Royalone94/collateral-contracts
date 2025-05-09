@@ -84,7 +84,6 @@ def deposit_collateral(w3, account, amount_tao,
     )
 
     receipt = wait_for_receipt(w3, tx_hash)
-    print("receipt", receipt)
     
     if receipt['status'] == 0:
         revert_reason = get_revert_reason(w3, tx_hash, receipt['blockNumber'])
@@ -122,11 +121,6 @@ def main():
     w3 = get_web3_connection()
     account = get_account()
 
-    print("args.contract_address:", args.contract_address)
-    print("args.amount_tao:", args.amount_tao)
-    print("args.validator_address:", args.validator_address)
-    print("args.executor_uuid:", args.executor_uuid)
-    
     deposit_event, receipt = deposit_collateral(
         w3=w3,
         account=account,
