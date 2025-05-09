@@ -9,6 +9,7 @@ with non-zero TAO in collateral and not slashed or penalized) for a given miner.
 
 import sys
 import argparse
+import uuid  # Add this import for UUID conversion
 from common import (
     load_contract_abi,
     get_web3_connection,
@@ -32,7 +33,7 @@ def get_eligible_executors(w3, contract_address, miner_address, executor_uuids):
         executor_uuids: List of executor UUIDs to check eligibility
 
     Returns:
-        list: List of `bytes16` executor UUIDs for the given miner
+        list: List of human-readable UUID strings for the given miner
 
     Raises:
         GetEligibleExecutorsError: If the contract call fails for any reason
@@ -46,8 +47,9 @@ def get_eligible_executors(w3, contract_address, miner_address, executor_uuids):
     # print("Executor UUIDs:", executor_uuids)
     try:
         executors = contract.functions.getEligibleExecutors(miner_address, executor_uuids).call({'gas': 3000000})
-        print("executors", executors)
-        return executors
+        # Convert bytes16 to UUID strings
+        readable_executors = [str(uuid.UUID(bytes=executor)) for executor in executors]
+        return readable_executors
     except Exception as e:
         print("Error calling getEligibleExecutors:", str(e))
         raise GetEligibleExecutorsError(f"Error getting eligible executors for miner {miner_address}: {str(e)}")
@@ -85,9 +87,7 @@ def main():
         if not executors:
             print("No eligible executors found.")
         else:
-            print("Eligible Executors:")
-            for executor in executors:
-                print(f"  Executor UUID: {executor}")
+            print("Eligible Executors:", ",".join(executors))  # Join list into a single string
 
     except GetEligibleExecutorsError as e:
         print(f"Error: {str(e)}", file=sys.stderr)

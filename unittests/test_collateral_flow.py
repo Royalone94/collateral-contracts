@@ -183,7 +183,11 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         deposit_tasks = [
             ("3a5ce92a-a066-45f7-b07d-58b3b7986464", False),
             ("72a1d228-3c8c-45cb-8b84-980071592589", False),
-            ("15c2ff27-0a4d-4987-bbc9-fa009ef9f7d2", False)
+            ("15c2ff27-0a4d-4987-bbc9-fa009ef9f7d2", False),
+            ("335453ad-246c-4ad5-809e-e2013ca6c07e", False),
+            ("89c66519-244f-4db0-b4a7-756014d6fd24", False),
+            ("af3f1b82-ff98-44c8-b130-d948a2a56b44", False),
+            ("ee3002d9-71f8-4a83-881d-48bd21b6bdd1", False),
         ]
         # for uuid_str, capture_output in deposit_tasks:
         #     executor_uuid = uuid_to_bytes16(uuid_str)  # Convert UUID to bytes32
@@ -214,12 +218,17 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         
         result = self.run_cmd(
             ["python", "scripts/get_eligible_executors.py", 
-             contract_address, miner_address, executor_uuids_str],  # Pass as a single string
+            contract_address, miner_address, executor_uuids_str],  # Pass as a single string
             capture=True,
             env=env
         )
         time.sleep(3)
-        print("Result : ", result.stdout.strip())
+        print("Result: ", result.stdout.strip())
+        # Extract UUIDs from the result log
+        result_output = result.stdout.strip()
+        if "Eligible Executors:" in result_output:
+            eligible_executors = result_output.split("Eligible Executors: ")[1].split(",")
+            print("Eligible Executors as list:", eligible_executors)
 
         # print("Starting slash collateral...")
         # === Step 8: Validator Slashes Miner ===
