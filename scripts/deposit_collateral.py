@@ -10,6 +10,7 @@ executes the deposit transaction on the blockchain.
 
 import sys
 import argparse
+from uuid import UUID  # Add import for UUID
 from web3 import Web3
 from common import (
     load_contract_abi,
@@ -75,8 +76,11 @@ def deposit_collateral(w3, account, amount_tao,
     amount_wei = w3.to_wei(amount_tao, "ether")
     check_minimum_collateral(contract, amount_wei)
 
+    # Convert executor_uuid to bytes16
+    executor_uuid_bytes = UUID(executor_uuid).bytes
+
     tx_hash = build_and_send_transaction(
-        w3, contract.functions.deposit(validator_address, executor_uuid), account, value=amount_wei
+        w3, contract.functions.deposit(validator_address, executor_uuid_bytes), account, value=amount_wei
     )
 
     receipt = wait_for_receipt(w3, tx_hash)

@@ -44,9 +44,11 @@ def get_eligible_executors(w3, contract_address, miner_address, executor_uuids):
     contract_abi = load_contract_abi()
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
-    # print("Executor UUIDs:", executor_uuids)
+    # Convert executor_uuids from strings to bytes16
+    executor_uuids_bytes = [uuid.UUID(uuid_str).bytes for uuid_str in executor_uuids]
+
     try:
-        executors = contract.functions.getEligibleExecutors(miner_address, executor_uuids).call({'gas': 3000000})
+        executors = contract.functions.getEligibleExecutors(miner_address, executor_uuids_bytes).call({'gas': 3000000})
         # Convert bytes16 to UUID strings
         readable_executors = [str(uuid.UUID(bytes=executor)) for executor in executors]
         return readable_executors
@@ -75,12 +77,12 @@ def main():
     account = get_account()  # You may not need to use this for reading data, but it's useful for connection checks
 
     try:
-        executor_uuids = [bytes.fromhex(uuid.replace("-", "")) for uuid in args.executor_uuids.split(",")]
+        executor_uuids = args.executor_uuids.split(",")  # Keep UUIDs as strings
         executors = get_eligible_executors(
             w3=w3,
             contract_address=args.contract_address,
             miner_address=args.miner_address,
-            executor_uuids=executor_uuids,
+            executor_uuids=executor_uuids,  # Pass UUID strings
         )
 
         print(f"Successfully fetched eligible executors for miner {args.miner_address}")

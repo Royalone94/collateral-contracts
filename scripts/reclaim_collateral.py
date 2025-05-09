@@ -10,6 +10,7 @@ with associated URLs for verification purposes.
 
 import sys
 import argparse
+from uuid import UUID  # Add import for UUID
 from common import (
     load_contract_abi,
     get_web3_connection,
@@ -62,13 +63,16 @@ def reclaim_collateral(
         md5_checksum = calculate_md5_checksum(url)
         print(f"MD5 checksum: {md5_checksum}", file=sys.stderr)
 
+    # Convert executor_uuid to bytes16
+    executor_uuid_bytes = UUID(executor_uuid).bytes
+
     tx_hash = build_and_send_transaction(
         w3,
         contract.functions.reclaimCollateral(
             amount_wei,
             url,
             bytes.fromhex(md5_checksum),
-            executor_uuid
+            executor_uuid_bytes  # Pass bytes16
         ),
         account,
         gas_limit=200000,  # Higher gas limit for this function
@@ -114,7 +118,8 @@ def main():
     account = get_account()
 
     receipt, event = reclaim_collateral(
-        w3, account, args.amount_tao, args.contract_address, args.url, args.executor_uuid)
+        w3, account, args.amount_tao, args.contract_address, args.url, args.executor_uuid
+    )
 
     print(f"Successfully initiated reclaim of {args.amount_tao} TAO")
     print("Event details:")

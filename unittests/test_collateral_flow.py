@@ -184,20 +184,19 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             ("3a5ce92a-a066-45f7-b07d-58b3b7986464", False),
             ("72a1d228-3c8c-45cb-8b84-980071592589", False),
             ("15c2ff27-0a4d-4987-bbc9-fa009ef9f7d2", False),
-            ("335453ad-246c-4ad5-809e-e2013ca6c07e", False),
-            ("89c66519-244f-4db0-b4a7-756014d6fd24", False),
-            ("af3f1b82-ff98-44c8-b130-d948a2a56b44", False),
-            ("ee3002d9-71f8-4a83-881d-48bd21b6bdd1", False),
+            # ("335453ad-246c-4ad5-809e-e2013ca6c07e", False),
+            # ("89c66519-244f-4db0-b4a7-756014d6fd24", False),
+            # ("af3f1b82-ff98-44c8-b130-d948a2a56b44", False),
+            # ("ee3002d9-71f8-4a83-881d-48bd21b6bdd1", False),
         ]
-        # for uuid_str, capture_output in deposit_tasks:
-        #     executor_uuid = uuid_to_bytes16(uuid_str)  # Convert UUID to bytes32
-        #     print(f"Starting deposit collateral for this executor {executor_uuid}...")
-        #     result = self.run_cmd(
-        #         ["python", "scripts/deposit_collateral.py", contract_address, "0.0001", validator_address, executor_uuid],
-        #         env=env, capture=capture_output
-        #     )
-        #     if capture_output:
-        #         print(result.stdout.strip())
+        for uuid_str, capture_output in deposit_tasks:
+            print(f"Starting deposit collateral for executor {uuid_str}...")
+            result = self.run_cmd(
+                ["python", "scripts/deposit_collateral.py", contract_address, "0.0001", validator_address, uuid_str],
+                env=env, capture=capture_output
+            )
+            if capture_output:
+                print(result.stdout.strip())
 
         # === Step 7: Verify Collateral ===
         check = self.run_cmd(["python", "scripts/get_miners_collateral.py", contract_address, miner_address],
@@ -241,15 +240,13 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         # time.sleep(3)
         # print("Result : ", result.stdout.strip())
 
-        # # === Step 9: Miner Reclaims Collateral ===
-        # print("Starting reclaim collateral...")
-
-        # env["PRIVATE_KEY"] = miner_key
-        # result = self.run_cmd(
-        #     ["python", "scripts/reclaim_collateral.py", contract_address, "0.00001", "please gimme money back. this reclaim will be denied", executor_uuid],
-        #     env=env
-        # )
-        # print("Reclaim Result: ", result.stdout.strip())
+        # === Step 9: Miner Reclaims Collateral ===
+        print("Starting reclaim collateral...")
+        result = self.run_cmd(
+            ["python", "scripts/reclaim_collateral.py", contract_address, "0.00001", "please gimme money back", "72a1d228-3c8c-45cb-8b84-980071592589"],
+            env=env
+        )
+        print("Reclaim Result: ", result.stdout.strip())
         # match = re.search(r"Reclaim ID:\s*(\d+)", result.stdout)
         # if match:
         #     deny_reclaim_id = int(match.group(1))
