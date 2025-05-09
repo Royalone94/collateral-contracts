@@ -52,7 +52,7 @@ def get_transferrable_balance(w3: Web3, sender: str, recipient: str):
     
 class TestCollateralContractLifecycle(unittest.TestCase):
     USE_EXISTING_ACCOUNTS = True
-    DEPLOY_CONTRACT = True
+    DEPLOY_CONTRACT = False
 
     # Add a helper to run subprocess commands with a sleep delay
     def run_cmd(self, cmd, env, capture=True, sleep_time=1):
@@ -166,7 +166,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             contract_address = contract_line.split(": ")[-1]
             self.assertTrue(Web3.is_address(contract_address))
         else:
-            contract_address = "0x6E66bebe0C0101cc778d359858b1e5bA1ebB3Aae"
+            contract_address = "0x354DbD43c977A59a3EeFeAd3Cb3de0a4E0E62b6D"
 
         print("Deployed Contract Address:", contract_address)
         # === Step 6: Miner Deposits Collateral ===
@@ -185,15 +185,15 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             ("72a1d228-3c8c-45cb-8b84-980071592589", False),
             ("15c2ff27-0a4d-4987-bbc9-fa009ef9f7d2", False)
         ]
-        for uuid_str, capture_output in deposit_tasks:
-            executor_uuid = uuid_to_bytes16(uuid_str)  # Convert UUID to bytes32
-            print(f"Starting deposit collateral for this executor {executor_uuid}...")
-            result = self.run_cmd(
-                ["python", "scripts/deposit_collateral.py", contract_address, "0.0001", validator_address, executor_uuid],
-                env=env, capture=capture_output
-            )
-            if capture_output:
-                print(result.stdout.strip())
+        # for uuid_str, capture_output in deposit_tasks:
+        #     executor_uuid = uuid_to_bytes16(uuid_str)  # Convert UUID to bytes32
+        #     print(f"Starting deposit collateral for this executor {executor_uuid}...")
+        #     result = self.run_cmd(
+        #         ["python", "scripts/deposit_collateral.py", contract_address, "0.0001", validator_address, executor_uuid],
+        #         env=env, capture=capture_output
+        #     )
+        #     if capture_output:
+        #         print(result.stdout.strip())
 
         # === Step 7: Verify Collateral ===
         check = self.run_cmd(["python", "scripts/get_miners_collateral.py", contract_address, miner_address],
@@ -203,7 +203,21 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         print("Deposit collateral finished")
 
         print("Listing eligible executors before penalty...")
-        result = self.run_cmd(["python", "scripts/get_eligible_executors.py", contract_address, miner_address], capture=True, env=env)
+
+        executors = []
+        for uuid_str, capture_output in deposit_tasks:
+            executor_uuid = uuid_to_bytes16(uuid_str)  # Convert UUID to bytes32
+            executors.append(uuid_str)  # Keep original UUID strings
+        
+        executor_uuids_str = ",".join(executors)  # Join UUIDs with commas
+        print("executor_uuids_str:", executor_uuids_str)
+        
+        result = self.run_cmd(
+            ["python", "scripts/get_eligible_executors.py", 
+             contract_address, miner_address, executor_uuids_str],  # Pass as a single string
+            capture=True,
+            env=env
+        )
         time.sleep(3)
         print("Result : ", result.stdout.strip())
 

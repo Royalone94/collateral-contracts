@@ -22,13 +22,14 @@ class GetEligibleExecutorsError(Exception):
     pass
 
 
-def get_eligible_executors(w3, contract_address, miner_address):
+def get_eligible_executors(w3, contract_address, miner_address, executor_uuids):
     """Get the list of eligible executors for a miner from the contract.
 
     Args:
         w3: Web3 instance
         contract_address: Address of the contract
         miner_address: Address of the miner to fetch executors for
+        executor_uuids: List of executor UUIDs to check eligibility
 
     Returns:
         list: List of `bytes16` executor UUIDs for the given miner
@@ -42,10 +43,13 @@ def get_eligible_executors(w3, contract_address, miner_address):
     contract_abi = load_contract_abi()
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
+    # print("Executor UUIDs:", executor_uuids)
     try:
-        executors = contract.functions.getEligibleExecutors(miner_address).call({'gas': 3000000})
+        executors = contract.functions.getEligibleExecutors(miner_address, executor_uuids).call({'gas': 3000000})
+        print("executors", executors)
         return executors
     except Exception as e:
+        print("Error calling getEligibleExecutors:", str(e))
         raise GetEligibleExecutorsError(f"Error getting eligible executors for miner {miner_address}: {str(e)}")
 
 
@@ -59,16 +63,22 @@ def main():
     parser.add_argument(
         "miner_address", help="Address of the miner to fetch eligible executors for"
     )
+    parser.add_argument(
+        "executor_uuids",
+        help="Comma-separated list of executor UUIDs to check eligibility",
+    )
     args = parser.parse_args()
 
     w3 = get_web3_connection()
     account = get_account()  # You may not need to use this for reading data, but it's useful for connection checks
 
     try:
+        executor_uuids = [bytes.fromhex(uuid.replace("-", "")) for uuid in args.executor_uuids.split(",")]
         executors = get_eligible_executors(
             w3=w3,
             contract_address=args.contract_address,
             miner_address=args.miner_address,
+            executor_uuids=executor_uuids,
         )
 
         print(f"Successfully fetched eligible executors for miner {args.miner_address}")

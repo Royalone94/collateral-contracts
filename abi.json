@@ -172,6 +172,11 @@
         "name": "miner",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "executors",
+        "type": "bytes16[]",
+        "internalType": "bytes16[]"
       }
     ],
     "outputs": [
