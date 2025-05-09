@@ -12,9 +12,6 @@ import re
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from scripts.address_conversion import h160_to_ss58
 
-def uuid_to_bytes16(uuid_str):
-    u = uuid.UUID(uuid_str)
-    return "0x" + u.bytes.hex()
 
 def get_transferrable_balance(w3: Web3, sender: str, recipient: str):
     # Build a dummy transaction to estimate gas
@@ -178,16 +175,16 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         print("Miner Address:", miner_address)
         print("Miner Key:", miner_key)
 
-        executor_uuid = uuid_to_bytes16("72a1d228-3c8c-45cb-8b84-980071592589")  # Example UUID
+        executor_uuid = "72a1d228-3c8c-45cb-8b84-980071592589"  # Example UUID
         # Refactored deposit collateral steps as a loop
         deposit_tasks = [
             ("3a5ce92a-a066-45f7-b07d-58b3b7986464", False),
             ("72a1d228-3c8c-45cb-8b84-980071592589", False),
             ("15c2ff27-0a4d-4987-bbc9-fa009ef9f7d2", False),
-            # ("335453ad-246c-4ad5-809e-e2013ca6c07e", False),
-            # ("89c66519-244f-4db0-b4a7-756014d6fd24", False),
-            # ("af3f1b82-ff98-44c8-b130-d948a2a56b44", False),
-            # ("ee3002d9-71f8-4a83-881d-48bd21b6bdd1", False),
+            ("335453ad-246c-4ad5-809e-e2013ca6c07e", False),
+            ("89c66519-244f-4db0-b4a7-756014d6fd24", False),
+            ("af3f1b82-ff98-44c8-b130-d948a2a56b44", False),
+            ("ee3002d9-71f8-4a83-881d-48bd21b6bdd1", False),
         ]
         for uuid_str, capture_output in deposit_tasks:
             print(f"Starting deposit collateral for executor {uuid_str}...")
@@ -209,7 +206,6 @@ class TestCollateralContractLifecycle(unittest.TestCase):
 
         executors = []
         for uuid_str, capture_output in deposit_tasks:
-            executor_uuid = uuid_to_bytes16(uuid_str)  # Convert UUID to bytes32
             executors.append(uuid_str)  # Keep original UUID strings
         
         executor_uuids_str = ",".join(executors)  # Join UUIDs with commas
