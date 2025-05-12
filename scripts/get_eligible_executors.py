@@ -62,13 +62,13 @@ def main():
         description="Get the list of eligible executors for a specific miner on the Collateral contract"
     )
     parser.add_argument(
-        "--contract_address", help="Address of the deployed Collateral contract"
+        "--contract-address", help="Address of the deployed Collateral contract"
     )
     parser.add_argument(
-        "--miner_address", help="Address of the miner to fetch eligible executors for"
+        "--miner-address", help="Address of the miner to fetch eligible executors for"
     )
     parser.add_argument(
-        "--executor_uuids",
+        "--executor-uuids",
         help="Comma-separated list of executor UUIDs to check eligibility",
     )
     parser.add_argument("--network", default="finney")
