@@ -9,7 +9,7 @@ import uuid
 import re
 
 # Update import to use the scripts package
-from scripts.address_conversion import h160_to_ss58
+from celium_collateral_contracts.address_conversion import h160_to_ss58
 
 
 def get_transferrable_balance(w3: Web3, sender: str, recipient: str):
