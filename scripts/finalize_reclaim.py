@@ -76,12 +76,12 @@ def main():
     parser.add_argument(
         "--reclaim-request-id", required=True, type=int, help="ID of the reclaim request to finalize"
     )
-    parser.add_argument("--keyfile", help="Path to keypair file")
+    parser.add_argument("--keystr", help="Keystring of the account to use")
     parser.add_argument("--network", default="finney", help="The Subtensor Network to connect to.")
     args = parser.parse_args()
 
     w3 = get_web3_connection(args.network)
-    account = get_account(args.keyfile)
+    account = get_account(args.keystr)
 
     try:
         reclaim_event, receipt = finalize_reclaim(

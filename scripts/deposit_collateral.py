@@ -110,13 +110,13 @@ def main():
         required=True,
         help="Expected trustee/validator address to verify"
     )
-    parser.add_argument("--keyfile", help="Path to keypair file")
+    parser.add_argument("--keystr", help="Keystring of the account to use")
     parser.add_argument("--network", default="finney", help="The Subtensor Network to connect to.")
 
     args = parser.parse_args()
 
     w3 = get_web3_connection(args.network)
-    account = get_account(args.keyfile)
+    account = get_account(args.keystr)
 
     deposit_event, receipt = deposit_collateral(
         w3=w3,

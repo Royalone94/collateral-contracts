@@ -110,7 +110,7 @@ def main():
         required=True,
         help="URL for reclaim information"
     )
-    parser.add_argument("--keyfile", help="Path to keypair file")
+    parser.add_argument("--keystr", help="Keystring of the account to use")
     parser.add_argument(
         "--network",
         default="finney",
@@ -126,7 +126,7 @@ def main():
     validate_address_format(args.contract_address)
 
     w3 = get_web3_connection(args.network)
-    account = get_account(args.keyfile)
+    account = get_account(args.keystr)
 
     receipt, event = reclaim_collateral(
         w3, account, args.amount_tao, args.contract_address, args.url, args.executor_uuid)
