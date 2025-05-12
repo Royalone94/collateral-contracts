@@ -28,4 +28,4 @@ Homepage = "https://github.com/DaturaAI/celium-collateral-contracts"
 Source = "https://github.com/DaturaAI/celium-collateral-contracts"
 
 [tool.setuptools.packages.find]
-where = ["scripts"]
+where = ["celium_collateral_contracts"]

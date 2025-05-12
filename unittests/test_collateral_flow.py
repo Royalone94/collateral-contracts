@@ -72,13 +72,13 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         print(f"Verified chain ID: {chain_id}")
 
         # Update script paths to match the updated folder structure
-        deposit_script = "scripts/deposit_collateral.py"
-        get_miners_collateral_script = "scripts/get_miners_collateral.py"
-        get_eligible_executors_script = "scripts/get_eligible_executors.py"
-        reclaim_collateral_script = "scripts/reclaim_collateral.py"
-        deny_request_script = "scripts/deny_request.py"
-        finalize_reclaim_script = "scripts/finalize_reclaim.py"
-        get_reclaim_requests_script = "scripts/get_reclaim_requests.py"
+        deposit_script = "celium_collateral_contracts/deposit_collateral.py"
+        get_miners_collateral_script = "celium_collateral_contracts/get_miners_collateral.py"
+        get_eligible_executors_script = "celium_collateral_contracts/get_eligible_executors.py"
+        reclaim_collateral_script = "celium_collateral_contracts/reclaim_collateral.py"
+        deny_request_script = "celium_collateral_contracts/deny_request.py"
+        finalize_reclaim_script = "celium_collateral_contracts/finalize_reclaim.py"
+        get_reclaim_requests_script = "celium_collateral_contracts/get_reclaim_requests.py"
         if self.USE_EXISTING_ACCOUNTS:
             validator_address = "0xE1A07A44ac6f8423bA3b734F0cAfC6F87fd385Fc"
             validator_key = "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
