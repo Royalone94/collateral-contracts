@@ -79,7 +79,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         reclaim_collateral_script = "scripts/reclaim_collateral.py"
         deny_request_script = "scripts/deny_request.py"
         finalize_reclaim_script = "scripts/finalize_reclaim.py"
-
+        get_reclaim_requests_script = "scripts/get_reclaim_requests.py"
         if self.USE_EXISTING_ACCOUNTS:
             validator_address = "0xE1A07A44ac6f8423bA3b734F0cAfC6F87fd385Fc"
             validator_key = "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
@@ -264,7 +264,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
 
         result = self.run_cmd(
             [
-                "python", "scripts/get_reclaim_requests.py",
+                "python", get_reclaim_requests_script,
                 "--contract-address", contract_address,
                 "--start-block", str(latest_block - 10),
                 "--end-block", str(latest_block + 10),
