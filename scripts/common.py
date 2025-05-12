@@ -33,7 +33,8 @@ def load_contract_abi():
 
 RPC_URLS = {
     "finney": "https://lite.chain.opentensor.ai",
-    "test": "https://test.chain.opentensor.ai",
+    # "finney": "https://entrypoint-finney.opentensor.ai",
+    "test": "https://test.finney.opentensor.ai",
 }
 
 
