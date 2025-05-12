@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "celium-collateral-contracts"
+version = "1.0.0"
+description = "Collateral Smart Contract for Bittensor"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Vitali", email = "vitalishvets20@gmail.com" }
+]
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent"
+]
+dependencies = [
+    "web3>=7.10.0",
+    "requests>=2.31.0",
+    "substrate-interface>=1.7.11"
+]
+
+[project.urls]
+Homepage = "https://github.com/DaturaAI/celium-collateral-contracts"
+Source = "https://github.com/DaturaAI/celium-collateral-contracts"
