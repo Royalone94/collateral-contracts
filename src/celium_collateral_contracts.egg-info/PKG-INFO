@@ -1,11 +1,11 @@
 Metadata-Version: 2.4
 Name: celium-collateral-contracts
-Version: 1.0.0
+Version: 1.0.1
 Summary: Collateral Smart Contract for Bittensor
 Author-email: Vitali <vitalishvets20@gmail.com>
 License: BSD 3-Clause License
         
-        Copyright (c) 2025, bactensor
+        Copyright (c) 2025, Datura
         
         Redistribution and use in source and binary forms, with or without
         modification, are permitted provided that the following conditions are met:
