@@ -59,7 +59,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
 
     def setUp(self):
         # Use the local RPC URL here
-        self.RPC_URL = "https://test.chain.opentensor.ai"
+        self.RPC_URL = "https://test.finney.opentensor.ai"
         # self.RPC_URL = "http://127.0.0.1:8545"
         self.w3 = Web3(Web3.HTTPProvider(self.RPC_URL))
         self.assertTrue(self.w3.is_connected(), "Cannot connect to Bittensor RPC")
