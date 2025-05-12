@@ -10,6 +10,7 @@ transparency and accountability.
 
 import sys
 import argparse
+import bittensor.utils
 from common import (
     load_contract_abi,
     get_web3_connection,
@@ -18,6 +19,7 @@ from common import (
     build_and_send_transaction,
     wait_for_receipt,
     calculate_md5_checksum,
+    get_revert_reason,
 )
 
 
@@ -62,7 +64,11 @@ def deny_reclaim_request(
 
     receipt = wait_for_receipt(w3, tx_hash)
     if receipt['status'] == 0:
-        raise DenyReclaimRequestError(f"Transaction failed for denying reclaim request {reclaim_request_id}")
+        # Get revert reason for failed transaction
+        revert_reason = get_revert_reason(w3, tx_hash, receipt['blockNumber'])
+        raise DenyReclaimRequestError(
+            f"Transaction failed for denying reclaim request {reclaim_request_id}. Revert reason: {revert_reason}"
+        )
     deny_event = contract.events.Denied().process_receipt(receipt)[0]
 
     return deny_event, receipt
@@ -73,16 +79,18 @@ def main():
         description="Deny a reclaim request on the Collateral contract"
     )
     parser.add_argument(
-        "contract_address", help="Address of the deployed Collateral contract"
+        "--contract-address", required=True, help="Address of the deployed Collateral contract"
     )
     parser.add_argument(
-        "reclaim_request_id", type=int, help="ID of the reclaim request to deny"
+        "--reclaim-request-id", required=True, type=int, help="ID of the reclaim request to deny"
     )
-    parser.add_argument("url", help="URL containing the reason for denial")
+    parser.add_argument("--url", required=True, help="URL containing the reason for denial")
+    parser.add_argument("--keyfile", help="Path to keypair file")
+    parser.add_argument("--network", default="finney", help="The Subtensor Network to connect to.")
     args = parser.parse_args()
 
-    w3 = get_web3_connection()
-    account = get_account()
+    w3 = get_web3_connection(args.network)
+    account = get_account(args.keyfile)
 
     deny_event, receipt = deny_reclaim_request(
         w3=w3,

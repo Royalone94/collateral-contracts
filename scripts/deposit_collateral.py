@@ -10,8 +10,9 @@ executes the deposit transaction on the blockchain.
 
 import sys
 import argparse
-from uuid import UUID  # Add import for UUID
 from web3 import Web3
+import bittensor.utils
+from uuid import UUID
 from common import (
     load_contract_abi,
     get_web3_connection,
@@ -19,7 +20,7 @@ from common import (
     validate_address_format,
     build_and_send_transaction,
     wait_for_receipt,
-    get_revert_reason
+    get_revert_reason,
 )
 
 
@@ -50,8 +51,7 @@ def verify_trustee(contract, expected_trustee):
 
 
 def deposit_collateral(w3, account, amount_tao,
-                       contract_address,
-                       validator_address, executor_uuid):
+                       contract_address, validator_address, executor_uuid):
     """Deposit collateral into the contract.
 
     Args:
@@ -71,12 +71,9 @@ def deposit_collateral(w3, account, amount_tao,
     contract_abi = load_contract_abi()
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
-    # verify_trustee(contract, trustee_address)
-
     amount_wei = w3.to_wei(amount_tao, "ether")
     check_minimum_collateral(contract, amount_wei)
 
-    # Convert executor_uuid to bytes16
     executor_uuid_bytes = UUID(executor_uuid).bytes
 
     tx_hash = build_and_send_transaction(
@@ -84,7 +81,6 @@ def deposit_collateral(w3, account, amount_tao,
     )
 
     receipt = wait_for_receipt(w3, tx_hash)
-    
     if receipt['status'] == 0:
         revert_reason = get_revert_reason(w3, tx_hash, receipt['blockNumber'])
         raise DepositCollateralError(f"Transaction failed for depositing collateral. Revert reason: {revert_reason}")
@@ -99,27 +95,28 @@ def main():
         description="Deposit collateral into the Collateral smart contract"
     )
     parser.add_argument(
-        "contract_address",
+        "--contract-address",
+        required=True,
         help="Address of the Collateral contract"
     )
     parser.add_argument(
-        "amount_tao",
+        "--amount-tao",
+        required=True,
         type=float,
         help="Amount of TAO to deposit"
     )
     parser.add_argument(
-        "validator_address",
-        help="Validator address for the deposit operation"
+        "--validator_address",
+        required=True,
+        help="Expected trustee/validator address to verify"
     )
-    parser.add_argument(
-        "executor_uuid",
-        help="Executor UUID for the deposit operation"
-    )
+    parser.add_argument("--keyfile", help="Path to keypair file")
+    parser.add_argument("--network", default="finney", help="The Subtensor Network to connect to.")
 
     args = parser.parse_args()
 
-    w3 = get_web3_connection()
-    account = get_account()
+    w3 = get_web3_connection(args.network)
+    account = get_account(args.keyfile)
 
     deposit_event, receipt = deposit_collateral(
         w3=w3,

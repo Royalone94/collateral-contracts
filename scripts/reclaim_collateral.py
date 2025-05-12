@@ -10,7 +10,8 @@ with associated URLs for verification purposes.
 
 import sys
 import argparse
-from uuid import UUID  # Add import for UUID
+import bittensor.utils
+from uuid import UUID
 from common import (
     load_contract_abi,
     get_web3_connection,
@@ -19,6 +20,7 @@ from common import (
     build_and_send_transaction,
     wait_for_receipt,
     calculate_md5_checksum,
+    get_revert_reason,
 )
 
 
@@ -63,7 +65,6 @@ def reclaim_collateral(
         md5_checksum = calculate_md5_checksum(url)
         print(f"MD5 checksum: {md5_checksum}", file=sys.stderr)
 
-    # Convert executor_uuid to bytes16
     executor_uuid_bytes = UUID(executor_uuid).bytes
 
     tx_hash = build_and_send_transaction(
@@ -72,7 +73,7 @@ def reclaim_collateral(
             amount_wei,
             url,
             bytes.fromhex(md5_checksum),
-            executor_uuid_bytes  # Pass bytes16
+            executor_uuid_bytes
         ),
         account,
         gas_limit=200000,  # Higher gas limit for this function
@@ -80,7 +81,8 @@ def reclaim_collateral(
 
     receipt = wait_for_receipt(w3, tx_hash)
     if receipt['status'] == 0:
-        raise ReclaimCollateralError(f"Transaction failed for reclaiming collateral")
+        revert_reason = get_revert_reason(w3, tx_hash, receipt['blockNumber'])
+        raise ReclaimCollateralError(f"Transaction failed for reclaiming collateral. Revert reason: {revert_reason}")
     reclaim_event = contract.events.ReclaimProcessStarted().process_receipt(
         receipt,
     )[0]
@@ -93,20 +95,29 @@ def main():
         description="Initiate the process of reclaiming collateral."
     )
     parser.add_argument(
-        "contract_address",
+        "--contract-address",
+        required=True,
         help="Address of the collateral contract"
     )
     parser.add_argument(
-        "amount_tao",
+        "--amount-tao",
+        required=True,
         type=float,
         help="Amount of TAO to reclaim"
     )
     parser.add_argument(
-        "url",
+        "--url",
+        required=True,
         help="URL for reclaim information"
     )
+    parser.add_argument("--keyfile", help="Path to keypair file")
     parser.add_argument(
-        "executor_uuid",
+        "--network",
+        default="finney",
+        help="The Subtensor Network to connect to.",
+    )
+    parser.add_argument(
+        "--executor_uuid",
         help="Executor UUID for the reclaim operation"
     )
 
@@ -114,12 +125,11 @@ def main():
 
     validate_address_format(args.contract_address)
 
-    w3 = get_web3_connection()
-    account = get_account()
+    w3 = get_web3_connection(args.network)
+    account = get_account(args.keyfile)
 
     receipt, event = reclaim_collateral(
-        w3, account, args.amount_tao, args.contract_address, args.url, args.executor_uuid
-    )
+        w3, account, args.amount_tao, args.contract_address, args.url, args.executor_uuid)
 
     print(f"Successfully initiated reclaim of {args.amount_tao} TAO")
     print("Event details:")

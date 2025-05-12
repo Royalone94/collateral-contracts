@@ -10,7 +10,7 @@ URLs for verification purposes.
 
 import sys
 import argparse
-from uuid import UUID  # Add import for UUID
+import bittensor.utils
 from common import (
     load_contract_abi,
     get_web3_connection,
@@ -19,6 +19,7 @@ from common import (
     build_and_send_transaction,
     wait_for_receipt,
     calculate_md5_checksum,
+    get_revert_reason,
 )
 
 
@@ -34,7 +35,6 @@ def slash_collateral(
     amount_tao,
     contract_address,
     url,
-    executor_uuid,
 ):
     """Slash collateral from a miner.
 
@@ -45,7 +45,6 @@ def slash_collateral(
         amount_tao (float): Amount of TAO to slash
         contract_address (str): Address of the collateral contract
         url (str): URL containing information about the slash
-        executor_uuid (str): Executor UUID for the slashing operation
 
     Returns:
         dict: Transaction receipt with slash event details
@@ -63,8 +62,6 @@ def slash_collateral(
         md5_checksum = calculate_md5_checksum(url)
         print(f"MD5 checksum: {md5_checksum}", file=sys.stderr)
 
-    executor_uuid_bytes = UUID(executor_uuid).bytes
-
     tx_hash = build_and_send_transaction(
         w3,
         contract.functions.slashCollateral(
@@ -72,7 +69,6 @@ def slash_collateral(
             w3.to_wei(amount_tao, "ether"),
             url,
             bytes.fromhex(md5_checksum),
-            executor_uuid_bytes
         ),
         account,
         gas_limit=200000,  # Higher gas limit for this function
@@ -80,7 +76,8 @@ def slash_collateral(
 
     receipt = wait_for_receipt(w3, tx_hash)
     if receipt['status'] == 0:
-        raise SlashCollateralError(f"Transaction failed for slashing collateral")
+        revert_reason = get_revert_reason(w3, tx_hash, receipt['blockNumber'])
+        raise SlashCollateralError(f"Transaction failed for slashing collateral. Revert reason: {revert_reason}")
     slash_event = contract.events.Slashed().process_receipt(receipt)[0]
 
     return receipt, slash_event
@@ -91,34 +88,36 @@ def main():
         description="Slash collateral from a miner."
     )
     parser.add_argument(
-        "contract_address",
+        "--contract-address",
+        required=True,
         help="Address of the collateral contract"
     )
     parser.add_argument(
-        "miner_address",
+        "--miner-address",
+        required=True,
         help="Address of the miner to slash"
     )
     parser.add_argument(
-        "amount_tao",
+        "--amount-tao",
+        required=True,
         type=float,
         help="Amount of TAO to slash"
     )
     parser.add_argument(
-        "url",
+        "--url",
+        required=True,
         help="URL containing information about the slash"
     )
-    parser.add_argument(
-        "executor_uuid",
-        help="Executor UUID for the slashing operation"
-    )
+    parser.add_argument("--keyfile", help="Path to keypair file")
+    parser.add_argument("--network", default="finney", help="The Subtensor Network to connect to.")
 
     args = parser.parse_args()
 
     validate_address_format(args.contract_address)
     validate_address_format(args.miner_address)
 
-    w3 = get_web3_connection()
-    account = get_account()
+    w3 = get_web3_connection(args.network)
+    account = get_account(args.keyfile)
 
     receipt, event = slash_collateral(
         w3,
@@ -127,7 +126,6 @@ def main():
         args.amount_tao,
         args.contract_address,
         args.url,
-        args.executor_uuid
     )
 
     print(f"Successfully slashed {args.amount_tao} TAO from {args.miner_address}")
