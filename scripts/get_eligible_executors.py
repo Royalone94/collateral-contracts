@@ -62,18 +62,20 @@ def main():
         description="Get the list of eligible executors for a specific miner on the Collateral contract"
     )
     parser.add_argument(
-        "contract_address", help="Address of the deployed Collateral contract"
+        "--contract_address", help="Address of the deployed Collateral contract"
     )
     parser.add_argument(
-        "miner_address", help="Address of the miner to fetch eligible executors for"
+        "--miner_address", help="Address of the miner to fetch eligible executors for"
     )
     parser.add_argument(
-        "executor_uuids",
+        "--executor_uuids",
         help="Comma-separated list of executor UUIDs to check eligibility",
     )
+    parser.add_argument("--network", default="finney")
+
     args = parser.parse_args()
 
-    w3 = get_web3_connection()
+    w3 = get_web3_connection(args.network)
     account = get_account()  # You may not need to use this for reading data, but it's useful for connection checks
 
     try:
