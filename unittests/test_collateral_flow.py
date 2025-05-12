@@ -8,8 +8,7 @@ from web3 import Web3
 import uuid
 import re
 
-# Add parent directory to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Update import to use the scripts package
 from scripts.address_conversion import h160_to_ss58
 
 
