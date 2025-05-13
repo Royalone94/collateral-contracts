@@ -21,15 +21,17 @@ class CollateralContract:
         self.validator_account = get_account(validator_keystr)
         self.miner_account = get_account(miner_keystr)
         self.contract_address = contract_address
+        self.validator_address = self.validator_account.address
+        self.miner_address = self.miner_account.address
 
-    def deposit_collateral(self, amount_tao, validator_address, executor_uuid):
+    def deposit_collateral(self, amount_tao, executor_uuid):
         """Deposit collateral into the contract."""
         return deposit_collateral(
             self.w3,
             self.miner_account,
             amount_tao,
             self.contract_address,
-            validator_address,
+            self.validator_address,
             executor_uuid,
         )
 
@@ -63,21 +65,21 @@ class CollateralContract:
             self.contract_address,
         )
 
-    def slash_collateral(self, miner_address, amount_tao, url, executor_uuid):
+    def slash_collateral(self, amount_tao, url, executor_uuid):
         """Slash collateral from a miner."""
         return slash_collateral(
             self.w3,
             self.validator_account,
-            miner_address,
+            self.miner_address,
             amount_tao,
             self.contract_address,
             url,
             executor_uuid,
         )
 
-    def get_miner_collateral(self, miner_address):
+    def get_miner_collateral(self):
         """Get the collateral amount for a miner."""
-        return get_miner_collateral(self.w3, self.contract_address, miner_address)
+        return get_miner_collateral(self.w3, self.contract_address, self.miner_address)
 
     def get_deposit_events(self, block_start, block_end):
         """Fetch deposit events within a block range."""
@@ -88,12 +90,12 @@ class CollateralContract:
             block_end,
         )
 
-    def get_eligible_executors(self, miner_address, executor_uuids):
+    def get_eligible_executors(self, executor_uuids):
         """Get the list of eligible executors for a miner."""
         return get_eligible_executors(
             self.w3,
             self.contract_address,
-            miner_address,
+            self.miner_address,
             executor_uuids,
         )
 
@@ -122,10 +124,8 @@ def main():
     print(f"Verified chain ID: {chain_id}")
 
     # Check balances
-    validator_address = contract.validator_account.address
-    miner_address = contract.miner_account.address
-    print("Validator Balance:", contract.get_balance(validator_address))
-    print("Miner Balance:", contract.get_balance(miner_address))
+    print("Validator Balance:", contract.get_balance(contract.validator_address))
+    print("Miner Balance:", contract.get_balance(contract.miner_address))
 
     # Deposit collateral
     deposit_tasks = [
@@ -136,18 +136,25 @@ def main():
         ("89c66519-244f-4db0-b4a7-756014d6fd24", 0.0001),
         ("af3f1b82-ff98-44c8-b130-d948a2a56b44", 0.0001),
         ("ee3002d9-71f8-4a83-881d-48bd21b6bdd1", 0.0001),
+        ("4f42de60-3a41-4d76-9a19-d6d2644eb57f", 0.0001),
+        ("7ac4184e-e84f-40cb-b6a0-9cf79a1a573c", 0.0001),
+        ("9d14f803-dc8c-405f-99b5-80f12207d4e5", 0.0001),
+        ("2a61e295-fd0f-4568-b01c-1c38c21573ac", 0.0001),
+        ("e7fd0b3f-4a42-4a5d-bda6-8e2f4b5cb92a", 0.0001),
+        ("f2c2a71d-5c44-4ab9-a87e-0ac1f278b6d6", 0.0001),
+        ("1ec29b47-3d6b-4cc3-b71d-6c97fcbf1e89", 0.0001),
     ]
     # for uuid_str, amount in deposit_tasks:
     #     print(f"Depositing collateral for executor {uuid_str}...")
-    #     contract.deposit_collateral(amount, validator_address, uuid_str)
+    #     contract.deposit_collateral(amount, uuid_str)
 
     # Verify collateral
-    collateral = contract.get_miner_collateral(miner_address)
+    collateral = contract.get_miner_collateral()
     print("[COLLATERAL]:", collateral)
 
     # List eligible executors
     executor_uuids = [uuid for uuid, _ in deposit_tasks]
-    eligible_executors = contract.get_eligible_executors(miner_address, executor_uuids)
+    eligible_executors = contract.get_eligible_executors(executor_uuids)
     print("Eligible Executors:", eligible_executors)
 
     # Reclaim collateral
@@ -169,12 +176,12 @@ def main():
     contract.finalize_reclaim(reclaim_request_id=1)
 
     # Final collateral check
-    final_collateral = contract.get_miner_collateral(miner_address)
+    final_collateral = contract.get_miner_collateral()
     print("[FINAL COLLATERAL]:", final_collateral)
 
     # Check transferrable balances
-    print("Validator Balance:", contract.get_balance(validator_address))
-    print("Miner Balance:", contract.get_balance(miner_address))
+    print("Validator Balance:", contract.get_balance(contract.validator_address))
+    print("Miner Balance:", contract.get_balance(contract.miner_address))
 
     print("✅ Contract lifecycle completed successfully.")
 
