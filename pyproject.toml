@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "celium-collateral-contracts"
-version = "1.0.3"
+version = "1.0.5"
 description = "Collateral Smart Contract for Bittensor"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -30,3 +30,6 @@ Source = "https://github.com/DaturaAI/celium-collateral-contracts"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["celium_collateral_contracts"]
+
+[tool.setuptools.package-data]
+celium_collateral_contracts = ["*.json"]

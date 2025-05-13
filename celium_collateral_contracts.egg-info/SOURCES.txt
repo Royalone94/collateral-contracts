@@ -3,6 +3,7 @@ MANIFEST.in
 README.md
 pyproject.toml
 celium_collateral_contracts/__init__.py
+celium_collateral_contracts/abi.json
 celium_collateral_contracts/address_conversion.py
 celium_collateral_contracts/associate_evm_key.py
 celium_collateral_contracts/collateral_contract.py
