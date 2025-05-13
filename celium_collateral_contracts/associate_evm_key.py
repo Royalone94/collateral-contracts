@@ -5,7 +5,7 @@ import sys
 
 import bittensor
 
-from subtensor import associate_evm_key
+from celium_collateral_contracts.subtensor import associate_evm_key
 
 
 def main():

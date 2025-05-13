@@ -13,8 +13,8 @@ import sys
 from web3 import Web3
 from eth_account import Account
 import bittensor.utils
-from address_conversion import ss58_to_pubkey
-from common import get_web3_connection, get_account, wait_for_receipt, build_and_send_transaction
+from celium_collateral_contracts.address_conversion import h160_to_ss58
+from celium_collateral_contracts.common import get_web3_connection, get_account, wait_for_receipt, build_and_send_transaction
 
 
 def send_tao_to_ss58(

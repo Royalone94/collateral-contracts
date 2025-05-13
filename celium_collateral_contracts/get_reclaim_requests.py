@@ -13,7 +13,7 @@ import csv
 import argparse
 from dataclasses import dataclass
 import bittensor.utils
-from common import get_web3_connection, load_contract_abi
+from celium_collateral_contracts.common import get_web3_connection, load_contract_abi
 
 
 @dataclass

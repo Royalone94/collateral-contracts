@@ -7,7 +7,7 @@ import sys
 import bittensor.utils
 import bittensor_wallet
 from bittensor import rao
-from common import get_miner_collateral, get_web3_connection
+from celium_collateral_contracts.common import get_miner_collateral, get_web3_connection
 
 
 async def main():

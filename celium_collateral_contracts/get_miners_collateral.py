@@ -13,7 +13,7 @@ The script will output the collateral amount in TAO (the native token).
 import argparse
 import sys
 import bittensor.utils
-from common import (
+from celium_collateral_contracts.common import (
     get_web3_connection,
     get_miner_collateral,
     validate_address_format,

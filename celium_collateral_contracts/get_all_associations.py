@@ -3,7 +3,7 @@ import sys
 
 import bittensor
 
-from common import get_evm_key_associations
+from celium_collateral_contracts.common import get_evm_key_associations
 
 
 def main() -> None:

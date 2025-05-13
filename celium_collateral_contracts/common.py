@@ -27,7 +27,7 @@ from web3.exceptions import ContractLogicError
 
 def load_contract_abi():
     """Load the contract ABI from the artifacts file."""
-    abi_file = pathlib.Path(__file__).parent.parent / "abi.json"
+    abi_file = pathlib.Path(__file__).parent / "abi.json"
     return json.loads(abi_file.read_text())
 
 

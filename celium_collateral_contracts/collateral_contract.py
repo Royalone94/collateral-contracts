@@ -1,18 +1,18 @@
 from web3 import Web3
 from uuid import UUID
-from common import (
+from celium_collateral_contracts.common import (
     get_web3_connection,
     get_account,
     validate_address_format,
     get_miner_collateral,
 )
-from deposit_collateral import deposit_collateral
-from reclaim_collateral import reclaim_collateral
-from finalize_reclaim import finalize_reclaim
-from deny_request import deny_reclaim_request
-from slash_collateral import slash_collateral
-from get_collaterals import get_deposit_events
-from get_eligible_executors import get_eligible_executors
+from celium_collateral_contracts.deposit_collateral import deposit_collateral
+from celium_collateral_contracts.reclaim_collateral import reclaim_collateral
+from celium_collateral_contracts.finalize_reclaim import finalize_reclaim
+from celium_collateral_contracts.deny_request import deny_reclaim_request
+from celium_collateral_contracts.slash_collateral import slash_collateral
+from celium_collateral_contracts.get_collaterals import get_deposit_events
+from celium_collateral_contracts.get_eligible_executors import get_eligible_executors
 
 
 class CollateralContract:

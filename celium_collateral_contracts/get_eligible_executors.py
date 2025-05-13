@@ -10,7 +10,7 @@ with non-zero TAO in collateral and not slashed or penalized) for a given miner.
 import sys
 import argparse
 import uuid  # Add this import for UUID conversion
-from common import (
+from celium_collateral_contracts.common import (
     load_contract_abi,
     get_web3_connection,
     get_account,

@@ -13,7 +13,7 @@ import argparse
 from web3 import Web3
 import bittensor.utils
 from uuid import UUID
-from common import (
+from celium_collateral_contracts.common import (
     load_contract_abi,
     get_web3_connection,
     get_account,
