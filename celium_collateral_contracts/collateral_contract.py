@@ -106,7 +106,7 @@ class CollateralContract:
         balance = self.w3.eth.get_balance(address)
         return self.w3.from_wei(balance, "ether")
 
-    def get_claim_requests(self):
+    def get_reclaim_requests(self):
         """Fetch claim requests from the latest 100 blocks."""
         latest_block = self.w3.eth.block_number
         return get_reclaim_process_started_events(self.w3, self.contract_address, latest_block - 100, latest_block)
@@ -172,7 +172,7 @@ def main():
     # Fetch reclaim requests
     latest_block = contract.w3.eth.block_number
     print(f"Fetching reclaim requests between blocks {latest_block - 100} and {latest_block + 100}...")
-    reclaim_requests = contract.get_claim_requests()
+    reclaim_requests = contract.get_reclaim_requests()
     print("Reclaim Requests:", reclaim_requests)
 
     # Deny and finalize reclaim requests
