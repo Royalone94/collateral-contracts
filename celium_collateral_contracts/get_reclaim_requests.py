@@ -27,6 +27,7 @@ class ReclaimProcessStartedEvent:
     url: str
     url_content_md5_checksum: str
     block_number: int
+    executor_uuid: str
 
 
 def get_reclaim_process_started_events(
@@ -64,6 +65,16 @@ def get_reclaim_process_started_events(
     }
     logs = w3.eth.get_logs(filter_params)
 
+    def get_reclaim_by_id(reclaim_id):
+        """Fetch reclaim information using reclaim_id."""
+        reclaim = contract.functions.reclaims(reclaim_id).call()
+        return {
+            "miner": reclaim[0],
+            "amount": reclaim[1],
+            "denyTimeout": reclaim[2],
+            "executorUuid": reclaim[3].hex(),
+        }
+
     formatted_events = []
     for log in logs:
         reclaim_request_id = int(log["topics"][1].hex(), 16)
@@ -73,12 +84,15 @@ def get_reclaim_process_started_events(
 
         decoded_event = contract.events.ReclaimProcessStarted().process_log(log)
 
+        reclaim_info = get_reclaim_by_id(reclaim_request_id)
+
         formatted_events.append(
             ReclaimProcessStartedEvent(
                 reclaim_request_id=reclaim_request_id,
                 account=account,
-                amount=decoded_event['args']['amount'],
-                expiration_time=decoded_event['args']['expirationTime'],
+                amount=reclaim_info["amount"],
+                expiration_time=reclaim_info["denyTimeout"],
+                executor_uuid=reclaim_info["executorUuid"],
                 url=decoded_event['args']['url'],
                 url_content_md5_checksum=decoded_event['args']['urlContentMd5Checksum'].hex(),
                 block_number=log["blockNumber"],

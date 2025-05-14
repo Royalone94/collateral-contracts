@@ -12,6 +12,7 @@ from celium_collateral_contracts.finalize_reclaim import finalize_reclaim
 from celium_collateral_contracts.deny_request import deny_reclaim_request
 from celium_collateral_contracts.slash_collateral import slash_collateral
 from celium_collateral_contracts.get_collaterals import get_deposit_events
+from celium_collateral_contracts.get_reclaim_requests import get_reclaim_process_started_events
 from celium_collateral_contracts.get_eligible_executors import get_eligible_executors
 
 
@@ -105,6 +106,11 @@ class CollateralContract:
         balance = self.w3.eth.get_balance(address)
         return self.w3.from_wei(balance, "ether")
 
+    def get_claim_requests(self):
+        """Fetch claim requests from the latest 100 blocks."""
+        latest_block = self.w3.eth.block_number
+        return get_reclaim_process_started_events(self.w3, self.contract_address, latest_block - 100, latest_block)
+
 
 def main():
     import os
@@ -165,15 +171,15 @@ def main():
 
     # Fetch reclaim requests
     latest_block = contract.w3.eth.block_number
-    print(f"Fetching reclaim requests between blocks {latest_block - 10} and {latest_block + 10}...")
-    reclaim_requests = contract.get_deposit_events(latest_block - 10, latest_block + 10)
+    print(f"Fetching reclaim requests between blocks {latest_block - 100} and {latest_block + 100}...")
+    reclaim_requests = contract.get_claim_requests()
     print("Reclaim Requests:", reclaim_requests)
 
     # Deny and finalize reclaim requests
-    print("Denying reclaim request...")
-    contract.deny_reclaim_request(reclaim_request_id=2, url="no, i will not")
-    print("Finalizing reclaim request...")
-    contract.finalize_reclaim(reclaim_request_id=1)
+    # print("Denying reclaim request...")
+    # contract.deny_reclaim_request(reclaim_request_id=2, url="no, i will not")
+    # print("Finalizing reclaim request...")
+    # contract.finalize_reclaim(reclaim_request_id=1)
 
     # Final collateral check
     final_collateral = contract.get_miner_collateral()
