@@ -51,7 +51,7 @@ class CollateralContract:
         """Finalize a reclaim request."""
         return finalize_reclaim(
             self.w3,
-            self.miner_account,
+            self.validator_account,
             reclaim_request_id,
             self.contract_address,
         )
