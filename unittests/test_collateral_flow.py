@@ -142,8 +142,8 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         print("Deploying contract...", self.RPC_URL)
           # Define the arguments for deployment
         netuid = 1  # Example netuid
-        min_collateral_increase = 10  # Example amount in wei
-        deny_timeout = 120  # Example deny timeout in seconds
+        min_collateral_increase = 1000000000000000  # Example amount in wei
+        deny_timeout = 3600  # Example deny timeout in seconds
 
         if self.DEPLOY_CONTRACT:
             print("Deploying contract with forge...")
@@ -162,7 +162,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             contract_address = contract_line.split(": ")[-1]
             self.assertTrue(Web3.is_address(contract_address))
         else:
-            contract_address = "0x354DbD43c977A59a3EeFeAd3Cb3de0a4E0E62b6D"
+            contract_address = "0x3512F750a13aF6EF0e62eCD8d4Badf779ea9033f"
 
         print("Deployed Contract Address:", contract_address)
         # === Step 6: Miner Deposits Collateral ===

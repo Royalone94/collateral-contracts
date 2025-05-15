@@ -130,7 +130,7 @@ def main():
 
     # Configuration
     network = "test"
-    contract_address = "0x354DbD43c977A59a3EeFeAd3Cb3de0a4E0E62b6D"
+    contract_address = "0x3512F750a13aF6EF0e62eCD8d4Badf779ea9033f"
     validator_key = "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
     miner_key = "259e0eded00353f71eb6be89d8749ad12bf693cbd8aeb6b80cd3a343c0dc8faf"
 
@@ -147,20 +147,20 @@ def main():
 
     # Deposit collateral
     deposit_tasks = [
-        ("3a5ce92a-a066-45f7-b07d-58b3b7986464", 0.0001),
-        ("72a1d228-3c8c-45cb-8b84-980071592589", 0.0001),
-        ("15c2ff27-0a4d-4987-bbc9-fa009ef9f7d2", 0.0001),
-        ("335453ad-246c-4ad5-809e-e2013ca6c07e", 0.0001),
-        ("89c66519-244f-4db0-b4a7-756014d6fd24", 0.0001),
-        ("af3f1b82-ff98-44c8-b130-d948a2a56b44", 0.0001),
-        ("ee3002d9-71f8-4a83-881d-48bd21b6bdd1", 0.0001),
-        ("4f42de60-3a41-4d76-9a19-d6d2644eb57f", 0.0001),
-        ("7ac4184e-e84f-40cb-b6a0-9cf79a1a573c", 0.0001),
-        ("9d14f803-dc8c-405f-99b5-80f12207d4e5", 0.0001),
-        ("2a61e295-fd0f-4568-b01c-1c38c21573ac", 0.0001),
-        ("e7fd0b3f-4a42-4a5d-bda6-8e2f4b5cb92a", 0.0001),
-        ("f2c2a71d-5c44-4ab9-a87e-0ac1f278b6d6", 0.0001),
-        ("1ec29b47-3d6b-4cc3-b71d-6c97fcbf1e89", 0.0001),
+        ("3a5ce92a-a066-45f7-b07d-58b3b7986464", 0.0005),
+        ("72a1d228-3c8c-45cb-8b84-980071592589", 0.0005),
+        ("15c2ff27-0a4d-4987-bbc9-fa009ef9f7d2", 0.0005),
+        ("335453ad-246c-4ad5-809e-e2013ca6c07e", 0.0005),
+        ("89c66519-244f-4db0-b4a7-756014d6fd24", 0.0005),
+        ("af3f1b82-ff98-44c8-b130-d948a2a56b44", 0.0005),
+        ("ee3002d9-71f8-4a83-881d-48bd21b6bdd1", 0.0005),
+        ("4f42de60-3a41-4d76-9a19-d6d2644eb57f", 0.0005),
+        ("7ac4184e-e84f-40cb-b6a0-9cf79a1a573c", 0.0005),
+        ("9d14f803-dc8c-405f-99b5-80f12207d4e5", 0.0005),
+        ("2a61e295-fd0f-4568-b01c-1c38c21573ac", 0.0005),
+        ("e7fd0b3f-4a42-4a5d-bda6-8e2f4b5cb92a", 0.0005),
+        ("f2c2a71d-5c44-4ab9-a87e-0ac1f278b6d6", 0.0005),
+        ("1ec29b47-3d6b-4cc3-b71d-6c97fcbf1e89", 0.0005),
     ]
     # for uuid_str, amount in deposit_tasks:
     #     print(f"Depositing collateral for executor {uuid_str}...")
@@ -168,7 +168,8 @@ def main():
 
     # Verify collateral
     collateral = contract.get_miner_collateral()
-    print("[COLLATERAL]:", collateral)
+    collateral_in_tao = contract.w3.from_wei(collateral, "ether")
+    print("[COLLATERAL]:", collateral_in_tao)
 
     # List eligible executors
     executor_uuids = [uuid for uuid, _ in deposit_tasks]
@@ -176,26 +177,37 @@ def main():
     print("Eligible Executors:", eligible_executors)
 
     # Reclaim collateral
-    reclaim_uuid = "72a1d228-3c8c-45cb-8b84-980071592589"
-    print("Reclaiming collateral...")
-    reclaim_result = contract.reclaim_collateral(0.00001, "please gimme money back", reclaim_uuid)
-    print("Reclaim Result:", reclaim_result)
+    # reclaim_uuid = "72a1d228-3c8c-45cb-8b84-980071592589"
+    # print("Reclaiming collateral...")
+    # reclaim_result = contract.reclaim_collateral(0.00001, "please gimme money back", reclaim_uuid)
+    # print("Reclaim Result:", reclaim_result)
+
+    # for uuid_str, amount in deposit_tasks:
+    #     print("Reclaiming collateral...")
+    #     reclaim_result = contract.reclaim_collateral(amount, "please gimme money back", uuid_str)
+    #     print("Reclaim Result:", reclaim_result)
 
     # Fetch reclaim requests
-    latest_block = contract.w3.eth.block_number
-    print(f"Fetching reclaim requests between blocks {latest_block - 100} and {latest_block + 100}...")
-    reclaim_requests = contract.get_reclaim_requests()
-    print("Reclaim Requests:", reclaim_requests)
+    # latest_block = contract.w3.eth.block_number
+    # print(f"Fetching reclaim requests between blocks {latest_block - 100} and {latest_block + 100}...")
+    # reclaim_requests = contract.get_reclaim_requests()
+    # print("Reclaim Requests:", reclaim_requests)
 
     # Deny and finalize reclaim requests
     # print("Denying reclaim request...")
     # contract.deny_reclaim_request(reclaim_request_id=2, url="no, i will not")
-    # print("Finalizing reclaim request...")
-    # contract.finalize_reclaim(reclaim_request_id=1)
+
+    # for i in range(65, 66):
+    #     print(f"Finalizing reclaim request..., reclaim_request_id = {i}")
+    #     try:
+    #         contract.finalize_reclaim(reclaim_request_id=i)
+    #     except Exception as e:
+    #         print(f"Error finalizing reclaim request {i}: {e}")
 
     # Final collateral check
     final_collateral = contract.get_miner_collateral()
-    print("[FINAL COLLATERAL]:", final_collateral)
+    final_collateral_in_tao = contract.w3.from_wei(final_collateral, "ether")
+    print("[FINAL COLLATERAL]:", final_collateral_in_tao)
 
     # Check transferrable balances
     print("Validator Balance:", contract.get_balance(contract.validator_address))
