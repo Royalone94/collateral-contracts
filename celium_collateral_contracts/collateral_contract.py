@@ -133,7 +133,7 @@ class CollateralContract:
             hotkey,
         )
 
-    def get_eth_address_from_hotkey(self, account, hotkey):
+    def get_eth_address_from_hotkey(self, hotkey):
         """Map a Bittensor hotkey to an Ethereum address."""
         return get_eth_address_from_hotkey(
             self.w3,
