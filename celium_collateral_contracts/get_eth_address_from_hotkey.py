@@ -1,7 +1,21 @@
 import argparse
-import json
 from web3 import Web3
 from substrateinterface.utils.ss58 import ss58_decode
+
+# Raw ABI text of the Collateral contract
+COLLATERAL_CONTRACT_ABI = [
+    {
+        "inputs": [
+            {"internalType": "bytes32", "name": "hotkey", "type": "bytes32"}
+        ],
+        "name": "hotkeyToEthereumAddress",
+        "outputs": [
+            {"internalType": "address", "name": "", "type": "address"}
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    }
+]
 
 def get_eth_address_from_hotkey(w3: Web3, contract_address: str, hotkey: str):
     """Retrieve the Ethereum address mapped to a hotkey."""
@@ -12,12 +26,8 @@ def get_eth_address_from_hotkey(w3: Web3, contract_address: str, hotkey: str):
     hotkey_bytes32 = bytes.fromhex(pubkey_hex)
     print(f"hotkey_bytes32: {hotkey_bytes32}")
 
-    # Load ABI from the Collateral contract artifact
-    with open('/home/shadeform/datura/celium-collateral-contracts/artifacts/contracts/Collateral.sol/Collateral.json', 'r') as f:
-        artifact = json.load(f)
-    abi = artifact['abi']
-
-    contract = w3.eth.contract(address=contract_address, abi=abi)
+    # Use raw ABI text
+    contract = w3.eth.contract(address=contract_address, abi=COLLATERAL_CONTRACT_ABI)
     eth_address = contract.functions.hotkeyToEthereumAddress(hotkey_bytes32).call()
 
     return eth_address
