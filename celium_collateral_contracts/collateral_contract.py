@@ -14,6 +14,7 @@ from celium_collateral_contracts.slash_collateral import slash_collateral
 from celium_collateral_contracts.get_collaterals import get_deposit_events
 from celium_collateral_contracts.get_reclaim_requests import get_reclaim_process_started_events
 from celium_collateral_contracts.get_eligible_executors import get_eligible_executors
+from celium_collateral_contracts.map_hotkey_to_ethereum import map_hotkey_to_ethereum
 
 
 class CollateralContract:
@@ -123,6 +124,14 @@ class CollateralContract:
         latest_block = self.w3.eth.block_number
         return get_reclaim_process_started_events(self.w3, self.contract_address, latest_block - 100, latest_block)
 
+    def map_hotkey_to_ethereum(self, address, hotkey):
+        """Map a Bittensor hotkey to an Ethereum address."""
+        return map_hotkey_to_ethereum(
+            self.w3,
+            self.contract_address,
+            address,
+            hotkey,
+        )
 
 def main():
     import os
@@ -144,6 +153,20 @@ def main():
     # Check balances
     print("Validator Balance:", contract.get_balance(contract.validator_address))
     print("Miner Balance:", contract.get_balance(contract.miner_address))
+
+    # Map hotkey to Ethereum address
+    hotkey = "5CdjQSjNefhzH71jmekdYDcM9NJm48Rdbx1cQhemfmdb4UQg"
+    ethereum_address = validator_key  # Using the validator key as the Ethereum address
+    print(f"Mapping hotkey {hotkey} to Ethereum address {ethereum_address}...")
+    try:
+        receipt = contract.map_hotkey_to_ethereum(
+            address=contract.validator_account,
+            hotkey=hotkey,
+        )
+        print(f"Transaction status: {'Success' if receipt['status'] == 1 else 'Failed'}")
+        print(f"Gas used: {receipt['gasUsed']}")
+    except Exception as e:
+        print(f"Error mapping hotkey: {e}")
 
     # Deposit collateral
     deposit_tasks = [
