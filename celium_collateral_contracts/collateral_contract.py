@@ -15,7 +15,7 @@ from celium_collateral_contracts.get_collaterals import get_deposit_events
 from celium_collateral_contracts.get_reclaim_requests import get_reclaim_process_started_events
 from celium_collateral_contracts.get_eligible_executors import get_eligible_executors
 from celium_collateral_contracts.map_hotkey_to_ethereum import map_hotkey_to_ethereum
-
+from celium_collateral_contracts.get_eth_address_from_hotkey import get_eth_address_from_hotkey
 
 class CollateralContract:
     def __init__(self, network: str, contract_address: str, validator_keystr=None, miner_keystr=None):
@@ -124,12 +124,20 @@ class CollateralContract:
         latest_block = self.w3.eth.block_number
         return get_reclaim_process_started_events(self.w3, self.contract_address, latest_block - 100, latest_block)
 
-    def map_hotkey_to_ethereum(self, address, hotkey):
+    def map_hotkey_to_ethereum(self, account, hotkey):
         """Map a Bittensor hotkey to an Ethereum address."""
         return map_hotkey_to_ethereum(
             self.w3,
             self.contract_address,
-            address,
+            account,
+            hotkey,
+        )
+
+    def get_eth_address_from_hotkey(self, account, hotkey):
+        """Map a Bittensor hotkey to an Ethereum address."""
+        return get_eth_address_from_hotkey(
+            self.w3,
+            self.contract_address,
             hotkey,
         )
 
@@ -160,13 +168,20 @@ def main():
     print(f"Mapping hotkey {hotkey} to Ethereum address {ethereum_address}...")
     try:
         receipt = contract.map_hotkey_to_ethereum(
-            address=contract.validator_account,
+            account=contract.validator_account,
             hotkey=hotkey,
         )
         print(f"Transaction status: {'Success' if receipt['status'] == 1 else 'Failed'}")
         print(f"Gas used: {receipt['gasUsed']}")
     except Exception as e:
         print(f"Error mapping hotkey: {e}")
+
+    address = contract.get_eth_address_from_hotkey(
+            account=contract.validator_account,
+            hotkey=hotkey,
+        )
+
+    print(f"Ethereum address for hotkey {hotkey}: {address}")
 
     # Deposit collateral
     deposit_tasks = [
