@@ -48,7 +48,7 @@ def get_transferrable_balance(w3: Web3, sender: str, recipient: str):
     
 class TestCollateralContractLifecycle(unittest.TestCase):
     USE_EXISTING_ACCOUNTS = True
-    DEPLOY_CONTRACT = True
+    DEPLOY_CONTRACT = False
 
     # Add a helper to run subprocess commands with a sleep delay
     def run_cmd(self, cmd, env, capture=True, sleep_time=1):
@@ -162,7 +162,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             contract_address = contract_line.split(": ")[-1]
             self.assertTrue(Web3.is_address(contract_address))
         else:
-            contract_address = "0x922f956Ee1B398d5b7BC35282a9cF7145c15b295"
+            contract_address = "0x164F18C584796583709A57311331ce2dD61c7B4c"
 
         print("Deployed Contract Address:", contract_address)
         # === Step 6: Miner Deposits Collateral ===
