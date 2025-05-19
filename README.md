@@ -117,6 +117,7 @@ Refer to the repository's [`scripts/`](/scripts/) folder for sample implementati
     curl -L https://foundry.paradigm.xyz | bash  
     source /home/ubuntu/.bashrc  # Or start a new terminal session
     foundryup
+    forge --version
     ```
   - Clone this repository.
   - Install project dependencies:
@@ -188,13 +189,13 @@ Refer to the repository's [`scripts/`](/scripts/) folder for sample implementati
 Depositing collateral not only demonstrates a miner's commitment to the network and ensures accountability but also enables them to become eligible for mining rewards. The miners who didn't deposit collateral or penalized won't get any rewards.
 
 ### When will a miner's deposit be slashed?
-validator will slash when miner stop rental container. so customer lost SSH access to the rental container;
+Validator will slash when miner stop rental container. so customer lost SSH access to the rental container;
 
 ### When will a miner's reclaim request be declined?
-miner's reclaim request will be declined when his executor is rented by customer in the platform. 
+Miner's reclaim request will be declined when his executor is rented by customer in the platform. 
 
 ### What will happen when a miner's deposit is slashed?
-I think miner will lose deposited amount for violated executor; miner need to deposit for that executor again if they want to keep getting rewards for executor. 
+Miner will lose deposited amount for violated executor; miner need to deposit for that executor again if they want to keep getting rewards for executor. 
 
 ### How can we keep smart contract states during deployment?
 To preserve contract states during deployment, ensure that the contract's storage variables and mappings are migrated correctly. Use tools like `forge` or custom scripts to verify and transfer state data between deployments.
