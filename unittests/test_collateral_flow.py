@@ -162,7 +162,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             contract_address = contract_line.split(": ")[-1]
             self.assertTrue(Web3.is_address(contract_address))
         else:
-            contract_address = "0x164F18C584796583709A57311331ce2dD61c7B4c"
+            contract_address = "0x8911acCB78363B3AD6D955892Ba966eb6869A2e6"
 
         print("Deployed Contract Address:", contract_address)
         # === Step 6: Miner Deposits Collateral ===

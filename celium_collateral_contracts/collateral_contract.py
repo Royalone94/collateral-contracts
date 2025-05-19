@@ -16,6 +16,7 @@ from celium_collateral_contracts.get_reclaim_requests import get_reclaim_process
 from celium_collateral_contracts.get_eligible_executors import get_eligible_executors
 from celium_collateral_contracts.map_hotkey_to_ethereum import map_hotkey_to_ethereum
 from celium_collateral_contracts.get_eth_address_from_hotkey import get_eth_address_from_hotkey
+from celium_collateral_contracts.update_validator_for_miner import update_validator_for_miner
 
 class CollateralContract:
     def __init__(self, network: str, contract_address: str, validator_keystr=None, miner_keystr=None):
@@ -140,14 +141,23 @@ class CollateralContract:
             self.contract_address,
             hotkey,
         )
-
+    
+    def update_validator_for_miner(self, new_validator):
+        return update_validator_for_miner(
+            self.w3,
+            self.miner_account,
+            self.contract_address,
+            self.miner_address,
+            new_validator,
+        )
+         
 def main():
     import os
     import time
 
     # Configuration
     network = "test"
-    contract_address = "0x3512F750a13aF6EF0e62eCD8d4Badf779ea9033f"
+    contract_address = "0x8911acCB78363B3AD6D955892Ba966eb6869A2e6"
     validator_key = "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
     miner_key = "259e0eded00353f71eb6be89d8749ad12bf693cbd8aeb6b80cd3a343c0dc8faf"
 
@@ -177,9 +187,8 @@ def main():
         print(f"Error mapping hotkey: {e}")
 
     address = contract.get_eth_address_from_hotkey(
-            account=contract.validator_account,
-            hotkey=hotkey,
-        )
+        hotkey=hotkey,
+    )
 
     print(f"Ethereum address for hotkey {hotkey}: {address}")
 
@@ -250,6 +259,16 @@ def main():
     # Check transferrable balances
     print("Validator Balance:", contract.get_balance(contract.validator_address))
     print("Miner Balance:", contract.get_balance(contract.miner_address))
+
+    # Update validator for miner
+    new_validator = "0xE1A07A44ac6f8423bA3b734F0cAfC6F87fd385Fc"  # Example new validator address
+    new_validator_checksum = Web3.to_checksum_address(new_validator)
+    print(f"Updating validator for miner to {new_validator_checksum}...")
+    try:
+        update_result = contract.update_validator_for_miner(new_validator_checksum)
+        print("Update Validator Result:", update_result)
+    except Exception as e:
+        print(f"Error updating validator for miner: {e}")
 
     print("✅ Contract lifecycle completed successfully.")
 
