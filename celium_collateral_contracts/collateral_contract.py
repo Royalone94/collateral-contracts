@@ -17,6 +17,7 @@ from celium_collateral_contracts.get_eligible_executors import get_eligible_exec
 from celium_collateral_contracts.map_hotkey_to_ethereum import map_hotkey_to_ethereum
 from celium_collateral_contracts.get_eth_address_from_hotkey import get_eth_address_from_hotkey
 from celium_collateral_contracts.update_validator_for_miner import update_validator_for_miner
+from celium_collateral_contracts.get_validator_of_miner import get_validator_of_miner
 
 class CollateralContract:
     def __init__(self, network: str, contract_address: str, validator_keystr=None, miner_keystr=None):
@@ -150,6 +151,10 @@ class CollateralContract:
             self.miner_address,
             new_validator,
         )
+    
+    def get_validator_of_miner(self):
+        """Retrieve the validator associated with the miner."""
+        return get_validator_of_miner(self.w3, self.contract_address, self.miner_address)
          
 def main():
     import os
@@ -260,15 +265,27 @@ def main():
     print("Validator Balance:", contract.get_balance(contract.validator_address))
     print("Miner Balance:", contract.get_balance(contract.miner_address))
 
-    # Update validator for miner
-    new_validator = "0xE1A07A44ac6f8423bA3b734F0cAfC6F87fd385Fc"  # Example new validator address
-    new_validator_checksum = Web3.to_checksum_address(new_validator)
-    print(f"Updating validator for miner to {new_validator_checksum}...")
     try:
-        update_result = contract.update_validator_for_miner(new_validator_checksum)
+        validator = contract.get_validator_of_miner()
+        print(f"Validator for miner {contract.miner_address}: {validator}")
+    except Exception as e:
+        print(f"Error retrieving validator for miner: {e}")
+
+    # Update validator for miner
+    new_validator = "0x94C54725D6c8500aFf59716F33EdE6AA1FaD86CF"  # Example new validator address
+    print(f"Updating validator for miner to {new_validator}...")
+    try:
+        update_result = contract.update_validator_for_miner(new_validator)
         print("Update Validator Result:", update_result)
     except Exception as e:
         print(f"Error updating validator for miner: {e}")
+
+    # Retrieve and print the validator associated with the miner
+    try:
+        validator = contract.get_validator_of_miner()
+        print(f"Validator for miner {contract.miner_address}: {validator}")
+    except Exception as e:
+        print(f"Error retrieving validator for miner: {e}")
 
     print("✅ Contract lifecycle completed successfully.")
 
