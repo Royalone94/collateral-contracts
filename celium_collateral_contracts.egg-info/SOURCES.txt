@@ -21,6 +21,7 @@ celium_collateral_contracts/get_eth_address_from_hotkey.py
 celium_collateral_contracts/get_hotkey_association.py
 celium_collateral_contracts/get_miners_collateral.py
 celium_collateral_contracts/get_reclaim_requests.py
+celium_collateral_contracts/get_validator_of_miner.py
 celium_collateral_contracts/h160_to_ss58.py
 celium_collateral_contracts/list_contracts.py
 celium_collateral_contracts/map_hotkey_to_ethereum.py
@@ -29,6 +30,7 @@ celium_collateral_contracts/send_to_ss58_precompile.py
 celium_collateral_contracts/setup_evm.py
 celium_collateral_contracts/slash_collateral.py
 celium_collateral_contracts/subtensor.py
+celium_collateral_contracts/update_validator_for_miner.py
 celium_collateral_contracts/verify_contract.py
 celium_collateral_contracts.egg-info/PKG-INFO
 celium_collateral_contracts.egg-info/SOURCES.txt
