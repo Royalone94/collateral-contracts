@@ -112,7 +112,18 @@ Refer to the repository's [`scripts/`](/scripts/) folder for sample implementati
 
 - **Deploy the Contract**
   - Install [Foundry](https://book.getfoundry.sh/).
+    ```bash
+    # Install Forge
+    curl -L https://foundry.paradigm.xyz | bash  
+    source /home/ubuntu/.bashrc  # Or start a new terminal session
+    foundryup
+    ```
   - Clone this repository.
+  - Install project dependencies:
+    ```bash
+    pdm init
+    pdm install
+    ```
   - Compile and deploy the contract, use [`deploy.sh`](/deploy.sh) with your details as arguments.
   - Record the deployed contract address and publish it via a subnet-owner-provided tool so that miners can discover and verify it.
 
