@@ -112,6 +112,7 @@ def main():
     )
     parser.add_argument("--keystr", help="Keystring of the account to use")
     parser.add_argument("--network", default="finney", help="The Subtensor Network to connect to.")
+    parser.add_argument("--executor_uuid", help="Executor UUID")
 
     args = parser.parse_args()
 
