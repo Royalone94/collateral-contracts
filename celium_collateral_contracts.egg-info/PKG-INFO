@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: celium-collateral-contracts
-Version: 1.0.20
+Version: 1.0.21
 Summary: Collateral Smart Contract for Bittensor
 Author-email: Vitali <vitalishvets20@gmail.com>
 License: BSD 3-Clause License
@@ -43,6 +43,7 @@ License-File: LICENSE
 Requires-Dist: web3>=6.0.0
 Requires-Dist: requests>=2.32.3
 Requires-Dist: substrate-interface>=1.7.11
+Requires-Dist: bittensor==9.0.0
 Requires-Dist: bittensor-wallet==3.0.3
 Requires-Dist: eth-utils==2.2.2
 Dynamic: license-file
