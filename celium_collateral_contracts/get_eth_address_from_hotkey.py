@@ -22,9 +22,7 @@ def get_eth_address_from_hotkey(w3: Web3, contract_address: str, hotkey: str):
 
     # Convert hotkey string to bytes32
     pubkey_hex = ss58_decode(hotkey)
-    print(f"pubkey_hex: {pubkey_hex}")
     hotkey_bytes32 = bytes.fromhex(pubkey_hex)
-    print(f"hotkey_bytes32: {hotkey_bytes32}")
 
     # Use raw ABI text
     contract = w3.eth.contract(address=contract_address, abi=COLLATERAL_CONTRACT_ABI)

@@ -59,18 +59,11 @@ def map_hotkey_to_ethereum(w3: Web3, contract_address: str, sender_account: Acco
         }
     ]
     contract = w3.eth.contract(address=contract_address, abi=abi)
-    print("Contract ABI loaded successfully.")
-    print(f"Contract address: {contract_address}")
-    print(f"Hotkey: {hotkey}")
-    print(f"Sender account: {sender_account.address}")  # Ensure sender_account is an Account object
 
     pubkey_hex = ss58_decode(hotkey)
-    print(f"pubkey_hex: {pubkey_hex}")
     hotkey_bytes32 = bytes.fromhex(pubkey_hex)
-    print(f"hotkey_bytes32: {hotkey_bytes32}")
 
     ethereum_address = sender_account.address  # Extract Ethereum address from Account object
-    print(f"Ethereum address: {ethereum_address}")
 
     try:
         tx_hash = build_and_send_transaction(
@@ -79,7 +72,6 @@ def map_hotkey_to_ethereum(w3: Web3, contract_address: str, sender_account: Acco
             sender_account,
             value=0  # Ensure no Ether is sent with the transaction
         )
-        print(f"Transaction hash: {tx_hash.hex()}")
         # Wait for transaction receipt
         receipt = wait_for_receipt(w3, tx_hash)
 
