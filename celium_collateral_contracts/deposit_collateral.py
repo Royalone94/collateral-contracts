@@ -7,7 +7,7 @@ This script allows users to deposit collateral into the Collateral smart contrac
 It handles validation of minimum collateral amounts, trustee verification, and
 executes the deposit transaction on the blockchain.
 """
-
+import asyncio
 import sys
 import argparse
 from web3 import Web3
@@ -89,7 +89,7 @@ async def deposit_collateral(w3, account, amount_tao,
     return deposit_event, receipt
 
 
-def main():
+async def main():
     """Handle command line arguments and execute deposit."""
     parser = argparse.ArgumentParser(
         description="Deposit collateral into the Collateral smart contract"
@@ -106,20 +106,20 @@ def main():
         help="Amount of TAO to deposit"
     )
     parser.add_argument(
-        "--validator_address",
+        "--validator-address",
         required=True,
         help="Expected trustee/validator address to verify"
     )
     parser.add_argument("--keystr", help="Keystring of the account to use")
     parser.add_argument("--network", default="finney", help="The Subtensor Network to connect to.")
-    parser.add_argument("--executor_uuid", help="Executor UUID")
+    parser.add_argument("--executor-uuid", help="Executor UUID")
 
     args = parser.parse_args()
 
     w3 = get_web3_connection(args.network)
     account = get_account(args.keystr)
 
-    deposit_event, receipt = deposit_collateral(
+    deposit_event, receipt = await deposit_collateral(
         w3=w3,
         account=account,
         amount_tao=args.amount_tao,
@@ -138,8 +138,4 @@ def main():
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        print(f"Error: {str(e)}", file=sys.stderr)
-        sys.exit(1)
+    asyncio.run(main())
