@@ -14,8 +14,6 @@ contract Collateral {
 
     mapping(address => mapping(bytes16 => uint256)) public collateralPerExecutor;
 
-    mapping(bytes32 => address) public hotkeyToEthereumAddress;
-
     uint256 private nextReclaimId;
 
     struct Reclaim {
@@ -37,7 +35,6 @@ contract Collateral {
     event Reclaimed(uint256 indexed reclaimRequestId, address indexed account, uint256 amount);
     event Denied(uint256 indexed reclaimRequestId, string url, bytes16 urlContentMd5Checksum);
     event Slashed(address indexed account, uint256 amount, string url, bytes16 urlContentMd5Checksum);
-    event HotkeyMapped(bytes32 indexed hotkey, address indexed ethereumAddress);
     event ValidatorUpdateAttemptFailed(address indexed miner, address indexed caller, address indexed newValidator);
 
     error AmountZero();
@@ -50,7 +47,6 @@ contract Collateral {
     error ReclaimAmountTooSmall();
     error ReclaimNotFound();
     error TransferFailed();
-    error HotkeyAlreadyMapped(bytes32 hotkey, address existingAddress);
 
     /// @notice Initializes a new Collateral contract with specified parameters
     /// @param netuid The netuid of the subnet
@@ -116,18 +112,7 @@ contract Collateral {
 
         emit Deposit(msg.sender, msg.value);
     }
-
-    /// @notice Maps a Bittensor hotkey to an Ethereum address
-    /// @param hotkey The Bittensor hotkey (as bytes32) to map
-    /// @dev Emits a HotkeyMapped event with the hotkey and Ethereum address
-    function mapHotkeyToEthereumAddress(bytes32 hotkey) external {
-        require(hotkey != bytes32(0), "Hotkey must be non-zero");
-
-        hotkeyToEthereumAddress[hotkey] = msg.sender;
-
-        emit HotkeyMapped(hotkey, msg.sender);
-    }
-
+    
     /// @notice Initiates a process to reclaim message sender's collateral from the contract
     /// @dev If it's not denied by the validator, the collateral will be available for withdrawal after DECISION_TIMEOUT
     /// @dev The amount reclaimed must be greater than 0
