@@ -8,6 +8,7 @@ This script updates the validator for a specific miner in the Collateral smart c
 
 import argparse
 import sys
+import asyncio
 from celium_collateral_contracts.common import (
     load_contract_abi,
     get_web3_connection,
@@ -19,7 +20,7 @@ from celium_collateral_contracts.common import (
 )
 
 
-def update_validator_for_miner(w3, account, contract_address, miner_address, new_validator):
+async def update_validator_for_miner(w3, account, contract_address, miner_address, new_validator):
     """Update the validator for a specific miner.
 
     Args:
@@ -39,13 +40,12 @@ def update_validator_for_miner(w3, account, contract_address, miner_address, new
     contract_abi = load_contract_abi()
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
-    tx_hash = build_and_send_transaction(
+    tx_hash = await build_and_send_transaction(
         w3,
         contract.functions.updateValidatorForMiner(miner_address, new_validator),
         account,
     )
-
-    receipt = wait_for_receipt(w3, tx_hash)
+    receipt = await wait_for_receipt(w3, tx_hash)
     if receipt["status"] == 0:
         revert_reason = get_revert_reason(w3, tx_hash, receipt["blockNumber"])
         raise Exception(f"Transaction failed. Revert reason: {revert_reason}")
@@ -53,7 +53,7 @@ def update_validator_for_miner(w3, account, contract_address, miner_address, new
     return receipt
 
 
-def main():
+async def main():
     parser = argparse.ArgumentParser(
         description="Update the validator for a specific miner."
     )
@@ -75,7 +75,7 @@ def main():
     account = get_account(args.keystr)
 
     try:
-        receipt = update_validator_for_miner(
+        receipt = await update_validator_for_miner(
             w3, account, args.contract_address, args.miner_address, args.new_validator
         )
         print(f"Validator updated successfully. Transaction hash: {receipt['transactionHash'].hex()}")
@@ -85,4 +85,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

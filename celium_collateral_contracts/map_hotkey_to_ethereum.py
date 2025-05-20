@@ -34,7 +34,7 @@ def decode_custom_error(data: str) -> str:
     except Exception:
         return f"Unrecognized error data: {data}"
 
-def map_hotkey_to_ethereum(w3: Web3, contract_address: str, sender_account: Account, hotkey: str) -> dict:
+async def map_hotkey_to_ethereum(w3: Web3, contract_address: str, sender_account: Account, hotkey: str) -> dict:
     """
     Map a Bittensor hotkey to an Ethereum address.
 

@@ -28,7 +28,7 @@ class DenyReclaimRequestError(Exception):
     pass
 
 
-def deny_reclaim_request(
+async def deny_reclaim_request(
         w3, account, reclaim_request_id, url, contract_address):
     """Deny a reclaim request on the contract.
 
@@ -54,7 +54,7 @@ def deny_reclaim_request(
         md5_checksum = calculate_md5_checksum(url)
         print(f"MD5 checksum: {md5_checksum}", file=sys.stderr)
 
-    tx_hash = build_and_send_transaction(
+    tx_hash = await build_and_send_transaction(
         w3,
         contract.functions.denyReclaimRequest(
             reclaim_request_id, url, bytes.fromhex(md5_checksum)

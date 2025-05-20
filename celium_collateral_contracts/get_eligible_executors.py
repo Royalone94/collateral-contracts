@@ -10,6 +10,7 @@ with non-zero TAO in collateral and not slashed or penalized) for a given miner.
 import sys
 import argparse
 import uuid  # Add this import for UUID conversion
+import asyncio
 from celium_collateral_contracts.common import (
     load_contract_abi,
     get_web3_connection,
@@ -23,7 +24,7 @@ class GetEligibleExecutorsError(Exception):
     pass
 
 
-def get_eligible_executors(w3, contract_address, miner_address, executor_uuids):
+async def get_eligible_executors(w3, contract_address, miner_address, executor_uuids):
     """Get the list of eligible executors for a miner from the contract.
 
     Args:
@@ -48,7 +49,7 @@ def get_eligible_executors(w3, contract_address, miner_address, executor_uuids):
     executor_uuids_bytes = [uuid.UUID(uuid_str).bytes for uuid_str in executor_uuids]
 
     try:
-        executors = contract.functions.getEligibleExecutors(miner_address, executor_uuids_bytes).call({'gas': 3000000})
+        executors = await contract.functions.getEligibleExecutors(miner_address, executor_uuids_bytes).call({'gas': 3000000})
         # Convert bytes16 to UUID strings
         readable_executors = [str(uuid.UUID(bytes=executor)) for executor in executors]
         return readable_executors
@@ -57,7 +58,7 @@ def get_eligible_executors(w3, contract_address, miner_address, executor_uuids):
         raise GetEligibleExecutorsError(f"Error getting eligible executors for miner {miner_address}: {str(e)}")
 
 
-def main():
+async def main():
     parser = argparse.ArgumentParser(
         description="Get the list of eligible executors for a specific miner on the Collateral contract"
     )
@@ -81,11 +82,11 @@ def main():
 
     try:
         executor_uuids = args.executor_uuids.split(",")  # Keep UUIDs as strings
-        executors = get_eligible_executors(
+        executors = await get_eligible_executors(
             w3=w3,
             contract_address=args.contract_address,
             miner_address=args.miner_address,
-            executor_uuids=executor_uuids,  # Pass UUID strings
+            executor_uuids=executor_uuids,
         )
 
         print(f"Successfully fetched eligible executors for miner {args.miner_address}")
@@ -103,4 +104,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

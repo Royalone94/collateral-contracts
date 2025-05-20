@@ -15,7 +15,7 @@ from celium_collateral_contracts.common import (
 )
 
 
-def get_validator_of_miner(w3, contract_address, miner_address):
+async def get_validator_of_miner(w3, contract_address, miner_address):
     """Retrieve the validator associated with a specific miner.
 
     Args:

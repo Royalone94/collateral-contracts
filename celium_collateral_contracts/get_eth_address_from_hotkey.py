@@ -17,7 +17,7 @@ COLLATERAL_CONTRACT_ABI = [
     }
 ]
 
-def get_eth_address_from_hotkey(w3: Web3, contract_address: str, hotkey: str):
+async def get_eth_address_from_hotkey(w3: Web3, contract_address: str, hotkey: str):
     """Retrieve the Ethereum address mapped to a hotkey."""
 
     # Convert hotkey string to bytes32

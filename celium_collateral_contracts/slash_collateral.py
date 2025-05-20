@@ -22,6 +22,7 @@ from celium_collateral_contracts.common import (
     calculate_md5_checksum,
     get_revert_reason,
 )
+import asyncio
 
 
 class SlashCollateralError(Exception):
@@ -29,7 +30,7 @@ class SlashCollateralError(Exception):
     pass
 
 
-def slash_collateral(
+async def slash_collateral(
     w3,
     account,
     miner_address,
@@ -67,7 +68,7 @@ def slash_collateral(
 
     executor_uuid_bytes = UUID(executor_uuid).bytes
 
-    tx_hash = build_and_send_transaction(
+    tx_hash = await build_and_send_transaction(
         w3,
         contract.functions.slashCollateral(
             miner_address,
@@ -80,7 +81,7 @@ def slash_collateral(
         gas_limit=200000,  # Higher gas limit for this function
     )
 
-    receipt = wait_for_receipt(w3, tx_hash)
+    receipt = await wait_for_receipt(w3, tx_hash)
     if receipt['status'] == 0:
         revert_reason = get_revert_reason(w3, tx_hash, receipt['blockNumber'])
         raise SlashCollateralError(f"Transaction failed for slashing collateral. Revert reason: {revert_reason}")
@@ -89,7 +90,7 @@ def slash_collateral(
     return receipt, slash_event
 
 
-def main():
+async def main():
     parser = argparse.ArgumentParser(
         description="Slash collateral from a miner."
     )
@@ -129,36 +130,35 @@ def main():
     w3 = get_web3_connection(args.network)
     account = get_account(args.keystr)
 
-    receipt, event = slash_collateral(
-        w3,
-        account,
-        args.miner_address,
-        args.amount_tao,
-        args.contract_address,
-        args.url,
-        args.executor_uuid
-    )
+    try:
+        receipt, event = await slash_collateral(
+            w3,
+            account,
+            args.miner_address,
+            args.amount_tao,
+            args.contract_address,
+            args.url,
+            args.executor_uuid
+        )
 
-    print(f"Successfully slashed {args.amount_tao} TAO from {args.miner_address}")
-    print("Event details:")
-    print(f"  Account: {event['args']['account']}")
-    print(
-        f"  Amount: "
-        f"{w3.from_wei(event['args']['amount'], 'ether')} TAO",
-    )
-    print(f"  URL: {event['args']['url']}")
-    print(
-        f"  URL Content MD5: "
-        f"{event['args']['urlContentMd5Checksum'].hex()}",
-    )
-    print(
-        f"  Transaction hash: {receipt['transactionHash'].hex()}")
-    print(f"  Block number: {receipt['blockNumber']}")
+        print(f"Successfully slashed {args.amount_tao} TAO from {args.miner_address}")
+        print("Event details:")
+        print(f"  Account: {event['args']['account']}")
+        print(
+            f"  Amount: "
+            f"{w3.from_wei(event['args']['amount'], 'ether')} TAO",
+        )
+        print(f"  URL: {event['args']['url']}")
+        print(
+            f"  URL Content MD5: "
+            f"{event['args']['urlContentMd5Checksum'].hex()}",
+        )
+        print(
+            f"  Transaction hash: {receipt['transactionHash'].hex()}")
+        print(f"  Block number: {receipt['blockNumber']}")
+    except Exception as e:
+        print(f"Error: {str(e)}", file=sys.stderr)
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        print(f"Error: {str(e)}", file=sys.stderr)
-        sys.exit(1)
+    asyncio.run(main())

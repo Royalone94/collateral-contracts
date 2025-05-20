@@ -21,28 +21,36 @@ from celium_collateral_contracts.get_validator_of_miner import get_validator_of_
 
 class CollateralContract:
     def __init__(self, network: str, contract_address: str, validator_keystr=None, miner_keystr=None):
-        self.w3 = get_web3_connection(network)
+        self.network = network
+        self.contract_address = contract_address
+        self.validator_keystr = validator_keystr
+        self.miner_keystr = miner_keystr
+        self.w3 = None
+        self.validator_account = None
+        self.validator_address = None
+        self.miner_account = None
+        self.miner_address = None
+
+    async def initialize(self):
+        """Asynchronous initialization logic."""
+        self.w3 = await get_web3_connection(self.network)
         try:
-            self.validator_account = get_account(validator_keystr) if validator_keystr else None
+            self.validator_account = await get_account(self.validator_keystr) if self.validator_keystr else None
             self.validator_address = self.validator_account.address if self.validator_account else None
         except Exception as e:
-            self.validator_account = None
-            self.validator_address = None
             print(f"Warning: Failed to initialize validator account. Error: {e}")
 
         try:
-            self.miner_account = get_account(miner_keystr) if miner_keystr else None
+            self.miner_account = await get_account(self.miner_keystr) if self.miner_keystr else None
             self.miner_address = self.miner_account.address if self.miner_account else None
         except Exception as e:
-            self.miner_account = None
-            self.miner_address = None
             print(f"Warning: Failed to initialize miner account. Error: {e}")
 
         self.contract_address = contract_address
 
-    def deposit_collateral(self, amount_tao, executor_uuid):
+    async def deposit_collateral(self, amount_tao, executor_uuid):
         """Deposit collateral into the contract."""
-        return deposit_collateral(
+        return await deposit_collateral(
             self.w3,
             self.miner_account,
             amount_tao,
@@ -51,9 +59,9 @@ class CollateralContract:
             executor_uuid,
         )
 
-    def reclaim_collateral(self, amount_tao, url, executor_uuid):
+    async def reclaim_collateral(self, amount_tao, url, executor_uuid):
         """Initiate reclaiming collateral."""
-        return reclaim_collateral(
+        return await reclaim_collateral(
             self.w3,
             self.miner_account,
             amount_tao,
@@ -62,18 +70,18 @@ class CollateralContract:
             executor_uuid,
         )
 
-    def finalize_reclaim(self, reclaim_request_id):
+    async def finalize_reclaim(self, reclaim_request_id):
         """Finalize a reclaim request."""
-        return finalize_reclaim(
+        return await finalize_reclaim(
             self.w3,
             self.validator_account,
             reclaim_request_id,
             self.contract_address,
         )
 
-    def deny_reclaim_request(self, reclaim_request_id, url):
+    async def deny_reclaim_request(self, reclaim_request_id, url):
         """Deny a reclaim request."""
-        return deny_reclaim_request(
+        return await deny_reclaim_request(
             self.w3,
             self.validator_account,
             reclaim_request_id,
@@ -81,9 +89,9 @@ class CollateralContract:
             self.contract_address,
         )
 
-    def slash_collateral(self, amount_tao, url, executor_uuid):
+    async def slash_collateral(self, amount_tao, url, executor_uuid):
         """Slash collateral from a miner."""
-        return slash_collateral(
+        return await slash_collateral(
             self.w3,
             self.validator_account,
             self.miner_address,
@@ -93,72 +101,75 @@ class CollateralContract:
             executor_uuid,
         )
 
-    def get_miner_collateral(self):
+    async def get_miner_collateral(self):
         """Get the collateral amount for a miner."""
-        return get_miner_collateral(self.w3, self.contract_address, self.miner_address)
+        return await get_miner_collateral(self.w3, self.contract_address, self.miner_address)
 
-    def get_deposit_events(self, block_start, block_end):
+    async def get_deposit_events(self, block_start, block_end):
         """Fetch deposit events within a block range."""
-        return get_deposit_events(
+        return await get_deposit_events(
             self.w3,
             self.contract_address,
             block_start,
             block_end,
         )
 
-    def get_eligible_executors(self, executor_uuids):
+    async def get_eligible_executors(self, executor_uuids):
         """Get the list of eligible executors for a miner."""
-        return get_eligible_executors(
+        return await get_eligible_executors(
             self.w3,
             self.contract_address,
             self.miner_address,
             executor_uuids,
         )
 
-    def get_balance(self, address):
+    async def get_balance(self, address):
         """Get the balance of an Ethereum address."""
         validate_address_format(address)
-        balance = self.w3.eth.get_balance(address)
+        balance = await self.w3.eth.get_balance(address)
         return self.w3.from_wei(balance, "ether")
 
-    def get_reclaim_requests(self):
+    async def get_reclaim_requests(self):
         """Fetch claim requests from the latest 100 blocks."""
-        latest_block = self.w3.eth.block_number
-        return get_reclaim_process_started_events(self.w3, self.contract_address, latest_block - 100, latest_block)
+        latest_block = await self.w3.eth.block_number
+        return await get_reclaim_process_started_events(
+            self.w3, self.contract_address, latest_block - 100, latest_block
+        )
 
-    def map_hotkey_to_ethereum(self, account, hotkey):
+    async def map_hotkey_to_ethereum(self, account, hotkey):
         """Map a Bittensor hotkey to an Ethereum address."""
-        return map_hotkey_to_ethereum(
+        return await map_hotkey_to_ethereum(
             self.w3,
             self.contract_address,
             account,
             hotkey,
         )
 
-    def get_eth_address_from_hotkey(self, hotkey):
+    async def get_eth_address_from_hotkey(self, hotkey):
         """Map a Bittensor hotkey to an Ethereum address."""
-        return get_eth_address_from_hotkey(
+        return await get_eth_address_from_hotkey(
             self.w3,
             self.contract_address,
             hotkey,
         )
-    
-    def update_validator_for_miner(self, new_validator):
-        return update_validator_for_miner(
+
+    async def update_validator_for_miner(self, new_validator):
+        return await update_validator_for_miner(
             self.w3,
             self.miner_account,
             self.contract_address,
             self.miner_address,
             new_validator,
         )
-    
-    def get_validator_of_miner(self):
+
+    async def get_validator_of_miner(self):
         """Retrieve the validator associated with the miner."""
-        return get_validator_of_miner(self.w3, self.contract_address, self.miner_address)
+        return await get_validator_of_miner(self.w3, self.contract_address, self.miner_address)
          
 def main():
     import os
     import time
+    import asyncio
 
     # Configuration
     network = "test"
@@ -168,6 +179,7 @@ def main():
 
     # Initialize CollateralContract instance
     contract = CollateralContract(network, contract_address, validator_key, miner_key)
+    asyncio.run(contract.initialize())
 
     # Verify chain ID
     chain_id = contract.w3.eth.chain_id

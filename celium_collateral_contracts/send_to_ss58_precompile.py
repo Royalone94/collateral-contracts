@@ -10,6 +10,7 @@ the conversion of SS58 addresses to the appropriate format for the precompile.
 
 import argparse
 import sys
+import asyncio
 from web3 import Web3
 from eth_account import Account
 import bittensor.utils
@@ -17,7 +18,7 @@ from celium_collateral_contracts.address_conversion import h160_to_ss58
 from celium_collateral_contracts.common import get_web3_connection, get_account, wait_for_receipt, build_and_send_transaction
 
 
-def send_tao_to_ss58(
+async def send_tao_to_ss58(
     w3: Web3, sender_account: Account, recipient_ss58: str, amount_wei: int
 ) -> dict:
     """
@@ -45,20 +46,18 @@ def send_tao_to_ss58(
     contract = w3.eth.contract(address=contract_address, abi=abi)
     pubkey = ss58_to_pubkey(recipient_ss58)
 
-    tx_hash = build_and_send_transaction(
+    tx_hash = await build_and_send_transaction(
         w3,
         contract.functions.transfer(pubkey),
         sender_account,
         value=amount_wei,
     )
-
-    # Wait for transaction receipt
-    receipt = wait_for_receipt(w3, tx_hash)
+    receipt = await wait_for_receipt(w3, tx_hash)
 
     return receipt
 
 
-def main():
+async def main():
     parser = argparse.ArgumentParser(
         description="Send TAO tokens to an SS58 address using the precompile contract"
     )
@@ -85,22 +84,22 @@ def main():
     account = get_account(args.keystr)
     print(f"Using account: {account.address}")
 
-    receipt = send_tao_to_ss58(
-        w3=w3,
-        sender_account=account,
-        recipient_ss58=args.recipient_ss58_address,
-        amount_wei=args.amount_wei,
-    )
-
-    print(
-        f"Transaction status: {'Success' if receipt['status'] == 1 else 'Failed'}"
-    )
-    print(f"Gas used: {receipt['gasUsed']}")
-
-
-if __name__ == "__main__":
     try:
-        main()
+        receipt = await send_tao_to_ss58(
+            w3=w3,
+            sender_account=account,
+            recipient_ss58=args.recipient_ss58_address,
+            amount_wei=args.amount_wei,
+        )
+
+        print(
+            f"Transaction status: {'Success' if receipt['status'] == 1 else 'Failed'}"
+        )
+        print(f"Gas used: {receipt['gasUsed']}")
     except Exception as e:
         print(f"Error: {str(e)}", file=sys.stderr)
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

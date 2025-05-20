@@ -70,77 +70,80 @@ async def main():
 
     w3 = get_web3_connection(args.network)
 
-    async with bittensor.AsyncSubtensor(
-        network=args.network,
-    ) as subtensor:
-        block = await subtensor.get_current_block()
+    try:
+        async with bittensor.AsyncSubtensor(network=args.network) as subtensor:
+            block = await subtensor.get_current_block()
 
-        stake_threshold, metagraph, commitments, associations = await asyncio.gather(
-            subtensor.query_module(
-                "SubtensorModule",
-                "StakeThreshold",
-                block=block,
-            ),
-            subtensor.metagraph(
-                block=block,
-                netuid=args.netuid,
-            ),
-            subtensor.get_all_commitments(
-                block=block,
-                netuid=args.netuid,
-            ),
-            subtensor.query_map_subtensor(
-                "AssociatedEvmAddress",
-                block=block,
-                params=[args.netuid],
-            ),
-        )
-
-        validators = {
-            hotkey: uid
-            for uid, hotkey, stake in zip(
-                metagraph.uids,
-                metagraph.hotkeys,
-                metagraph.total_stake,
+            stake_threshold, metagraph, commitments, associations = await asyncio.gather(
+                subtensor.query_module(
+                    "SubtensorModule",
+                    "StakeThreshold",
+                    block=block,
+                ),
+                subtensor.metagraph(
+                    block=block,
+                    netuid=args.netuid,
+                ),
+                subtensor.get_all_commitments(
+                    block=block,
+                    netuid=args.netuid,
+                ),
+                subtensor.query_map_subtensor(
+                    "AssociatedEvmAddress",
+                    block=block,
+                    params=[args.netuid],
+                ),
             )
-            if stake >= rao(stake_threshold.value).tao
-        }
-        associations = {
-            uid: bytes(association.value[0][0]).hex()
-            async for uid, association in associations
-        }
 
-        for hotkey, commitment in commitments.items():
-            if hotkey not in validators:
-                continue
-
-            try:
-                evm_address = associations[validators[hotkey]]
-            except KeyError:
-                evm_address = "?"
-
-            try:
-                contract_address = json.loads(commitment)["contract"]["address"]
-            except json.JSONDecodeError:
-                continue
-            except TypeError:
-                continue
-            except KeyError:
-                continue
-
-            print(f"HotKey {hotkey}")
-            print(f"- EVM Address: {evm_address}")
-            print(f"- Contract Address: {contract_address}")
-
-            # collateral checking is a blocking function so we make it optional
-            if args.check_collateral:
-                collateral = get_miner_collateral(
-                    w3,
-                    contract_address,
-                    keypair["address"],
+            validators = {
+                hotkey: uid
+                for uid, hotkey, stake in zip(
+                    metagraph.uids,
+                    metagraph.hotkeys,
+                    metagraph.total_stake,
                 )
+                if stake >= rao(stake_threshold.value).tao
+            }
+            associations = {
+                uid: bytes(association.value[0][0]).hex()
+                async for uid, association in associations
+            }
 
-                print(f"- My Collateral: {w3.from_wei(collateral, 'ether')} TAO")
+            for hotkey, commitment in commitments.items():
+                if hotkey not in validators:
+                    continue
+
+                try:
+                    evm_address = associations[validators[hotkey]]
+                except KeyError:
+                    evm_address = "?"
+
+                try:
+                    contract_address = json.loads(commitment)["contract"]["address"]
+                except json.JSONDecodeError:
+                    continue
+                except TypeError:
+                    continue
+                except KeyError:
+                    continue
+
+                print(f"HotKey {hotkey}")
+                print(f"- EVM Address: {evm_address}")
+                print(f"- Contract Address: {contract_address}")
+
+                # collateral checking is a blocking function so we make it optional
+                if args.check_collateral:
+                    collateral = await get_miner_collateral(
+                        w3,
+                        contract_address,
+                        keypair["address"],
+                    )
+
+                    print(f"- My Collateral: {w3.from_wei(collateral, 'ether')} TAO")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

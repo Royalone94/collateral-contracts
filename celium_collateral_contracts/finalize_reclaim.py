@@ -22,6 +22,7 @@ from celium_collateral_contracts.common import (
 )
 import json
 from web3.exceptions import ContractLogicError
+import asyncio
 
 
 class FinalizeReclaimError(Exception):
@@ -29,7 +30,7 @@ class FinalizeReclaimError(Exception):
     pass
 
 
-def finalize_reclaim(w3, account, reclaim_request_id, contract_address):
+async def finalize_reclaim(w3, account, reclaim_request_id, contract_address):
     """Finalize a reclaim request on the contract.
 
     Args:
@@ -49,13 +50,12 @@ def finalize_reclaim(w3, account, reclaim_request_id, contract_address):
     contract_abi = load_contract_abi()
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
-    tx_hash = build_and_send_transaction(
+    tx_hash = await build_and_send_transaction(
         w3,
         contract.functions.finalizeReclaim(reclaim_request_id),
         account,
     )
-
-    receipt = wait_for_receipt(w3, tx_hash)
+    receipt = await wait_for_receipt(w3, tx_hash)
 
     if receipt['status'] == 0:
         # Try to get revert reason
@@ -66,7 +66,7 @@ def finalize_reclaim(w3, account, reclaim_request_id, contract_address):
     return reclaim_event, receipt
 
 
-def main():
+async def main():
     parser = argparse.ArgumentParser(
         description="Finalize a reclaim request on the Collateral contract"
     )
@@ -84,7 +84,7 @@ def main():
     account = get_account(args.keystr)
 
     try:
-        reclaim_event, receipt = finalize_reclaim(
+        reclaim_event, receipt = await finalize_reclaim(
             w3=w3,
             account=account,
             reclaim_request_id=args.reclaim_request_id,
@@ -108,4 +108,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

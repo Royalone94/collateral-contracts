@@ -30,7 +30,7 @@ class ReclaimProcessStartedEvent:
     executor_uuid: str
 
 
-def get_reclaim_process_started_events(
+async def get_reclaim_process_started_events(
     w3, contract_address, block_num_low, block_num_high
 ):
     """Fetch all ReclaimProcessStarted events emitted by the Collateral contract within a block range.

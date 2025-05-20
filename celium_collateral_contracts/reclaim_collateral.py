@@ -22,6 +22,7 @@ from celium_collateral_contracts.common import (
     calculate_md5_checksum,
     get_revert_reason,
 )
+import asyncio
 
 
 class ReclaimCollateralError(Exception):
@@ -29,7 +30,7 @@ class ReclaimCollateralError(Exception):
     pass
 
 
-def reclaim_collateral(
+async def reclaim_collateral(
     w3,
     account,
     amount_tao,
@@ -67,7 +68,7 @@ def reclaim_collateral(
 
     executor_uuid_bytes = UUID(executor_uuid).bytes
 
-    tx_hash = build_and_send_transaction(
+    tx_hash = await build_and_send_transaction(
         w3,
         contract.functions.reclaimCollateral(
             amount_wei,
@@ -79,7 +80,7 @@ def reclaim_collateral(
         gas_limit=200000,  # Higher gas limit for this function
     )
 
-    receipt = wait_for_receipt(w3, tx_hash)
+    receipt = await wait_for_receipt(w3, tx_hash)
     if receipt['status'] == 0:
         revert_reason = get_revert_reason(w3, tx_hash, receipt['blockNumber'])
         raise ReclaimCollateralError(f"Transaction failed for reclaiming collateral. Revert reason: {revert_reason}")
@@ -90,7 +91,7 @@ def reclaim_collateral(
     return receipt, reclaim_event
 
 
-def main():
+async def main():
     parser = argparse.ArgumentParser(
         description="Initiate the process of reclaiming collateral."
     )
@@ -128,32 +129,32 @@ def main():
     w3 = get_web3_connection(args.network)
     account = get_account(args.keystr)
 
-    receipt, event = reclaim_collateral(
-        w3, account, args.amount_tao, args.contract_address, args.url, args.executor_uuid)
+    try:
+        receipt, event = await reclaim_collateral(
+            w3, account, args.amount_tao, args.contract_address, args.url, args.executor_uuid
+        )
 
-    print(f"Successfully initiated reclaim of {args.amount_tao} TAO")
-    print("Event details:")
-    print(f"  Reclaim ID: {event['args']['reclaimRequestId']}")
-    print(f"  Account: {event['args']['account']}")
-    print(
-        f"  Amount: "
-        f"{w3.from_wei(event['args']['amount'], 'ether')} TAO",
-    )
-    print(
-        f"  Expiration Time: {event['args']['expirationTime']}")
-    print(f"  URL: {event['args']['url']}")
-    print(
-        f"  URL Content MD5: "
-        f"{event['args']['urlContentMd5Checksum'].hex()}",
-    )
-    print(
-        f"  Transaction hash: {receipt['transactionHash'].hex()}")
-    print(f"  Block number: {receipt['blockNumber']}")
+        print(f"Successfully initiated reclaim of {args.amount_tao} TAO")
+        print("Event details:")
+        print(f"  Reclaim ID: {event['args']['reclaimRequestId']}")
+        print(f"  Account: {event['args']['account']}")
+        print(
+            f"  Amount: "
+            f"{w3.from_wei(event['args']['amount'], 'ether')} TAO",
+        )
+        print(
+            f"  Expiration Time: {event['args']['expirationTime']}")
+        print(f"  URL: {event['args']['url']}")
+        print(
+            f"  URL Content MD5: "
+            f"{event['args']['urlContentMd5Checksum'].hex()}",
+        )
+        print(
+            f"  Transaction hash: {receipt['transactionHash'].hex()}")
+        print(f"  Block number: {receipt['blockNumber']}")
+    except Exception as e:
+        print(f"Error during collateral reclaim: {str(e)}", file=sys.stderr)
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        print(f"Error: {str(e)}", file=sys.stderr)
-        sys.exit(1)
+    asyncio.run(main())

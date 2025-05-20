@@ -4,6 +4,7 @@ import os
 import pathlib
 import subprocess
 import sys
+import asyncio
 
 import bittensor
 import bittensor.utils
@@ -16,7 +17,7 @@ DENY_TIMEOUT = 3 * 24 * 60 * 60  # 3 days
 MIN_COLLATERAL_INCREASE = 10000000000000  # 0.01 TAO
 
 
-def main():
+async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--amount-tao",
@@ -109,10 +110,10 @@ def main():
             print(f"File {e.filename} already exists. Use --overwrite or --reuse.", file=sys.stderr)
             sys.exit(1)
 
-    with bittensor.Subtensor(
+    async with bittensor.AsyncSubtensor(
         network=network_url,
     ) as subtensor:
-        success, error = associate_evm_key(
+        success, error = await associate_evm_key(
             subtensor,
             wallet,
             keypair["private_key"],
@@ -187,4 +188,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

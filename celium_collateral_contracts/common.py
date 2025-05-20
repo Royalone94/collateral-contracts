@@ -38,19 +38,19 @@ RPC_URLS = {
 }
 
 
-def get_web3_connection(network: str) -> Web3:
+async def get_web3_connection(network: str) -> Web3:
     """Get Web3 connection for the specified network."""
     if network in RPC_URLS:
         network_url = RPC_URLS[network]
     else:
-        _, network_url = bittensor.utils.determine_chain_endpoint_and_network(network)
+        _, network_url = await bittensor.utils.determine_chain_endpoint_and_network(network)
     w3 = Web3(web3.providers.auto.load_provider_from_uri(URI(network_url)))
     if not w3.is_connected():
         raise ConnectionError("Failed to connect to the network")
     return w3
 
 
-def get_account(keystr=None):
+async def get_account(keystr=None):
     """Get the account from the keyfile or PRIVATE_KEY environment variable."""
     if keystr:
         private_key = keystr
@@ -67,7 +67,7 @@ def validate_address_format(address):
         raise ValueError("Invalid address")
 
 
-def build_and_send_transaction(
+async def build_and_send_transaction(
     w3, function_call, account, gas_limit=100000, value=0
 ):
     """Build, sign and send a transaction.
@@ -82,24 +82,24 @@ def build_and_send_transaction(
     transaction = function_call.build_transaction(
         {
             "from": account.address,
-            "nonce": w3.eth.get_transaction_count(account.address),
+            "nonce": await w3.eth.get_transaction_count(account.address),
             "gas": gas_limit,
-            "gasPrice": w3.eth.gas_price,
-            "chainId": w3.eth.chain_id,
+            "gasPrice": await w3.eth.gas_price,
+            "chainId": await w3.eth.chain_id,
             "value": value,
         }
     )
 
     signed_txn = w3.eth.account.sign_transaction(transaction, account.key)
 
-    tx_hash = w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+    tx_hash = await w3.eth.send_raw_transaction(signed_txn.rawTransaction)
     print(f"Transaction sent: {tx_hash.hex()}", file=sys.stderr)
     return tx_hash
 
 
-def wait_for_receipt(w3, tx_hash, timeout=300, poll_latency=2):
+async def wait_for_receipt(w3, tx_hash, timeout=300, poll_latency=2):
     """Wait for transaction receipt and return it."""
-    return w3.eth.wait_for_transaction_receipt(tx_hash, timeout, poll_latency)
+    return await w3.eth.wait_for_transaction_receipt(tx_hash, timeout, poll_latency)
 
 
 def calculate_md5_checksum(url):
@@ -119,7 +119,7 @@ def calculate_md5_checksum(url):
     return hashlib.md5(response.content).hexdigest()
 
 
-def get_miner_collateral(w3, contract_address, miner_address):
+async def get_miner_collateral(w3, contract_address, miner_address):
     """Query the collateral amount for a given miner address.
 
     Args:
@@ -136,7 +136,7 @@ def get_miner_collateral(w3, contract_address, miner_address):
     contract_abi = load_contract_abi()
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
-    return contract.functions.collaterals(miner_address).call()
+    return await contract.functions.collaterals(miner_address).call()
 
 
 def get_revert_reason(w3, tx_hash, block_number):
@@ -170,7 +170,7 @@ def get_revert_reason(w3, tx_hash, block_number):
     return "Could not parse error"
 
 
-def get_evm_key_associations(
+async def get_evm_key_associations(
     subtensor: bittensor.Subtensor, netuid: int, block: int | None = None
 ) -> dict[int, str]:
     """
@@ -184,7 +184,7 @@ def get_evm_key_associations(
     Returns:
         dict: A dictionary mapping UIDs (int) to their associated EVM key addresses (str).
     """
-    associations = subtensor.query_map_subtensor(
+    associations = await subtensor.query_map_subtensor(
         "AssociatedEvmAddress", block=block, params=[netuid]
     )
     uid_evm_address_map = {}

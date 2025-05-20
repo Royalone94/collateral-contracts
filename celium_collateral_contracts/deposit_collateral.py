@@ -50,8 +50,8 @@ def verify_trustee(contract, expected_trustee):
         )
 
 
-def deposit_collateral(w3, account, amount_tao,
-                       contract_address, validator_address, executor_uuid):
+async def deposit_collateral(w3, account, amount_tao,
+                             contract_address, validator_address, executor_uuid):
     """Deposit collateral into the contract.
 
     Args:

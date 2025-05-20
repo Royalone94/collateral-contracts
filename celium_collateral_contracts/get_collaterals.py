@@ -25,7 +25,7 @@ class DepositEvent:
     transaction_hash: str
 
 
-def get_deposit_events(w3, contract_address, block_num_low, block_num_high):
+async def get_deposit_events(w3, contract_address, block_num_low, block_num_high):
     """Fetch all Deposit events emitted by the Collateral contract within a block range.
 
     Args:
