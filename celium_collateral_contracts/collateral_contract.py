@@ -192,6 +192,10 @@ async def main():
         print(f"Depositing collateral for executor {uuid_str}...")
         await contract.deposit_collateral(amount, uuid_str)
 
+    collateral = await contract.get_miner_collateral()
+    collateral_in_tao = contract.w3.from_wei(collateral, "ether")
+    print("[COLLATERAL]:", collateral_in_tao)
+
     for uuid_str, amount in deposit_tasks:
         print(f"Reclaiming collateral for executor {uuid_str}...")
         await contract.reclaim_collateral(amount, f"Reclaim collateral from executor: {uuid_str}", uuid_str)
@@ -202,9 +206,12 @@ async def main():
 
     for reclaim_event in reclaim_requests:
         reclaim_request_id = getattr(reclaim_event, "reclaim_request_id", None)
-        print("reclaim_request_id", reclaim_request_id)
+        print("Reclaim Request Id:", reclaim_request_id)
         if reclaim_request_id is not None:
-            await contract.deny_reclaim_request(reclaim_request_id, "not good")
+            try:
+                await contract.finalize_reclaim(reclaim_request_id)
+            except Exception as e:
+                print("Reclaim Error:", str(e))
 
     for uuid_str, amount in deposit_tasks:
         print(f"Slashing collateral for executor {uuid_str}...")
