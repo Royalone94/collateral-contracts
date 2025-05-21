@@ -29,6 +29,38 @@ class ReclaimProcessStartedEvent:
     block_number: int
     executor_uuid: str
 
+def get_next_reclaim_id(w3, contract_address):
+    contract_abi = load_contract_abi()
+
+    contract = w3.eth.contract(address=contract_address, abi=contract_abi)
+    # Option 1: Use the last ReclaimProcessStarted event's reclaimRequestId
+    event_filter = contract.events.ReclaimProcessStarted.create_filter(fromBlock=0)
+    events = event_filter.get_all_entries()
+    print("get_next_reclaim_id events", events)
+    if not events:
+        return 0
+    return max(e['args']['reclaimRequestId'] for e in events)
+
+# Get all reclaim requests
+def get_all_reclaims(w3, contract_address):
+    contract_abi = load_contract_abi()
+
+    contract = w3.eth.contract(address=contract_address, abi=contract_abi)
+    next_reclaim_id = get_next_reclaim_id(w3, contract_address)
+    print("next_reclaim_id", next_reclaim_id)
+    reclaims = []
+    for reclaim_id in range(1, next_reclaim_id + 1):
+        reclaim = contract.functions.reclaims(reclaim_id).call()
+        # reclaim is a tuple: (miner, amount, denyTimeout, executorUuid)
+        if reclaim[1] > 0:  # amount > 0 means valid reclaim
+            reclaims.append({
+                'reclaim_id': reclaim_id,
+                'miner': reclaim[0],
+                'amount': reclaim[1],
+                'denyTimeout': reclaim[2],
+                'executorUuid': reclaim[3].hex()
+            })
+    return reclaims
 
 async def get_reclaim_process_started_events(
     w3, contract_address, block_num_low, block_num_high
@@ -64,6 +96,8 @@ async def get_reclaim_process_started_events(
         ]
     }
     logs = w3.eth.get_logs(filter_params)
+
+    get_all_reclaims(w3, contract_address)
 
     def get_reclaim_by_id(reclaim_id):
         """Fetch reclaim information using reclaim_id."""

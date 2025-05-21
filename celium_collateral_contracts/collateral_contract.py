@@ -14,6 +14,7 @@ from celium_collateral_contracts.deny_request import deny_reclaim_request
 from celium_collateral_contracts.slash_collateral import slash_collateral
 from celium_collateral_contracts.get_collaterals import get_deposit_events
 from celium_collateral_contracts.get_reclaim_requests import get_reclaim_process_started_events
+from celium_collateral_contracts.get_reclaim_requests import get_next_reclaim_id
 from celium_collateral_contracts.get_eligible_executors import get_eligible_executors
 from celium_collateral_contracts.update_validator_for_miner import update_validator_for_miner
 from celium_collateral_contracts.get_validator_of_miner import get_validator_of_miner
@@ -122,9 +123,9 @@ class CollateralContract:
 
     async def get_reclaim_requests(self):
         """Fetch claim requests from the latest 100 blocks."""
-        latest_block = await self.w3.eth.block_number
+        latest_block = self.w3.eth.block_number
         return await get_reclaim_process_started_events(
-            self.w3, self.contract_address, latest_block - 100, latest_block
+            self.w3, self.contract_address, latest_block-1000, latest_block
         )
 
     async def update_validator_for_miner(self, new_validator):
@@ -139,7 +140,10 @@ class CollateralContract:
     async def get_validator_of_miner(self):
         """Retrieve the validator associated with the miner."""
         return await get_validator_of_miner(self.w3, self.contract_address, self.miner_address)
-         
+        
+    async def get_latest_reclaim_id(self):
+        """Retrieve the validator associated with the miner."""
+        return get_next_reclaim_id(self.w3, self.contract_address)
 
 async def main():
     import os
@@ -154,6 +158,7 @@ async def main():
     # Initialize CollateralContract instance
     contract = CollateralContract(network, contract_address, validator_key, miner_key)
 
+    print("Validator address:", contract.validator_address)
     # Verify chain ID
     chain_id = contract.w3.eth.chain_id
     print(f"Verified chain ID: {chain_id}")
@@ -187,6 +192,24 @@ async def main():
         print(f"Depositing collateral for executor {uuid_str}...")
         await contract.deposit_collateral(amount, uuid_str)
 
+    for uuid_str, amount in deposit_tasks:
+        print(f"Reclaiming collateral for executor {uuid_str}...")
+        await contract.reclaim_collateral(amount, f"Reclaim collateral from executor: {uuid_str}", uuid_str)
+
+    latest_reclaim_id = await contract.get_latest_reclaim_id()
+ 
+    reclaim_requests = await contract.get_reclaim_requests()
+
+    for reclaim_event in reclaim_requests:
+        reclaim_request_id = getattr(reclaim_event, "reclaim_request_id", None)
+        print("reclaim_request_id", reclaim_request_id)
+        if reclaim_request_id is not None:
+            await contract.deny_reclaim_request(reclaim_request_id, "not good")
+
+    for uuid_str, amount in deposit_tasks:
+        print(f"Slashing collateral for executor {uuid_str}...")
+        await contract.slash_collateral(amount, "slashit", uuid_str)
+
     # Verify collateral
     collateral = await contract.get_miner_collateral()
     collateral_in_tao = contract.w3.from_wei(collateral, "ether")
@@ -196,12 +219,6 @@ async def main():
     executor_uuids = [uuid for uuid, _ in deposit_tasks]
     eligible_executors = await contract.get_eligible_executors(executor_uuids)
     print("Eligible Executors:", eligible_executors)
-
-    # Reclaim collateral example (uncomment to use)
-    # reclaim_uuid = "72a1d228-3c8c-45cb-8b84-980071592589"
-    # print("Reclaiming collateral...")
-    # reclaim_result = await contract.reclaim_collateral(0.00001, "please gimme money back", reclaim_uuid)
-    # print("Reclaim Result:", reclaim_result)
 
     # Final collateral check
     final_collateral = await contract.get_miner_collateral()
@@ -222,7 +239,9 @@ async def main():
         print(f"Error retrieving validator for miner: {e}")
 
     # Update validator
-    new_validator = "0x94C54725D6c8500aFf59716F33EdE6AA1FaD86CF"
+    # new_validator = "0x94C54725D6c8500aFf59716F33EdE6AA1FaD86CF"
+    new_validator = "0xE1A07A44ac6f8423bA3b734F0cAfC6F87fd385Fc"
+    
     print(f"Updating validator for miner to {new_validator}...")
     try:
         update_result = await contract.update_validator_for_miner(new_validator)
