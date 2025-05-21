@@ -116,7 +116,7 @@ async def main():
         help="URL containing information about the slash"
     )
     parser.add_argument(
-        "--executor_uuid",
+        "--executor-uuid",
         help="Executor UUID for the slashing operation"
     )
     parser.add_argument("--keystr", help="Keystring of the account to use")

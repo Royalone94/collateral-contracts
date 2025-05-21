@@ -282,7 +282,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 [
                     "python", reclaim_collateral_script,
                     "--contract-address", contract_address,
-                    "--amount-tao", "0.001",
+                    "--amount-tao", '"0.001"',
                     "--keystr", miner_key,
                     "--url", f"Reclaiming for executor {uuid_str}",
                     "--executor-uuid", uuid_str,
@@ -293,7 +293,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             print(
                 f'python {reclaim_collateral_script} '
                 f'--contract-address {contract_address} '
-                f'--amount-tao 0.001 '
+                f'--amount-tao "0.001" '
                 f'--keystr {miner_key} '
                 f'--url "Reclaiming for executor {uuid_str}" '
                 f'--executor-uuid {uuid_str} '
