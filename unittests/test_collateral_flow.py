@@ -58,8 +58,10 @@ class TestCollateralContractLifecycle(unittest.TestCase):
 
     def setUp(self):
         # Use the local RPC URL here
-        self.RPC_URL = "https://test.finney.opentensor.ai"
-        # self.RPC_URL = "http://127.0.0.1:8545"
+        # self.RPC_URL = "https://test.finney.opentensor.ai"
+        self.network = "test"
+        self.RPC_URL = "http://127.0.0.1:9944"
+        self.network = "local"
         self.w3 = Web3(Web3.HTTPProvider(self.RPC_URL))
         self.assertTrue(self.w3.is_connected(), "Cannot connect to Bittensor RPC")
         print("Connected to Bittensor RPC")
@@ -113,7 +115,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             print("Miner Key:", miner_key)
 
             # === Step 3: Fund Validator ===
-            subprocess.run(["btcli", "w", "transfer", "--network", "test", "--dest", validator_ss58, "--amount", "0.5"])
+            subprocess.run(["btcli", "w", "transfer", "--network", self.network, "--dest", validator_ss58, "--amount", "0.5"])
             time.sleep(3)
 
             chain_id = self.w3.eth.chain_id
@@ -131,7 +133,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 raise ValueError("DEPLOYER_PRIVATE_KEY environment variable not set.")
             
             # === Step 5: Fund Miner ===
-            subprocess.run(["btcli", "w", "transfer", "--network", "test", "--dest", miner_ss58, "--amount", "3.5"])
+            subprocess.run(["btcli", "w", "transfer", "--network", self.network, "--dest", miner_ss58, "--amount", "3.5"])
             time.sleep(3)
             self.assertGreater(self.w3.eth.get_balance(miner_address), 0, "Miner not funded")
 
@@ -157,12 +159,20 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 ],
                 capture_output=True, text=True
             )
+            print(
+                f'forge create src/Collateral.sol:Collateral '
+                f'--broadcast '
+                f'--rpc-url {self.RPC_URL} '
+                f'--private-key {miner_key} '
+                f'--constructor-args {netuid} {min_collateral_increase} {deny_timeout}'
+            )
+
             self.assertIn("Deployed to:", deploy_result.stdout, deploy_result.stderr)
             contract_line = [line for line in deploy_result.stdout.splitlines() if "Deployed to:" in line][0]
             contract_address = contract_line.split(": ")[-1]
             self.assertTrue(Web3.is_address(contract_address))
         else:
-            contract_address = "0x8911acCB78363B3AD6D955892Ba966eb6869A2e6"
+            contract_address = "0x484822428493FdCbFEcfa2dBBcDd787880549725"
 
         print("Deployed Contract Address:", contract_address)
         # === Step 6: Miner Deposits Collateral ===
@@ -185,20 +195,22 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             ("af3f1b82-ff98-44c8-b130-d948a2a56b44", False),
             ("ee3002d9-71f8-4a83-881d-48bd21b6bdd1", False),
         ]
-        # for uuid_str, capture_output in deposit_tasks:
-        #     print(f"Starting deposit collateral for executor {uuid_str}...")
-        #     result = self.run_cmd(
-        #         [
-        #             "python", deposit_script,
-        #             "--contract-address", contract_address,
-        #             "--amount-tao", "0.0001",
-        #             "--validator-address", validator_address,
-        #             "--executor-uuid", uuid_str
-        #         ],
-        #         env=env, capture=capture_output
-        #     )
-        #     if capture_output:
-        #         print(result.stdout.strip())
+        for uuid_str, capture_output in deposit_tasks:
+            print(f"Starting deposit collateral for executor {uuid_str}...")
+            result = self.run_cmd(
+                [
+                    "python", deposit_script,
+                    "--contract-address", contract_address,
+                    "--amount-tao", "0.001",
+                    "--validator-address", validator_address,
+                    "--keystr", miner_key,
+                    "--network", self.network,
+                    "--executor-uuid", uuid_str
+                ],
+                env=env, capture=capture_output
+            )
+            if capture_output:
+                print(result.stdout.strip())
 
         # === Step 7: Verify Collateral ===
         check = self.run_cmd(
@@ -206,7 +218,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 "python", get_miners_collateral_script,
                 "--contract-address", contract_address,
                 "--miner-address", miner_address,
-                "--network", "test"
+                "--network", self.network
             ],
             capture=True, env=env
         )
@@ -229,7 +241,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 "--contract-address", contract_address,
                 "--miner-address", miner_address,
                 "--executor-uuids", executor_uuids_str,
-                "--network", "test"
+                "--network", self.network
             ],
             capture=True,
             env=env
@@ -251,7 +263,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 "--amount-tao", "0.00001",
                 "--reason", "please gimme money back",
                 "--executor-uuid", "72a1d228-3c8c-45cb-8b84-980071592589",
-                "--network", "test"
+                "--network", self.network
             ],
             env=env
         )
@@ -267,7 +279,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 "--contract-address", contract_address,
                 "--start-block", str(latest_block - 10),
                 "--end-block", str(latest_block + 10),
-                "--network", "test"
+                "--network", self.network
             ],
             env=env
         )
@@ -283,7 +295,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 "--contract-address", contract_address,
                 "--reclaim-id", str(deny_reclaim_id),
                 "--reason", "no, i will not",
-                "--network", "test"
+                "--network", self.network
             ],
             env=env
         )
@@ -296,7 +308,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 "python", finalize_reclaim_script,
                 "--contract-address", contract_address,
                 "--reclaim-id", str(finalize_reclaim_id),
-                "--network", "test"
+                "--network", self.network
             ],
             env=env
         )
@@ -307,7 +319,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 "python", get_miners_collateral_script,
                 "--contract-address", contract_address,
                 "--miner-address", miner_address,
-                "--network", "test"
+                "--network", self.network
             ],
             capture=True, env=env
         )
