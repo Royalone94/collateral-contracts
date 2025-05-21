@@ -80,7 +80,7 @@ async def reclaim_collateral(
         gas_limit=200000,  # Higher gas limit for this function
     )
 
-    receipt = await wait_for_receipt(w3, tx_hash)
+    receipt = wait_for_receipt(w3, tx_hash)
     if receipt['status'] == 0:
         revert_reason = get_revert_reason(w3, tx_hash, receipt['blockNumber'])
         raise ReclaimCollateralError(f"Transaction failed for reclaiming collateral. Revert reason: {revert_reason}")
@@ -118,7 +118,7 @@ async def main():
         help="The Subtensor Network to connect to.",
     )
     parser.add_argument(
-        "--executor_uuid",
+        "--executor-uuid",
         help="Executor UUID for the reclaim operation"
     )
 

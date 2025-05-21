@@ -133,7 +133,7 @@ async def main():
 
                 # collateral checking is a blocking function so we make it optional
                 if args.check_collateral:
-                    collateral = await get_miner_collateral(
+                    collateral = get_miner_collateral(
                         w3,
                         contract_address,
                         keypair["address"],

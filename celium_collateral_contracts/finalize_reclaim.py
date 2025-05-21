@@ -55,7 +55,7 @@ async def finalize_reclaim(w3, account, reclaim_request_id, contract_address):
         contract.functions.finalizeReclaim(reclaim_request_id),
         account,
     )
-    receipt = await wait_for_receipt(w3, tx_hash)
+    receipt = wait_for_receipt(w3, tx_hash)
 
     if receipt['status'] == 0:
         # Try to get revert reason

@@ -52,7 +52,7 @@ async def send_tao_to_ss58(
         sender_account,
         value=amount_wei,
     )
-    receipt = await wait_for_receipt(w3, tx_hash)
+    receipt = wait_for_receipt(w3, tx_hash)
 
     return receipt
 

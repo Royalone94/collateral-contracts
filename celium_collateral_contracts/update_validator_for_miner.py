@@ -45,7 +45,7 @@ async def update_validator_for_miner(w3, account, contract_address, miner_addres
         contract.functions.updateValidatorForMiner(miner_address, new_validator),
         account,
     )
-    receipt = await wait_for_receipt(w3, tx_hash)
+    receipt = wait_for_receipt(w3, tx_hash)
     if receipt["status"] == 0:
         revert_reason = get_revert_reason(w3, tx_hash, receipt["blockNumber"])
         raise Exception(f"Transaction failed. Revert reason: {revert_reason}")

@@ -256,18 +256,31 @@ class TestCollateralContractLifecycle(unittest.TestCase):
 
         # === Step 9: Miner Reclaims Collateral ===
         print("Starting reclaim collateral...")
-        result = self.run_cmd(
-            [
-                "python", reclaim_collateral_script,
-                "--contract-address", contract_address,
-                "--amount-tao", "0.00001",
-                "--reason", "please gimme money back",
-                "--executor-uuid", "72a1d228-3c8c-45cb-8b84-980071592589",
-                "--network", self.network
-            ],
-            env=env
-        )
-        print("Reclaim Result: ", result.stdout.strip())
+        for uuid_str, _ in deposit_tasks:
+            print(f"Reclaiming collateral for executor UUID: {uuid_str}")
+            result = self.run_cmd(
+                [
+                    "python", reclaim_collateral_script,
+                    "--contract-address", contract_address,
+                    "--amount-tao", "0.001",
+                    "--keystr", miner_key,
+                    "--url", f"Reclaiming for executor {uuid_str}",
+                    "--executor-uuid", uuid_str,
+                    "--network", self.network
+                ],
+                env=env
+            )
+            print(
+                f'python {reclaim_collateral_script} '
+                f'--contract-address {contract_address} '
+                f'--amount-tao 0.001 '
+                f'--keystr {miner_key} '
+                f'--url "Reclaiming for executor {uuid_str}" '
+                f'--executor-uuid {uuid_str} '
+                f'--network {self.network}'
+            )
+
+            print("Reclaim Result:", result.stdout.strip())
 
         # === Step 10: Validator Checks Requests ===
         latest_block = self.w3.eth.block_number
@@ -277,7 +290,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             [
                 "python", get_reclaim_requests_script,
                 "--contract-address", contract_address,
-                "--start-block", str(latest_block - 10),
+                "--start-block", str(latest_block - 100),
                 "--end-block", str(latest_block + 10),
                 "--network", self.network
             ],

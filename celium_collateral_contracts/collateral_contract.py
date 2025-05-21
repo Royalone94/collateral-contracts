@@ -20,29 +20,21 @@ from celium_collateral_contracts.get_validator_of_miner import get_validator_of_
 
 class CollateralContract:
     def __init__(self, network: str, contract_address: str, validator_keystr=None, miner_keystr=None):
-        self.network = network
-        self.contract_address = contract_address
-        self.validator_keystr = validator_keystr
-        self.miner_keystr = miner_keystr
-        self.w3 = None
-        self.validator_account = None
-        self.validator_address = None
-        self.miner_account = None
-        self.miner_address = None
-
-    async def initialize(self):
-        """Asynchronous initialization logic."""
-        self.w3 = await get_web3_connection(self.network)
+        self.w3 = get_web3_connection(network)
         try:
-            self.validator_account = await get_account(self.validator_keystr) if self.validator_keystr else None
+            self.validator_account = get_account(validator_keystr) if validator_keystr else None
             self.validator_address = self.validator_account.address if self.validator_account else None
         except Exception as e:
+            self.validator_account = None
+            self.validator_address = None
             print(f"Warning: Failed to initialize validator account. Error: {e}")
 
         try:
-            self.miner_account = await get_account(self.miner_keystr) if self.miner_keystr else None
+            self.miner_account = get_account(miner_keystr) if miner_keystr else None
             self.miner_address = self.miner_account.address if self.miner_account else None
         except Exception as e:
+            self.miner_account = None
+            self.miner_address = None
             print(f"Warning: Failed to initialize miner account. Error: {e}")
 
         self.contract_address = contract_address
@@ -102,7 +94,7 @@ class CollateralContract:
 
     async def get_miner_collateral(self):
         """Get the collateral amount for a miner."""
-        return await get_miner_collateral(self.w3, self.contract_address, self.miner_address)
+        return get_miner_collateral(self.w3, self.contract_address, self.miner_address)
 
     async def get_deposit_events(self, block_start, block_end):
         """Fetch deposit events within a block range."""
@@ -161,10 +153,9 @@ async def main():
 
     # Initialize CollateralContract instance
     contract = CollateralContract(network, contract_address, validator_key, miner_key)
-    await contract.initialize()
 
     # Verify chain ID
-    chain_id = await contract.w3.eth.chain_id
+    chain_id = contract.w3.eth.chain_id
     print(f"Verified chain ID: {chain_id}")
 
     # Check balances

@@ -81,7 +81,7 @@ async def slash_collateral(
         gas_limit=200000,  # Higher gas limit for this function
     )
 
-    receipt = await wait_for_receipt(w3, tx_hash)
+    receipt = wait_for_receipt(w3, tx_hash)
     if receipt['status'] == 0:
         revert_reason = get_revert_reason(w3, tx_hash, receipt['blockNumber'])
         raise SlashCollateralError(f"Transaction failed for slashing collateral. Revert reason: {revert_reason}")
