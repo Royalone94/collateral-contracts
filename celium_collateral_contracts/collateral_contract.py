@@ -117,7 +117,7 @@ class CollateralContract:
     async def get_balance(self, address):
         """Get the balance of an Ethereum address."""
         validate_address_format(address)
-        balance = await self.w3.eth.get_balance(address)
+        balance = self.w3.eth.get_balance(address)
         return self.w3.from_wei(balance, "ether")
 
     async def get_reclaim_requests(self):
@@ -146,8 +146,8 @@ async def main():
     import time
 
     # Configuration
-    network = "test"
-    contract_address = "0x8911acCB78363B3AD6D955892Ba966eb6869A2e6"
+    network = "local"
+    contract_address = "0x484822428493FdCbFEcfa2dBBcDd787880549725"
     validator_key = "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
     miner_key = "259e0eded00353f71eb6be89d8749ad12bf693cbd8aeb6b80cd3a343c0dc8faf"
 
@@ -166,26 +166,26 @@ async def main():
 
     # Deposit collateral (optional: uncomment to use)
     deposit_tasks = [
-        ("3a5ce92a-a066-45f7-b07d-58b3b7986464", 0.0005),
-        ("72a1d228-3c8c-45cb-8b84-980071592589", 0.0005),
-        ("15c2ff27-0a4d-4987-bbc9-fa009ef9f7d2", 0.0005),
-        ("335453ad-246c-4ad5-809e-e2013ca6c07e", 0.0005),
-        ("89c66519-244f-4db0-b4a7-756014d6fd24", 0.0005),
-        ("af3f1b82-ff98-44c8-b130-d948a2a56b44", 0.0005),
-        ("ee3002d9-71f8-4a83-881d-48bd21b6bdd1", 0.0005),
-        ("4f42de60-3a41-4d76-9a19-d6d2644eb57f", 0.0005),
-        ("7ac4184e-e84f-40cb-b6a0-9cf79a1a573c", 0.0005),
-        ("9d14f803-dc8c-405f-99b5-80f12207d4e5", 0.0005),
-        ("2a61e295-fd0f-4568-b01c-1c38c21573ac", 0.0005),
-        ("e7fd0b3f-4a42-4a5d-bda6-8e2f4b5cb92a", 0.0005),
-        ("f2c2a71d-5c44-4ab9-a87e-0ac1f278b6d6", 0.0005),
-        ("1ec29b47-3d6b-4cc3-b71d-6c97fcbf1e89", 0.0005),
+        ("3a5ce92a-a066-45f7-b07d-58b3b7986464", 0.005),
+        ("72a1d228-3c8c-45cb-8b84-980071592589", 0.005),
+        ("15c2ff27-0a4d-4987-bbc9-fa009ef9f7d2", 0.005),
+        ("335453ad-246c-4ad5-809e-e2013ca6c07e", 0.005),
+        ("89c66519-244f-4db0-b4a7-756014d6fd24", 0.005),
+        ("af3f1b82-ff98-44c8-b130-d948a2a56b44", 0.005),
+        ("ee3002d9-71f8-4a83-881d-48bd21b6bdd1", 0.005),
+        ("4f42de60-3a41-4d76-9a19-d6d2644eb57f", 0.005),
+        ("7ac4184e-e84f-40cb-b6a0-9cf79a1a573c", 0.005),
+        ("9d14f803-dc8c-405f-99b5-80f12207d4e5", 0.005),
+        ("2a61e295-fd0f-4568-b01c-1c38c21573ac", 0.005),
+        ("e7fd0b3f-4a42-4a5d-bda6-8e2f4b5cb92a", 0.005),
+        ("f2c2a71d-5c44-4ab9-a87e-0ac1f278b6d6", 0.005),
+        ("1ec29b47-3d6b-4cc3-b71d-6c97fcbf1e89", 0.005),
     ]
 
     # Example deposit (uncomment to perform deposits)
-    # for uuid_str, amount in deposit_tasks:
-    #     print(f"Depositing collateral for executor {uuid_str}...")
-    #     await contract.deposit_collateral(amount, uuid_str)
+    for uuid_str, amount in deposit_tasks:
+        print(f"Depositing collateral for executor {uuid_str}...")
+        await contract.deposit_collateral(amount, uuid_str)
 
     # Verify collateral
     collateral = await contract.get_miner_collateral()
