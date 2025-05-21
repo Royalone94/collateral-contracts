@@ -10,6 +10,7 @@ transparency and accountability.
 
 import sys
 import argparse
+import asyncio
 import bittensor.utils
 from celium_collateral_contracts.common import (
     load_contract_abi,
@@ -54,7 +55,7 @@ async def deny_reclaim_request(
         md5_checksum = calculate_md5_checksum(url)
         print(f"MD5 checksum: {md5_checksum}", file=sys.stderr)
 
-    tx_hash = await build_and_send_transaction(
+    tx_hash = build_and_send_transaction(
         w3,
         contract.functions.denyReclaimRequest(
             reclaim_request_id, url, bytes.fromhex(md5_checksum)
@@ -74,7 +75,7 @@ async def deny_reclaim_request(
     return deny_event, receipt
 
 
-def main():
+async def main():
     parser = argparse.ArgumentParser(
         description="Deny a reclaim request on the Collateral contract"
     )
@@ -92,7 +93,7 @@ def main():
     w3 = get_web3_connection(args.network)
     account = get_account(keystr=args.keystr)
 
-    deny_event, receipt = deny_reclaim_request(
+    deny_event, receipt = await deny_reclaim_request(
         w3=w3,
         account=account,
         reclaim_request_id=args.reclaim_request_id,
@@ -109,10 +110,5 @@ def main():
     print(f"  Transaction hash: {receipt['transactionHash'].hex()}")
     print(f"  Block number: {receipt['blockNumber']}")
 
-
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        print(f"Error: {str(e)}", file=sys.stderr)
-        sys.exit(1)
+    asyncio.run(main())

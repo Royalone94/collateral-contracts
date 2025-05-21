@@ -76,7 +76,7 @@ async def deposit_collateral(w3, account, amount_tao,
 
     executor_uuid_bytes = UUID(executor_uuid).bytes
 
-    tx_hash = await build_and_send_transaction(
+    tx_hash = build_and_send_transaction(
         w3, contract.functions.deposit(validator_address, executor_uuid_bytes), account, value=amount_wei
     )
 

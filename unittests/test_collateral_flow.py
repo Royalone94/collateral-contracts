@@ -81,6 +81,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         deny_request_script = "celium_collateral_contracts/deny_request.py"
         finalize_reclaim_script = "celium_collateral_contracts/finalize_reclaim.py"
         get_reclaim_requests_script = "celium_collateral_contracts/get_reclaim_requests.py"
+        slash_collateral_script = "celium_collateral_contracts/slash_collateral.py"
         if self.USE_EXISTING_ACCOUNTS:
             validator_address = "0xE1A07A44ac6f8423bA3b734F0cAfC6F87fd385Fc"
             validator_key = "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
@@ -212,6 +213,16 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             if capture_output:
                 print(result.stdout.strip())
 
+        print(
+            f'python {deposit_script} '
+            f'--contract-address {contract_address} '
+            f'--amount-tao 0.001 '
+            f'--validator-address {validator_address} '
+            f'--keystr {miner_key} '
+            f'--network {self.network} '
+            f'--executor-uuid {uuid_str}'
+        )
+
         # === Step 7: Verify Collateral ===
         check = self.run_cmd(
             [
@@ -241,7 +252,8 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 "--contract-address", contract_address,
                 "--miner-address", miner_address,
                 "--executor-uuids", executor_uuids_str,
-                "--network", self.network
+                "--network", self.network,
+                "--keystr", miner_key
             ],
             capture=True,
             env=env
@@ -251,7 +263,8 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             f'--contract-address {contract_address} '
             f'--miner-address {miner_address} '
             f'--executor-uuids {executor_uuids_str} '
-            f'--network {self.network}'
+            f'--network {self.network} '
+            f'--keystr {miner_key} '
         )
         time.sleep(3)
         print("Result: ", result.stdout.strip())
@@ -321,9 +334,10 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             [
                 "python", deny_request_script,
                 "--contract-address", contract_address,
-                "--reclaim-id", str(deny_reclaim_id),
-                "--reason", "no, i will not",
-                "--network", self.network
+                "--reclaim-request-id", str(deny_reclaim_id),
+                "--url", "no, i will not",
+                "--network", self.network,
+                "--keystr", miner_key
             ],
             env=env
         )
@@ -331,9 +345,10 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         print(
             f'python {deny_request_script} '
             f'--contract-address {contract_address} '
-            f'--reclaim-id {deny_reclaim_id} '
-            f'--reason "no, i will not" '
-            f'--network {self.network}'
+            f'--reclaim-request-id {deny_reclaim_id} '
+            f'--url "no, i will not" '
+            f'--network {self.network} '
+            f'--keystr {miner_key} '
         )
         
         print("Deny reclaim request finished")
@@ -343,8 +358,9 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             [
                 "python", finalize_reclaim_script,
                 "--contract-address", contract_address,
-                "--reclaim-id", str(finalize_reclaim_id),
-                "--network", self.network
+                "--reclaim-request-id", str(finalize_reclaim_id),
+                "--network", self.network,
+                "--keystr", miner_key
             ],
             env=env
         )
@@ -352,9 +368,39 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         print(
             f'python {finalize_reclaim_script} '
             f'--contract-address {contract_address} '
-            f'--reclaim-id {finalize_reclaim_id} '
-            f'--network {self.network}'
+            f'--reclaim-request-id {finalize_reclaim_id} '
+            f'--network {self.network} '
+            f'--keystr {miner_key} '
         )
+
+        for uuid_str, capture_output in deposit_tasks:
+            print(f"Starting deposit collateral for executor {uuid_str}...")
+            result = self.run_cmd(
+                [
+                    "python", slash_collateral_script,
+                    "--contract-address", contract_address,
+                    "--amount-tao", "0.001",
+                    "--miner-address", miner_address,
+                    "--url", "slashit",
+                    "--keystr", validator_key,
+                    "--network", self.network,
+                    "--executor-uuid", uuid_str
+                ],
+                env=env, capture=capture_output
+            )
+            if capture_output:
+                print(result.stdout.strip())
+
+            print(
+                f'python {slash_collateral_script} '
+                f'--contract-address {contract_address} '
+                f'--amount-tao 0.001 '
+                f'--miner-address {miner_address} '
+                f'--keystr {validator_key} '
+                f'--url "slashit" '
+                f'--network {self.network} '
+                f'--executor-uuid {uuid_str}'
+            )
 
         # === Step 12: Final Collateral Check ===
         result = self.run_cmd(

@@ -68,7 +68,7 @@ async def slash_collateral(
 
     executor_uuid_bytes = UUID(executor_uuid).bytes
 
-    tx_hash = await build_and_send_transaction(
+    tx_hash = build_and_send_transaction(
         w3,
         contract.functions.slashCollateral(
             miner_address,

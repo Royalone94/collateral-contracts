@@ -67,7 +67,7 @@ def validate_address_format(address):
         raise ValueError("Invalid address")
 
 
-async def build_and_send_transaction(
+def build_and_send_transaction(
     w3, function_call, account, gas_limit=100000, value=0
 ):
     """Build, sign and send a transaction.

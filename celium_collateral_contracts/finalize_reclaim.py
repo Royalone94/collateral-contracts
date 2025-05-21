@@ -50,7 +50,7 @@ async def finalize_reclaim(w3, account, reclaim_request_id, contract_address):
     contract_abi = load_contract_abi()
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
-    tx_hash = await build_and_send_transaction(
+    tx_hash = build_and_send_transaction(
         w3,
         contract.functions.finalizeReclaim(reclaim_request_id),
         account,

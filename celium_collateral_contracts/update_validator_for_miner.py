@@ -40,7 +40,7 @@ async def update_validator_for_miner(w3, account, contract_address, miner_addres
     contract_abi = load_contract_abi()
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
-    tx_hash = await build_and_send_transaction(
+    tx_hash = build_and_send_transaction(
         w3,
         contract.functions.updateValidatorForMiner(miner_address, new_validator),
         account,

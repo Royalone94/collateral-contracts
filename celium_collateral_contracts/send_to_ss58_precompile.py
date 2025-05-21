@@ -46,7 +46,7 @@ async def send_tao_to_ss58(
     contract = w3.eth.contract(address=contract_address, abi=abi)
     pubkey = ss58_to_pubkey(recipient_ss58)
 
-    tx_hash = await build_and_send_transaction(
+    tx_hash = build_and_send_transaction(
         w3,
         contract.functions.transfer(pubkey),
         sender_account,
