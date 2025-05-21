@@ -195,22 +195,22 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             ("af3f1b82-ff98-44c8-b130-d948a2a56b44", False),
             ("ee3002d9-71f8-4a83-881d-48bd21b6bdd1", False),
         ]
-        # for uuid_str, capture_output in deposit_tasks:
-        #     print(f"Starting deposit collateral for executor {uuid_str}...")
-        #     result = self.run_cmd(
-        #         [
-        #             "python", deposit_script,
-        #             "--contract-address", contract_address,
-        #             "--amount-tao", "0.001",
-        #             "--validator-address", validator_address,
-        #             "--keystr", miner_key,
-        #             "--network", self.network,
-        #             "--executor-uuid", uuid_str
-        #         ],
-        #         env=env, capture=capture_output
-        #     )
-        #     if capture_output:
-        #         print(result.stdout.strip())
+        for uuid_str, capture_output in deposit_tasks:
+            print(f"Starting deposit collateral for executor {uuid_str}...")
+            result = self.run_cmd(
+                [
+                    "python", deposit_script,
+                    "--contract-address", contract_address,
+                    "--amount-tao", "0.001",
+                    "--validator-address", validator_address,
+                    "--keystr", miner_key,
+                    "--network", self.network,
+                    "--executor-uuid", uuid_str
+                ],
+                env=env, capture=capture_output
+            )
+            if capture_output:
+                print(result.stdout.strip())
 
         # === Step 7: Verify Collateral ===
         check = self.run_cmd(
@@ -245,6 +245,13 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             ],
             capture=True,
             env=env
+        )
+        print(
+            f'python {get_eligible_executors_script} '
+            f'--contract-address {contract_address} '
+            f'--miner-address {miner_address} '
+            f'--executor-uuids {executor_uuids_str} '
+            f'--network {self.network}'
         )
         time.sleep(3)
         print("Result: ", result.stdout.strip())
@@ -297,6 +304,14 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             env=env
         )
 
+        print(
+            f'python {get_reclaim_requests_script} '
+            f'--contract-address {contract_address} '
+            f'--start-block {latest_block - 100} '
+            f'--end-block {latest_block + 10} '
+            f'--network {self.network}'
+        )
+        
         deny_reclaim_id = 2
         finalize_reclaim_id = 1
         # === Step 11: Validator Denies Request 1, Finalizes Request 2 ===
@@ -313,6 +328,14 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             env=env
         )
 
+        print(
+            f'python {deny_request_script} '
+            f'--contract-address {contract_address} '
+            f'--reclaim-id {deny_reclaim_id} '
+            f'--reason "no, i will not" '
+            f'--network {self.network}'
+        )
+        
         print("Deny reclaim request finished")
 
         print("Starting finalize reclaim request")
@@ -326,6 +349,13 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             env=env
         )
 
+        print(
+            f'python {finalize_reclaim_script} '
+            f'--contract-address {contract_address} '
+            f'--reclaim-id {finalize_reclaim_id} '
+            f'--network {self.network}'
+        )
+
         # === Step 12: Final Collateral Check ===
         result = self.run_cmd(
             [
@@ -335,6 +365,13 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 "--network", self.network
             ],
             capture=True, env=env
+        )
+
+        print(
+            f'python {get_miners_collateral_script} '
+            f'--contract-address {contract_address} '
+            f'--miner-address {miner_address} '
+            f'--network {self.network}'
         )
         print("[FINAL COLLATERAL]:", result.stdout.strip())
 
