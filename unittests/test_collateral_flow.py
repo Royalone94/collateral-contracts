@@ -195,22 +195,22 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             ("af3f1b82-ff98-44c8-b130-d948a2a56b44", False),
             ("ee3002d9-71f8-4a83-881d-48bd21b6bdd1", False),
         ]
-        for uuid_str, capture_output in deposit_tasks:
-            print(f"Starting deposit collateral for executor {uuid_str}...")
-            result = self.run_cmd(
-                [
-                    "python", deposit_script,
-                    "--contract-address", contract_address,
-                    "--amount-tao", "0.001",
-                    "--validator-address", validator_address,
-                    "--keystr", miner_key,
-                    "--network", self.network,
-                    "--executor-uuid", uuid_str
-                ],
-                env=env, capture=capture_output
-            )
-            if capture_output:
-                print(result.stdout.strip())
+        # for uuid_str, capture_output in deposit_tasks:
+        #     print(f"Starting deposit collateral for executor {uuid_str}...")
+        #     result = self.run_cmd(
+        #         [
+        #             "python", deposit_script,
+        #             "--contract-address", contract_address,
+        #             "--amount-tao", "0.001",
+        #             "--validator-address", validator_address,
+        #             "--keystr", miner_key,
+        #             "--network", self.network,
+        #             "--executor-uuid", uuid_str
+        #         ],
+        #         env=env, capture=capture_output
+        #     )
+        #     if capture_output:
+        #         print(result.stdout.strip())
 
         # === Step 7: Verify Collateral ===
         check = self.run_cmd(

@@ -49,7 +49,10 @@ async def get_eligible_executors(w3, contract_address, miner_address, executor_u
     executor_uuids_bytes = [uuid.UUID(uuid_str).bytes for uuid_str in executor_uuids]
 
     try:
-        executors = await contract.functions.getEligibleExecutors(miner_address, executor_uuids_bytes).call({'gas': 3000000})
+        executors = await asyncio.to_thread(
+            contract.functions.getEligibleExecutors(miner_address, executor_uuids_bytes).call,
+            {'gas': 3000000}
+        )
         # Convert bytes16 to UUID strings
         readable_executors = [str(uuid.UUID(bytes=executor)) for executor in executors]
         return readable_executors
