@@ -46,7 +46,7 @@ def main():
     w3 = get_web3_connection(args.network)
     collateral = get_executor_collateral(w3, args.contract_address, args.miner_address, args.executor_uuid)
     print(
-        f"Collateral for miner {args.miner_address}, executor {args.executor_uuid}: {w3.from_wei(collateral, 'ether')} TAO"
+        f"Collateral for miner {args.miner_address}, executor {args.executor_uuid}: {collateral} TAO"
     )
 
 if __name__ == "__main__":

@@ -203,12 +203,10 @@ async def main():
     print("\n[EXECUTOR COLLATERAL AFTER DEPOSITS]:")
     for uuid_str, _ in deposit_tasks:
         executor_collateral = await contract.get_executor_collateral(uuid_str)
-        executor_collateral_in_tao = contract.w3.from_wei(executor_collateral, "ether")
-        print(f"Executor {uuid_str}: {executor_collateral_in_tao} TAO")
+        print(f"Executor {uuid_str}: {executor_collateral} TAO")
 
     collateral = await contract.get_miner_collateral()
-    collateral_in_tao = contract.w3.from_wei(collateral, "ether")
-    print("[COLLATERAL]:", collateral_in_tao)
+    print("[COLLATERAL]:", collateral)
 
     for uuid_str, amount in deposit_tasks:
         print(f"Reclaiming collateral for executor {uuid_str}...")
@@ -233,8 +231,7 @@ async def main():
 
     # Verify collateral
     collateral = await contract.get_miner_collateral()
-    collateral_in_tao = contract.w3.from_wei(collateral, "ether")
-    print("[COLLATERAL]:", collateral_in_tao)
+    print("[COLLATERAL]:", collateral)
 
     # List eligible executors
     executor_uuids = [uuid for uuid, _ in deposit_tasks]
@@ -243,8 +240,7 @@ async def main():
 
     # Final collateral check
     final_collateral = await contract.get_miner_collateral()
-    final_collateral_in_tao = contract.w3.from_wei(final_collateral, "ether")
-    print("[FINAL COLLATERAL]:", final_collateral_in_tao)
+    print("[FINAL COLLATERAL]:", final_collateral)
 
     # Check final balances
     validator_balance = await contract.get_balance(contract.validator_address)

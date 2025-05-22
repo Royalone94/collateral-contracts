@@ -142,7 +142,8 @@ def get_miner_collateral(w3, contract_address, miner_address):
     contract_abi = load_contract_abi()
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
-    return contract.functions.collaterals(miner_address).call()
+    miner_collateral = contract.functions.collaterals(miner_address).call()
+    return w3.from_wei(miner_collateral, "ether")
 
 
 def get_revert_reason(w3, tx_hash, block_number):
@@ -218,4 +219,5 @@ def get_executor_collateral(w3, contract_address, miner_address, executor_uuid):
         uuid_bytes = uuid_bytes[:16] if len(uuid_bytes) > 16 else uuid_bytes.ljust(16, b'\0')
     else:
         uuid_bytes = executor_uuid
-    return contract.functions.collateralPerExecutor(miner_address, uuid_bytes).call()
+    executor_collateral =  contract.functions.collateralPerExecutor(miner_address, uuid_bytes).call()
+    return w3.from_wei(executor_collateral, "ether")

@@ -50,7 +50,7 @@ def main():
 
     collateral = get_miner_collateral(w3, args.contract_address, args.miner_address)
     print(
-        f"Collateral for miner {args.miner_address}: {w3.from_wei(collateral, 'ether')} TAO"
+        f"Collateral for miner {args.miner_address}: {collateral} TAO"
     )
 
 
