@@ -199,3 +199,23 @@ async def get_evm_key_associations(
         evm_address = "0x" + bytes(evm_address_raw[0]).hex()
         uid_evm_address_map[uid] = evm_address
     return uid_evm_address_map
+
+
+def get_executor_collateral(w3, contract_address, miner_address, executor_uuid):
+    """Query the collateral amount for a given miner and executor UUID."""
+    contract_abi = load_contract_abi()
+    contract = w3.eth.contract(address=contract_address, abi=contract_abi)
+    # executor_uuid must be bytes16
+    if isinstance(executor_uuid, str):
+        import uuid
+        try:
+            # Try to parse as UUID string
+            uuid_bytes = uuid.UUID(executor_uuid).bytes
+        except Exception:
+            # If not a UUID, try to decode as hex
+            uuid_bytes = bytes.fromhex(executor_uuid.replace('0x', ''))
+        # Pad or trim to 16 bytes
+        uuid_bytes = uuid_bytes[:16] if len(uuid_bytes) > 16 else uuid_bytes.ljust(16, b'\0')
+    else:
+        uuid_bytes = executor_uuid
+    return contract.functions.collateralPerExecutor(miner_address, uuid_bytes).call()

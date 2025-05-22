@@ -6,6 +6,7 @@ from celium_collateral_contracts.common import (
     get_account,
     validate_address_format,
     get_miner_collateral,
+    get_executor_collateral,
 )
 from celium_collateral_contracts.deposit_collateral import deposit_collateral
 from celium_collateral_contracts.reclaim_collateral import reclaim_collateral
@@ -145,6 +146,12 @@ class CollateralContract:
         """Retrieve the validator associated with the miner."""
         return get_next_reclaim_id(self.w3, self.contract_address)
 
+    async def get_executor_collateral(self, executor_uuid, miner_address=None):
+        """Get the collateral amount for a miner and executor UUID."""
+        if miner_address is None:
+            miner_address = self.miner_address
+        return get_executor_collateral(self.w3, self.contract_address, miner_address, executor_uuid)
+
 async def main():
     import os
     import time
@@ -191,6 +198,13 @@ async def main():
     for uuid_str, amount in deposit_tasks:
         print(f"Depositing collateral for executor {uuid_str}...")
         await contract.deposit_collateral(amount, uuid_str)
+
+    # Print executor collateral for each UUID after deposits
+    print("\n[EXECUTOR COLLATERAL AFTER DEPOSITS]:")
+    for uuid_str, _ in deposit_tasks:
+        executor_collateral = await contract.get_executor_collateral(uuid_str)
+        executor_collateral_in_tao = contract.w3.from_wei(executor_collateral, "ether")
+        print(f"Executor {uuid_str}: {executor_collateral_in_tao} TAO")
 
     collateral = await contract.get_miner_collateral()
     collateral_in_tao = contract.w3.from_wei(collateral, "ether")

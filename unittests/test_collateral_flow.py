@@ -439,6 +439,22 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         print("Validator balance:", self.w3.from_wei(self.w3.eth.get_balance(validator_address), 'ether'))
         print("Miner balance:", self.w3.from_wei(self.w3.eth.get_balance(miner_address), 'ether'))
 
+        # === Step 8: Check executor collateral for each deposit ===
+        get_executor_collateral_script = "celium_collateral_contracts/get_executor_collateral.py"
+        for uuid_str, _ in deposit_tasks:
+            print(f"Checking executor collateral for executor {uuid_str}...")
+            result = self.run_cmd(
+                [
+                    "python", get_executor_collateral_script,
+                    "--contract-address", contract_address,
+                    "--miner-address", miner_address,
+                    "--executor-uuid", uuid_str,
+                    "--network", self.network
+                ],
+                capture=True, env=env
+            )
+            print(f"Executor collateral for {uuid_str}: ", result.stdout.strip())
+
         print("✅ Contract lifecycle test completed successfully.")
 
 
@@ -463,3 +479,20 @@ if __name__ == "__main__":
         TestCollateralContractLifecycle.DEPLOY_CONTRACT = (args.deploy_contract == "True")
     sys.argv = [sys.argv[0]] + remaining
     unittest.main()
+
+    # --- Example usage of get_executor_collateral.py as a main method ---
+    # This demonstrates how to call the script directly for a single executor UUID
+    import subprocess
+    print("\n[Standalone get_executor_collateral.py usage example]:")
+    contract_address = "0xc30c6Fefb37c8599aD6e048178BeD4300f067470"
+    miner_address = "0x19F71e76B34A8Dc01944Cf3B76478B45DE05B75b"
+    executor_uuid = "3a5ce92a-a066-45f7-b07d-58b3b7986464"
+    network = "local"
+    result = subprocess.run([
+        "python", "celium_collateral_contracts/get_executor_collateral.py",
+        "--contract-address", contract_address,
+        "--miner-address", miner_address,
+        "--executor-uuid", executor_uuid,
+        "--network", network
+    ], capture_output=True, text=True)
+    print(result.stdout.strip())
