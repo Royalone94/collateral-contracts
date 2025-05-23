@@ -128,6 +128,34 @@ Refer to the repository's [`scripts/`](/scripts/) folder for sample implementati
   - Compile and deploy the contract, use [`deploy.sh`](/deploy.sh) with your details as arguments.
   - Record the deployed contract address and publish it via a subnet-owner-provided tool so that miners can discover and verify it.
 
+  ---
+
+  ## UUPS Proxy Deployment (Upgradeability)
+
+  This contract uses the **UUPS (Universal Upgradeable Proxy Standard) proxy pattern** to enable seamless upgrades without losing contract state.  
+  With UUPS, the proxy contract holds all storage and delegates logic to an implementation contract. When you upgrade, you deploy a new implementation and point the proxy to it—**all balances and mappings are preserved**.
+
+  ### Deployment Steps
+
+  1. **Install dependencies:**
+      ```bash
+      npm install
+      ```
+
+  2. **Deploy or upgrade the contract:**
+      ```bash
+      node deployUUPS.js
+      ```
+
+  This script will:
+  - Deploy the implementation contract if needed.
+  - Deploy the proxy contract (if not already deployed) or upgrade it to the latest implementation.
+  - Save deployment addresses to `deployments.json`.
+
+  **Always interact with the proxy address for all contract calls.**
+
+  ---
+
 - **Enable Regular Operation**
   - Enable the deployed contract address in your validator's code (provided by the subnet owner), so that
     - task assignment prioritizes miners with higher collateral balances.
