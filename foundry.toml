@@ -5,3 +5,4 @@ libs = ["libs"]
 
 [dependencies]
 forge-std = "1.9.6"
+remappings = ["@openzeppelin/=lib/openzeppelin-contracts-upgradeable/contracts/"]

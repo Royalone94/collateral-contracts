@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-contract Collateral {
-    uint16 public immutable NETUID;
-    uint64 public immutable DECISION_TIMEOUT;
-    uint256 public immutable MIN_COLLATERAL_INCREASE;
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
+contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
+    uint16 public NETUID;
+    uint64 public DECISION_TIMEOUT;
+    uint256 public MIN_COLLATERAL_INCREASE;
 
     mapping(uint256 => Reclaim) public reclaims;
     mapping(address => uint256) public collaterals;
-
     mapping(address => uint256) private collateralUnderPendingReclaims;
     mapping(address => address) public validatorOfMiner;
-
     mapping(address => mapping(bytes16 => uint256)) public collateralPerExecutor;
-
     uint256 private nextReclaimId;
 
     struct Reclaim {
@@ -53,15 +54,17 @@ contract Collateral {
     /// @param minCollateralIncrease The minimum amount that can be deposited or reclaimed
     /// @param decisionTimeout The time window (in seconds) for the validator to deny a reclaim request
     /// @dev Reverts if any of the arguments is zero
-    constructor(uint16 netuid, uint256 minCollateralIncrease, uint64 decisionTimeout) {
-        // custom errors are not used here because it's a 1-time setup
+    function initialize(uint16 netuid, uint256 minCollateralIncrease, uint64 decisionTimeout) public initializer {
         require(minCollateralIncrease > 0, "Min collateral increase must be greater than 0");
         require(decisionTimeout > 0, "Decision timeout must be greater than 0");
-
+        __Ownable_init(msg.sender);
+        __UUPSUpgradeable_init();
         NETUID = netuid;
         MIN_COLLATERAL_INCREASE = minCollateralIncrease;
         DECISION_TIMEOUT = decisionTimeout;
     }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     modifier onlyAssignedValidator(address miner) {
         if (validatorOfMiner[miner] != msg.sender) {
