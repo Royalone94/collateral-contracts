@@ -7,7 +7,7 @@ This script retrieves and displays information about reclaim requests from the
 Collateral smart contract. It fetches ReclaimProcessStarted events within a
 specified block range and provides details about each reclaim request.
 """
-
+import asyncio
 import sys
 import csv
 import argparse
@@ -97,8 +97,6 @@ async def get_reclaim_process_started_events(
     }
     logs = w3.eth.get_logs(filter_params)
 
-    get_all_reclaims(w3, contract_address)
-
     def get_reclaim_by_id(reclaim_id):
         """Fetch reclaim information using reclaim_id."""
         reclaim = contract.functions.reclaims(reclaim_id).call()
@@ -135,7 +133,7 @@ async def get_reclaim_process_started_events(
     return formatted_events
 
 
-def main():
+async def main():
     parser = argparse.ArgumentParser(
         description="Fetch ReclaimProcessStarted events from Collateral contract")
     parser.add_argument(
@@ -156,7 +154,7 @@ def main():
     args = parser.parse_args()
 
     w3 = get_web3_connection(args.network)
-    events = get_reclaim_process_started_events(
+    events = await get_reclaim_process_started_events(
         w3, args.contract_address, args.block_start, args.block_end
     )
 
@@ -188,8 +186,4 @@ def main():
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        print(f"Error: {str(e)}", file=sys.stderr)
-        sys.exit(1)
+    asyncio.run(main())

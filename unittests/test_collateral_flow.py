@@ -310,8 +310,8 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             [
                 "python", get_reclaim_requests_script,
                 "--contract-address", contract_address,
-                "--start-block", str(latest_block - 100),
-                "--end-block", str(latest_block + 10),
+                "--block-start", str(latest_block - 100),
+                "--block-end", str(latest_block + 10),
                 "--network", self.network
             ],
             env=env
@@ -320,8 +320,8 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         print(
             f'python {get_reclaim_requests_script} '
             f'--contract-address {contract_address} '
-            f'--start-block {latest_block - 100} '
-            f'--end-block {latest_block + 10} '
+            f'--block-start {latest_block - 100} '
+            f'--block-end {latest_block + 10} '
             f'--network {self.network}'
         )
         

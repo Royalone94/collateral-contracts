@@ -5,7 +5,7 @@ This script retrieves and displays collateral information for miners who have
 deposited within a specified block range. It aggregates deposit events and
 calculates the current collateral amounts for each miner.
 """
-
+import asyncio
 import argparse
 import csv
 import sys
@@ -74,7 +74,7 @@ async def get_deposit_events(w3, contract_address, block_num_low, block_num_high
     return formatted_events
 
 
-def main():
+async def main():
     parser = argparse.ArgumentParser(
         description="Get collaterals for miners who deposited in a given block range"
     )
@@ -92,7 +92,7 @@ def main():
 
     w3 = get_web3_connection(args.network)
 
-    deposit_events = get_deposit_events(
+    deposit_events = await get_deposit_events(
         w3, args.contract_address, args.block_start, args.block_end
     )
 
@@ -118,8 +118,4 @@ def main():
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        print(f"Error: {str(e)}", file=sys.stderr)
-        sys.exit(1)
+    asyncio.run(main())

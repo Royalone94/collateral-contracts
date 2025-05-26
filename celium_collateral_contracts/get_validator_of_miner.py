@@ -5,7 +5,7 @@ Get Validator of Miner Script
 
 This script retrieves the validator associated with a specific miner from the Collateral smart contract.
 """
-
+import asyncio
 import argparse
 import sys
 from celium_collateral_contracts.common import (
@@ -35,7 +35,7 @@ async def get_validator_of_miner(w3, contract_address, miner_address):
     return contract.functions.validatorOfMiner(miner_address).call()
 
 
-def main():
+async def main():
     parser = argparse.ArgumentParser(
         description="Retrieve the validator associated with a specific miner."
     )
@@ -52,12 +52,13 @@ def main():
     w3 = get_web3_connection(args.network)
 
     try:
-        validator = get_validator_of_miner(w3, args.contract_address, args.miner_address)
+        validator = await get_validator_of_miner(w3, args.contract_address, args.miner_address)
         print(f"Validator for miner {args.miner_address}: {validator}")
     except Exception as e:
         print(f"Error: {str(e)}", file=sys.stderr)
         sys.exit(1)
 
 
+
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
