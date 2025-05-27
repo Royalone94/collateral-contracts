@@ -316,4 +316,10 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
         validatorOfMiner[miner] = newValidator;
     }
+
+    /// @notice Returns the next available reclaim request ID.
+    /// @return The next reclaim request ID.
+    function getNextReclaimId() external view returns (uint256) {
+        return nextReclaimId;
+    }
 }
