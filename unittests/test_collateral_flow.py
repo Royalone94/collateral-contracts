@@ -204,7 +204,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                     "--contract-address", contract_address,
                     "--amount-tao", "0.001",
                     "--validator-address", validator_address,
-                    "--keystr", miner_key,
+                    "--private-key", miner_key,
                     "--network", self.network,
                     "--executor-uuid", uuid_str
                 ],
@@ -218,7 +218,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             f'--contract-address {contract_address} '
             f'--amount-tao 0.001 '
             f'--validator-address {validator_address} '
-            f'--keystr {miner_key} '
+            f'--private-key {miner_key} '
             f'--network {self.network} '
             f'--executor-uuid {uuid_str}'
         )
@@ -253,7 +253,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 "--miner-address", miner_address,
                 "--executor-uuids", executor_uuids_str,
                 "--network", self.network,
-                "--keystr", miner_key
+                "--private-key", miner_key
             ],
             capture=True,
             env=env
@@ -264,7 +264,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             f'--miner-address {miner_address} '
             f'--executor-uuids {executor_uuids_str} '
             f'--network {self.network} '
-            f'--keystr {miner_key} '
+            f'--private-key {miner_key} '
         )
         time.sleep(3)
         print("Result: ", result.stdout.strip())
@@ -283,7 +283,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                     "python", reclaim_collateral_script,
                     "--contract-address", contract_address,
                     "--amount-tao", '"0.001"',
-                    "--keystr", miner_key,
+                    "--private-key", miner_key,
                     "--url", f"Reclaiming for executor {uuid_str}",
                     "--executor-uuid", uuid_str,
                     "--network", self.network
@@ -294,7 +294,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 f'python {reclaim_collateral_script} '
                 f'--contract-address {contract_address} '
                 f'--amount-tao "0.001" '
-                f'--keystr {miner_key} '
+                f'--private-key {miner_key} '
                 f'--url "Reclaiming for executor {uuid_str}" '
                 f'--executor-uuid {uuid_str} '
                 f'--network {self.network}'
@@ -337,7 +337,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 "--reclaim-request-id", str(deny_reclaim_id),
                 "--url", "no, i will not",
                 "--network", self.network,
-                "--keystr", miner_key
+                "--private-key", miner_key
             ],
             env=env
         )
@@ -348,7 +348,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             f'--reclaim-request-id {deny_reclaim_id} '
             f'--url "no, i will not" '
             f'--network {self.network} '
-            f'--keystr {miner_key} '
+            f'--private-key {miner_key} '
         )
         
         print("Deny reclaim request finished")
@@ -360,7 +360,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 "--contract-address", contract_address,
                 "--reclaim-request-id", str(finalize_reclaim_id),
                 "--network", self.network,
-                "--keystr", miner_key
+                "--private-key", miner_key
             ],
             env=env
         )
@@ -370,7 +370,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             f'--contract-address {contract_address} '
             f'--reclaim-request-id {finalize_reclaim_id} '
             f'--network {self.network} '
-            f'--keystr {miner_key} '
+            f'--private-key {miner_key} '
         )
 
         for uuid_str, capture_output in deposit_tasks:
@@ -382,7 +382,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                     "--amount-tao", "0.001",
                     "--miner-address", miner_address,
                     "--url", "slashit",
-                    "--keystr", validator_key,
+                    "--private-key", validator_key,
                     "--network", self.network,
                     "--executor-uuid", uuid_str
                 ],
@@ -396,7 +396,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 f'--contract-address {contract_address} '
                 f'--amount-tao 0.001 '
                 f'--miner-address {miner_address} '
-                f'--keystr {validator_key} '
+                f'--private-key {validator_key} '
                 f'--url "slashit" '
                 f'--network {self.network} '
                 f'--executor-uuid {uuid_str}'
