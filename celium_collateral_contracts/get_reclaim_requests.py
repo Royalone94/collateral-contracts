@@ -33,13 +33,9 @@ def get_next_reclaim_id(w3, contract_address):
     contract_abi = load_contract_abi()
 
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
-    # Option 1: Use the last ReclaimProcessStarted event's reclaimRequestId
-    event_filter = contract.events.ReclaimProcessStarted.create_filter(fromBlock=0)
-    events = event_filter.get_all_entries()
-    print("get_next_reclaim_id events", events)
-    if not events:
-        return 0
-    return max(e['args']['reclaimRequestId'] for e in events)
+    # Call the new public getter function
+    next_id = contract.functions.getNextReclaimId().call()
+    return next_id
 
 # Get all reclaim requests
 def get_all_reclaims(w3, contract_address):
@@ -52,14 +48,18 @@ def get_all_reclaims(w3, contract_address):
     for reclaim_id in range(1, next_reclaim_id + 1):
         reclaim = contract.functions.reclaims(reclaim_id).call()
         # reclaim is a tuple: (miner, amount, denyTimeout, executorUuid)
-        if reclaim[1] > 0:  # amount > 0 means valid reclaim
-            reclaims.append({
-                'reclaim_id': reclaim_id,
-                'miner': reclaim[0],
-                'amount': reclaim[1],
-                'denyTimeout': reclaim[2],
-                'executorUuid': reclaim[3].hex()
-            })
+        if reclaim[1] > 0:
+            reclaims.append(
+                ReclaimProcessStartedEvent(
+                    reclaim_request_id=reclaim_id,
+                    account="",
+                    amount=reclaim[1],
+                    expiration_time=reclaim[2],
+                    executor_uuid=reclaim[3].hex(),
+                    url='',
+                    url_content_md5_checksum='',
+                    block_number=0
+            ))
     return reclaims
 
 async def get_reclaim_process_started_events(

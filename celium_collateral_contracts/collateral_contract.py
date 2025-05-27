@@ -15,7 +15,7 @@ from celium_collateral_contracts.deny_request import deny_reclaim_request
 from celium_collateral_contracts.slash_collateral import slash_collateral
 from celium_collateral_contracts.get_collaterals import get_deposit_events
 from celium_collateral_contracts.get_reclaim_requests import get_reclaim_process_started_events
-from celium_collateral_contracts.get_reclaim_requests import get_next_reclaim_id
+from celium_collateral_contracts.get_reclaim_requests import get_next_reclaim_id, get_all_reclaims
 from celium_collateral_contracts.get_eligible_executors import get_eligible_executors
 from celium_collateral_contracts.update_validator_for_miner import update_validator_for_miner
 from celium_collateral_contracts.get_validator_of_miner import get_validator_of_miner
@@ -121,7 +121,7 @@ class CollateralContract:
         balance = self.w3.eth.get_balance(address)
         return self.w3.from_wei(balance, "ether")
 
-    async def get_reclaim_requests(self):
+    async def get_reclaim_events(self):
         """Fetch claim requests from the latest 100 blocks."""
         latest_block = self.w3.eth.block_number
         return await get_reclaim_process_started_events(
@@ -151,13 +151,17 @@ class CollateralContract:
             miner_address = self.miner_address
         return get_executor_collateral(self.w3, self.contract_address, miner_address, executor_uuid)
 
+    async def get_reclaim_requests(self):
+        return get_all_reclaims(self.w3, self.contract_address)
+        
+
 async def main():
     import os
     import time
 
     # Configuration
     network = "local"
-    contract_address = "0x6eb278AFA7724ACAB19DCDdEa96DA6aECD2e549b"
+    contract_address = "0x8b6A0598898255C48Cb73B21271bB47f2EEEE7c1"
     validator_key = "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
     miner_key = "259e0eded00353f71eb6be89d8749ad12bf693cbd8aeb6b80cd3a343c0dc8faf"
 
@@ -213,11 +217,9 @@ async def main():
     for uuid_str, amount in deposit_tasks:
         print(f"Reclaiming collateral for executor {uuid_str}...")
         await contract.reclaim_collateral(amount, f"Reclaim collateral from executor: {uuid_str}", uuid_str)
-
-    # latest_reclaim_id = await contract.get_latest_reclaim_id()
  
     reclaim_requests = await contract.get_reclaim_requests()
-
+    print("reclaim_requests", reclaim_requests)
     for reclaim_event in reclaim_requests:
         reclaim_request_id = getattr(reclaim_event, "reclaim_request_id", None)
         print("Reclaim Request Id:", reclaim_request_id)
