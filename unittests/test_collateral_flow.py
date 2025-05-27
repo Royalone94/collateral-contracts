@@ -173,7 +173,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             contract_address = contract_line.split(": ")[-1]
             self.assertTrue(Web3.is_address(contract_address))
         else:
-            contract_address = "0xc30c6Fefb37c8599aD6e048178BeD4300f067470"
+            contract_address = "0x8b6A0598898255C48Cb73B21271bB47f2EEEE7c1"
 
         print("Deployed Contract Address:", contract_address)
         # === Step 6: Miner Deposits Collateral ===
@@ -368,34 +368,34 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             f'--private-key {miner_key} '
         )
 
-        # for uuid_str, capture_output in deposit_tasks:
-        #     print(f"Starting slash collateral for executor {uuid_str}...")
-        #     result = self.run_cmd(
-        #         [
-        #             "python", slash_collateral_script,
-        #             "--contract-address", contract_address,
-        #             "--amount-tao", "0.001",
-        #             "--miner-address", miner_address,
-        #             "--url", "slashit",
-        #             "--private-key", validator_key,
-        #             "--network", self.network,
-        #             "--executor-uuid", uuid_str
-        #         ],
-        #         env=env, capture=capture_output
-        #     )
-        #     if capture_output:
-        #         print(result.stdout.strip())
+        for uuid_str, capture_output in deposit_tasks:
+            print(f"Starting slash collateral for executor {uuid_str}...")
+            result = self.run_cmd(
+                [
+                    "python", slash_collateral_script,
+                    "--contract-address", contract_address,
+                    "--amount-tao", "0.001",
+                    "--miner-address", miner_address,
+                    "--url", "slashit",
+                    "--private-key", validator_key,
+                    "--network", self.network,
+                    "--executor-uuid", uuid_str
+                ],
+                env=env, capture=capture_output
+            )
+            if capture_output:
+                print(result.stdout.strip())
 
-        #     print(
-        #         f'python {slash_collateral_script} '
-        #         f'--contract-address {contract_address} '
-        #         f'--amount-tao 0.001 '
-        #         f'--miner-address {miner_address} '
-        #         f'--private-key {validator_key} '
-        #         f'--url "slashit" '
-        #         f'--network {self.network} '
-        #         f'--executor-uuid {uuid_str}'
-        #     )
+            print(
+                f'python {slash_collateral_script} '
+                f'--contract-address {contract_address} '
+                f'--amount-tao 0.001 '
+                f'--miner-address {miner_address} '
+                f'--private-key {validator_key} '
+                f'--url "slashit" '
+                f'--network {self.network} '
+                f'--executor-uuid {uuid_str}'
+            )
 
         # === Step 12: Final Collateral Check ===
         result = self.run_cmd(
@@ -488,7 +488,7 @@ if __name__ == "__main__":
     # This demonstrates how to call the script directly for a single executor UUID
     import subprocess
     print("\n[Standalone get_executor_collateral.py usage example]:")
-    contract_address = "0xc30c6Fefb37c8599aD6e048178BeD4300f067470"
+    contract_address = "0x8b6A0598898255C48Cb73B21271bB47f2EEEE7c1"
     miner_address = "0x19F71e76B34A8Dc01944Cf3B76478B45DE05B75b"
     executor_uuid = "3a5ce92a-a066-45f7-b07d-58b3b7986464"
     network = "local"
