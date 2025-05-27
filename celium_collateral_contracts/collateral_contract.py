@@ -157,7 +157,7 @@ async def main():
 
     # Configuration
     network = "local"
-    contract_address = "0xCAbe1902fc9CCA5F843e29fE63C4e226464Ce9f2"
+    contract_address = "0x6eb278AFA7724ACAB19DCDdEa96DA6aECD2e549b"
     validator_key = "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
     miner_key = "259e0eded00353f71eb6be89d8749ad12bf693cbd8aeb6b80cd3a343c0dc8faf"
 

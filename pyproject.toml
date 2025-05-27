@@ -27,8 +27,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/DaturaAI/celium-collateral-contracts"
-Source = "https://github.com/DaturaAI/celium-collateral-contracts"
+Homepage = "https://github.com/Datura-ai/celium-collateral-contracts"
+Source = "https://github.com/Datura-ai/celium-collateral-contracts"
 
 [tool.setuptools.packages.find]
 where = ["."]

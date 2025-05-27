@@ -13,7 +13,10 @@ def main():
         args.network,
     )
 
-    w3 = Web3(Web3.LegacyWebSocketProvider(network_url))
+    try:
+        w3 = Web3(Web3.WebsocketProvider(network_url))
+    except Exception:
+        w3 = Web3(Web3.LegacyWebSocketProvider(network_url))
     print(w3.eth.get_block('latest')['number'])
 
 

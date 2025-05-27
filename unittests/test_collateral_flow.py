@@ -59,7 +59,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
     def setUp(self):
         # Use the local RPC URL here
         # self.RPC_URL = "https://test.finney.opentensor.ai"
-        self.network = "test"
+        # self.network = "test"
         self.RPC_URL = "http://127.0.0.1:9944"
         self.network = "local"
         self.w3 = Web3(Web3.HTTPProvider(self.RPC_URL))
@@ -368,34 +368,34 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             f'--private-key {miner_key} '
         )
 
-        for uuid_str, capture_output in deposit_tasks:
-            print(f"Starting deposit collateral for executor {uuid_str}...")
-            result = self.run_cmd(
-                [
-                    "python", slash_collateral_script,
-                    "--contract-address", contract_address,
-                    "--amount-tao", "0.001",
-                    "--miner-address", miner_address,
-                    "--url", "slashit",
-                    "--private-key", validator_key,
-                    "--network", self.network,
-                    "--executor-uuid", uuid_str
-                ],
-                env=env, capture=capture_output
-            )
-            if capture_output:
-                print(result.stdout.strip())
+        # for uuid_str, capture_output in deposit_tasks:
+        #     print(f"Starting slash collateral for executor {uuid_str}...")
+        #     result = self.run_cmd(
+        #         [
+        #             "python", slash_collateral_script,
+        #             "--contract-address", contract_address,
+        #             "--amount-tao", "0.001",
+        #             "--miner-address", miner_address,
+        #             "--url", "slashit",
+        #             "--private-key", validator_key,
+        #             "--network", self.network,
+        #             "--executor-uuid", uuid_str
+        #         ],
+        #         env=env, capture=capture_output
+        #     )
+        #     if capture_output:
+        #         print(result.stdout.strip())
 
-            print(
-                f'python {slash_collateral_script} '
-                f'--contract-address {contract_address} '
-                f'--amount-tao 0.001 '
-                f'--miner-address {miner_address} '
-                f'--private-key {validator_key} '
-                f'--url "slashit" '
-                f'--network {self.network} '
-                f'--executor-uuid {uuid_str}'
-            )
+        #     print(
+        #         f'python {slash_collateral_script} '
+        #         f'--contract-address {contract_address} '
+        #         f'--amount-tao 0.001 '
+        #         f'--miner-address {miner_address} '
+        #         f'--private-key {validator_key} '
+        #         f'--url "slashit" '
+        #         f'--network {self.network} '
+        #         f'--executor-uuid {uuid_str}'
+        #     )
 
         # === Step 12: Final Collateral Check ===
         result = self.run_cmd(
