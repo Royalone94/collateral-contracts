@@ -77,7 +77,7 @@ async def deposit_collateral(w3, account, amount_tao,
     executor_uuid_bytes = UUID(executor_uuid).bytes
 
     tx_hash = build_and_send_transaction(
-        w3, contract.functions.deposit(validator_address, executor_uuid_bytes), account, value=amount_wei
+        w3, contract.functions.deposit(validator_address, executor_uuid_bytes), account, value=amount_wei, gas_limit=200000,  # Higher gas limit for this function
     )
 
     receipt = wait_for_receipt(w3, tx_hash)

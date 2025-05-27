@@ -24,14 +24,13 @@ class GetEligibleExecutorsError(Exception):
     pass
 
 
-async def get_eligible_executors(w3, contract_address, miner_address, executor_uuids):
+async def get_eligible_executors(w3, contract_address, miner_address):
     """Get the list of eligible executors for a miner from the contract.
 
     Args:
         w3: Web3 instance
         contract_address: Address of the contract
         miner_address: Address of the miner to fetch executors for
-        executor_uuids: List of executor UUIDs to check eligibility
 
     Returns:
         list: List of human-readable UUID strings for the given miner
@@ -46,12 +45,10 @@ async def get_eligible_executors(w3, contract_address, miner_address, executor_u
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
     # Convert executor_uuids from strings to bytes16
-    executor_uuids_bytes = [uuid.UUID(uuid_str).bytes for uuid_str in executor_uuids]
-
+    print("get eligible executors")
     try:
         executors = await asyncio.to_thread(
-            contract.functions.getEligibleExecutors(miner_address, executor_uuids_bytes).call,
-            {'gas': 3000000}
+            contract.functions.getEligibleExecutors(miner_address).call
         )
         # Convert bytes16 to UUID strings
         readable_executors = [str(uuid.UUID(bytes=executor)) for executor in executors]
@@ -71,10 +68,6 @@ async def main():
     parser.add_argument(
         "--miner-address", help="Address of the miner to fetch eligible executors for"
     )
-    parser.add_argument(
-        "--executor-uuids",
-        help="Comma-separated list of executor UUIDs to check eligibility",
-    )
     parser.add_argument("--private-key", help="Ethereum private key of the account to use")
     parser.add_argument("--network", default="finney")
 
@@ -84,12 +77,10 @@ async def main():
     account = get_account(args.private_key)  # You may not need to use this for reading data, but it's useful for connection checks
 
     try:
-        executor_uuids = args.executor_uuids.split(",")  # Keep UUIDs as strings
         executors = await get_eligible_executors(
             w3=w3,
             contract_address=args.contract_address,
             miner_address=args.miner_address,
-            executor_uuids=executor_uuids,
         )
 
         print(f"Successfully fetched eligible executors for miner {args.miner_address}")

@@ -107,13 +107,12 @@ class CollateralContract:
             block_end,
         )
 
-    async def get_eligible_executors(self, executor_uuids):
+    async def get_eligible_executors(self):
         """Get the list of eligible executors for a miner."""
         return await get_eligible_executors(
             self.w3,
             self.contract_address,
             self.miner_address,
-            executor_uuids,
         )
 
     async def get_balance(self, address):
@@ -158,7 +157,7 @@ async def main():
 
     # Configuration
     network = "local"
-    contract_address = "0x2FeD38D80E7F73Ed74beD72907f64C4A59B2D563"
+    contract_address = "0xCAbe1902fc9CCA5F843e29fE63C4e226464Ce9f2"
     validator_key = "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
     miner_key = "259e0eded00353f71eb6be89d8749ad12bf693cbd8aeb6b80cd3a343c0dc8faf"
 
@@ -199,6 +198,9 @@ async def main():
         print(f"Depositing collateral for executor {uuid_str}...")
         await contract.deposit_collateral(amount, uuid_str)
 
+    eligible_executors = await contract.get_eligible_executors()
+    print("Eligible Executors:", eligible_executors)
+
     # Print executor collateral for each UUID after deposits
     print("\n[EXECUTOR COLLATERAL AFTER DEPOSITS]:")
     for uuid_str, _ in deposit_tasks:
@@ -212,7 +214,7 @@ async def main():
         print(f"Reclaiming collateral for executor {uuid_str}...")
         await contract.reclaim_collateral(amount, f"Reclaim collateral from executor: {uuid_str}", uuid_str)
 
-    latest_reclaim_id = await contract.get_latest_reclaim_id()
+    # latest_reclaim_id = await contract.get_latest_reclaim_id()
  
     reclaim_requests = await contract.get_reclaim_requests()
 
@@ -232,11 +234,6 @@ async def main():
     # Verify collateral
     collateral = await contract.get_miner_collateral()
     print("[COLLATERAL]:", collateral)
-
-    # List eligible executors
-    executor_uuids = [uuid for uuid, _ in deposit_tasks]
-    eligible_executors = await contract.get_eligible_executors(executor_uuids)
-    print("Eligible Executors:", eligible_executors)
 
     # Final collateral check
     final_collateral = await contract.get_miner_collateral()

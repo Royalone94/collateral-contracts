@@ -48,7 +48,7 @@ def get_transferrable_balance(w3: Web3, sender: str, recipient: str):
     
 class TestCollateralContractLifecycle(unittest.TestCase):
     USE_EXISTING_ACCOUNTS = True
-    DEPLOY_CONTRACT = False
+    DEPLOY_CONTRACT = True
 
     # Add a helper to run subprocess commands with a sleep delay
     def run_cmd(self, cmd, env, capture=True, sleep_time=1):
@@ -243,15 +243,11 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         for uuid_str, capture_output in deposit_tasks:
             executors.append(uuid_str)  # Keep original UUID strings
 
-        executor_uuids_str = ",".join(executors)  # Join UUIDs with commas
-        print("executor_uuids_str:", executor_uuids_str)
-
         result = self.run_cmd(
             [
                 "python", get_eligible_executors_script,
                 "--contract-address", contract_address,
                 "--miner-address", miner_address,
-                "--executor-uuids", executor_uuids_str,
                 "--network", self.network,
                 "--private-key", miner_key
             ],
@@ -262,7 +258,6 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             f'python {get_eligible_executors_script} '
             f'--contract-address {contract_address} '
             f'--miner-address {miner_address} '
-            f'--executor-uuids {executor_uuids_str} '
             f'--network {self.network} '
             f'--private-key {miner_key} '
         )
@@ -453,6 +448,15 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 ],
                 capture=True, env=env
             )
+
+            print(
+                f'python {get_executor_collateral_script} '
+                f'--contract-address {contract_address} '
+                f'--miner-address {miner_address} '
+                f'--executor-uuid {uuid_str} '
+                f'--network {self.network}'
+            )
+
             print(f"Executor collateral for {uuid_str}: ", result.stdout.strip())
 
         print("✅ Contract lifecycle test completed successfully.")
