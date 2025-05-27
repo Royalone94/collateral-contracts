@@ -21,10 +21,10 @@ from celium_collateral_contracts.update_validator_for_miner import update_valida
 from celium_collateral_contracts.get_validator_of_miner import get_validator_of_miner
 
 class CollateralContract:
-    def __init__(self, network: str, contract_address: str, validator_keystr=None, miner_keystr=None):
+    def __init__(self, network: str, contract_address: str, validator_key=None, miner_key=None):
         self.w3 = get_web3_connection(network)
         try:
-            self.validator_account = get_account(validator_keystr) if validator_keystr else None
+            self.validator_account = get_account(validator_key) if validator_key else None
             self.validator_address = self.validator_account.address if self.validator_account else None
         except Exception as e:
             self.validator_account = None
@@ -32,7 +32,7 @@ class CollateralContract:
             print(f"Warning: Failed to initialize validator account. Error: {e}")
 
         try:
-            self.miner_account = get_account(miner_keystr) if miner_keystr else None
+            self.miner_account = get_account(miner_key) if miner_key else None
             self.miner_address = self.miner_account.address if self.miner_account else None
         except Exception as e:
             self.miner_account = None

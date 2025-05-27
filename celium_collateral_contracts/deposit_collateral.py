@@ -110,14 +110,14 @@ async def main():
         required=True,
         help="Expected trustee/validator address to verify"
     )
-    parser.add_argument("--keystr", help="Keystring of the account to use")
+    parser.add_argument("--private-key", help="Private key of the account to use")
     parser.add_argument("--network", default="finney", help="The Subtensor Network to connect to.")
     parser.add_argument("--executor-uuid", help="Executor UUID")
 
     args = parser.parse_args()
 
     w3 = get_web3_connection(args.network)
-    account = get_account(args.keystr)
+    account = get_account(args.private_key)
 
     deposit_event, receipt = await deposit_collateral(
         w3=w3,

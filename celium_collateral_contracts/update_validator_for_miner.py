@@ -66,13 +66,13 @@ async def main():
     parser.add_argument(
         "--new-validator", required=True, help="Address of the new validator"
     )
-    parser.add_argument("--keystr", required=True, help="Keystring of the account to use")
+    parser.add_argument("--private-key", required=True, help="Private key of the account to use")
     parser.add_argument("--network", default="finney", help="The Subtensor Network to connect to.")
 
     args = parser.parse_args()
 
     w3 = get_web3_connection(args.network)
-    account = get_account(args.keystr)
+    account = get_account(args.private_key)
 
     try:
         receipt = await update_validator_for_miner(

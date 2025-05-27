@@ -119,7 +119,7 @@ async def main():
         "--executor-uuid",
         help="Executor UUID for the slashing operation"
     )
-    parser.add_argument("--keystr", help="Keystring of the account to use")
+    parser.add_argument("--private-key", help="Private key of the account to use")
     parser.add_argument("--network", default="finney", help="The Subtensor Network to connect to.")
 
     args = parser.parse_args()
@@ -128,7 +128,7 @@ async def main():
     validate_address_format(args.miner_address)
 
     w3 = get_web3_connection(args.network)
-    account = get_account(args.keystr)
+    account = get_account(args.private_key)
 
     try:
         receipt, event = await slash_collateral(

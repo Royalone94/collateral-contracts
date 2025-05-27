@@ -86,12 +86,12 @@ async def main():
         "--reclaim-request-id", required=True, type=int, help="ID of the reclaim request to deny"
     )
     parser.add_argument("--url", required=True, help="URL containing the reason for denial")
-    parser.add_argument("--keystr", help="Keystring of the account to use")
+    parser.add_argument("--private-key", help="Private key of the account to use")
     parser.add_argument("--network", default="finney", help="The Subtensor Network to connect to.")
     args = parser.parse_args()
 
     w3 = get_web3_connection(args.network)
-    account = get_account(keystr=args.keystr)
+    account = get_account(args.private_key)
 
     deny_event, receipt = await deny_reclaim_request(
         w3=w3,

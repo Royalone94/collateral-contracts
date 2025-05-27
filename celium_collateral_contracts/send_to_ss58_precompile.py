@@ -72,7 +72,7 @@ async def main():
         type=int,
         help="The amount to send in wei (smallest unit of TAO)"
     )
-    parser.add_argument("--keystr", help="Keystring of the account to use")
+    parser.add_argument("--private-key", help="Private key of the account to use")
     parser.add_argument(
         "--network",
         default="finney",
@@ -81,7 +81,7 @@ async def main():
     args = parser.parse_args()
 
     w3 = get_web3_connection(args.network)
-    account = get_account(args.keystr)
+    account = get_account(args.private_key)
     print(f"Using account: {account.address}")
 
     try:

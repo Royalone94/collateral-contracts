@@ -46,7 +46,7 @@ def main():
             f'--contract-address {args.contract_address} '
             f'--amount-tao "0.001" '
             f'--validator-address {args.validator_address} '
-            f'--keystr {args.miner_private_key} '
+            f'--private-key {args.miner_private_key} '
             f'--network {args.network} '
             f'--executor-uuid {args.executor_uuid}'
         )
@@ -69,7 +69,7 @@ def main():
             f'--miner-address {args.miner_address} '
             f'--executor-uuids {args.executor_uuids} '
             f'--network {args.network} '
-            f'--keystr {args.miner_private_key}'
+            f'--private-key {args.miner_private_key}'
         )
         commands_to_print.append(("get_eligible_executors", get_eligible_executors_command))
 
@@ -79,7 +79,7 @@ def main():
             f'python {reclaim_collateral_script} '
             f'--contract-address {args.contract_address} '
             f'--amount-tao "0.001" '
-            f'--keystr {args.miner_private_key} '
+            f'--private-key {args.miner_private_key} '
             f'--url "reclaim_request_url" '
             f'--executor-uuid {args.executor_uuid} '
             f'--network {args.network}'
@@ -105,7 +105,7 @@ def main():
             f'--reclaim-request-id {args.reclaim_request_id} '
             f'--url "deny_request_url" '
             f'--network {args.network} '
-            f'--keystr {args.validator_private_key}' # Denied by validator
+            f'--private-key {args.validator_private_key}' # Denied by validator
         )
         commands_to_print.append(("deny_request", deny_request_command))
 
@@ -116,7 +116,7 @@ def main():
             f'--contract-address {args.contract_address} '
             f'--reclaim-request-id {args.reclaim_request_id} '
             f'--network {args.network} '
-            f'--keystr {args.validator_private_key}' # Finalized by validator
+            f'--private-key {args.validator_private_key}' # Finalized by validator
         )
         commands_to_print.append(("finalize_reclaim", finalize_reclaim_command))
 
@@ -128,7 +128,7 @@ def main():
             f'--amount-tao "0.001" '
             f'--miner-address {args.miner_address} '
             f'--url "slash_url" '
-            f'--keystr {args.validator_private_key} '
+            f'--private-key {args.validator_private_key} '
             f'--network {args.network} '
             f'--executor-uuid {args.executor_uuid}'
         )
@@ -158,4 +158,4 @@ def main():
         console.print(table)
 
 if __name__ == "__main__":
-    main() 
+    main()

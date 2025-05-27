@@ -75,13 +75,13 @@ async def main():
         "--executor-uuids",
         help="Comma-separated list of executor UUIDs to check eligibility",
     )
-    parser.add_argument("--keystr", help="Keystring of the account to use")
+    parser.add_argument("--private-key", help="Ethereum private key of the account to use")
     parser.add_argument("--network", default="finney")
 
     args = parser.parse_args()
 
     w3 = get_web3_connection(args.network)
-    account = get_account(args.keystr)  # You may not need to use this for reading data, but it's useful for connection checks
+    account = get_account(args.private_key)  # You may not need to use this for reading data, but it's useful for connection checks
 
     try:
         executor_uuids = args.executor_uuids.split(",")  # Keep UUIDs as strings
