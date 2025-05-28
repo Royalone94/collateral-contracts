@@ -137,6 +137,10 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
             revert AmountZero();
         }
 
+        if (collateralPerExecutor[msg.sender][executorUuid] < amount) {
+            revert ReclaimAmountTooLarge(); // or define a new error for executor-specific limits
+        }
+
         uint256 collateral = collaterals[msg.sender];
         uint256 pendingCollateral = collateralUnderPendingReclaims[msg.sender];
         uint256 collateralAvailableForReclaim = collateral - pendingCollateral;
