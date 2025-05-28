@@ -47,6 +47,7 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     error PastDenyTimeout();
     error ReclaimAmountTooLarge();
     error ReclaimAmountTooSmall();
+    error SlashAmountTooLarge();
     error ReclaimNotFound();
     error TransferFailed();
 
@@ -258,6 +259,10 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         }
         if (collaterals[miner] < amount) {
             revert InsufficientAmount();
+        }
+
+        if (collateralPerExecutor[msg.sender][executorUuid] < amount) {
+            revert SlashAmountTooLarge(); // or define a new error for executor-specific limits
         }
 
         // Ensure only assigned validator can slash
