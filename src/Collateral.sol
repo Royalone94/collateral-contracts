@@ -331,4 +331,33 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     function getNextReclaimId() external view returns (uint256) {
         return nextReclaimId;
     }
+
+    /// @notice Returns a list of active reclaim requests (amount > 0).
+    /// @return A dynamic array of Reclaim structs.
+    function getReclaims() external view returns (Reclaim[] memory) {
+        uint256 totalReclaims = nextReclaimId;
+        uint256 eligibleCount = 0;
+
+        // First pass to count the number of eligible reclaims
+        for (uint256 i = 1; i <= totalReclaims; i++) {
+            if (reclaims[i].amount > 0) {
+                eligibleCount++;
+            }
+        }
+
+        // Create an array of the exact size needed
+        Reclaim[] memory eligibleReclaims = new Reclaim[](eligibleCount);
+        uint256 currentIndex = 0;
+
+        // Second pass to populate the array with eligible reclaims
+        for (uint256 i = 1; i <= totalReclaims; i++) {
+            Reclaim storage currentReclaim = reclaims[i];
+            if (currentReclaim.amount > 0) {
+                eligibleReclaims[currentIndex] = currentReclaim;
+                currentIndex++;
+            }
+        }
+
+        return eligibleReclaims;
+    }
 }
