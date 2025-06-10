@@ -26,7 +26,7 @@ const DEPLOYMENTS_FILE = path.join(__dirname, "deployments.json");
 
 const netuid = 1;
 const minCollateralIncrease = process.env.MIN_COLLATERAL_INCREASE ? BigInt(process.env.MIN_COLLATERAL_INCREASE) : BigInt("1000000000000000"); // 1 ether
-const decisionTimeout = process.env.DENY_TIMEOUT || 3600;
+const decisionTimeout = process.env.DENY_TIMEOUT || 20;
 
 function loadDeployments() {
     if (fs.existsSync(DEPLOYMENTS_FILE)) {

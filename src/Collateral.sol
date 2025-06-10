@@ -19,6 +19,7 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     uint256 private nextReclaimId;
 
     struct Reclaim {
+        uint256 id;
         address miner;
         uint256 amount;
         uint256 denyTimeout;
@@ -142,10 +143,17 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         }
 
         uint64 expirationTime = uint64(block.timestamp) + DECISION_TIMEOUT;
-        reclaims[++nextReclaimId] = Reclaim(msg.sender, amount, expirationTime, executorUuid);
+        uint256 reclaimId = ++nextReclaimId;
+        reclaims[reclaimId] = Reclaim({
+            id: reclaimId,
+            miner: msg.sender,
+            amount: amount,
+            denyTimeout: expirationTime,
+            executorUuid: executorUuid
+        });
         collateralUnderPendingReclaims[msg.sender] += amount;
 
-        emit ReclaimProcessStarted(nextReclaimId, msg.sender, amount, expirationTime, url, urlContentMd5Checksum);
+        emit ReclaimProcessStarted(reclaimId, msg.sender, amount, expirationTime, url, urlContentMd5Checksum);
     }
 
     /// @notice Finalizes a reclaim request and transfers the collateral to the depositor if conditions are met
@@ -311,12 +319,9 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         // Create an array of the exact size needed
         Reclaim[] memory eligibleReclaims = new Reclaim[](eligibleCount);
         uint256 currentIndex = 0;
-
-        // Second pass to populate the array with eligible reclaims
         for (uint256 i = 1; i <= totalReclaims; i++) {
-            Reclaim storage currentReclaim = reclaims[i];
-            if (currentReclaim.amount > 0) {
-                eligibleReclaims[currentIndex] = currentReclaim;
+            if (reclaims[i].amount > 0) {
+                eligibleReclaims[currentIndex] = reclaims[i];
                 currentIndex++;
             }
         }

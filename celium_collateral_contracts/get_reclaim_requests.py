@@ -49,11 +49,11 @@ def get_all_reclaims(w3, contract_address):
         if reclaim[1] > 0:
             result.append(
                 ReclaimProcessStartedEvent(
-                    reclaim_request_id=idx + 1,  # Note: This index may not match the original reclaimRequestId
-                    account=reclaim[0],
-                    amount=reclaim[1],
-                    expiration_time=reclaim[2],
-                    executor_uuid=reclaim[3].hex(),
+                    reclaim_request_id=reclaim[0],  # Note: This index may not match the original reclaimRequestId
+                    account=reclaim[1],
+                    amount=reclaim[2],
+                    expiration_time=reclaim[3],
+                    executor_uuid=reclaim[4].hex(),
                     url='',
                     url_content_md5_checksum='',
                     block_number=0
@@ -72,11 +72,11 @@ def get_miner_reclaims(w3, contract_address, miner_address):
         if reclaim[1] > 0:
             result.append(
                 ReclaimProcessStartedEvent(
-                    reclaim_request_id=idx + 1,  # Index in this list, not global reclaimRequestId
-                    account=reclaim[0],
-                    amount=reclaim[1],
-                    expiration_time=reclaim[2],
-                    executor_uuid=reclaim[3].hex(),
+                    reclaim_request_id=reclaim[0],  # Index in this list, not global reclaimRequestId
+                    account=reclaim[1],
+                    amount=reclaim[2],
+                    expiration_time=reclaim[3],
+                    executor_uuid=reclaim[4].hex(),
                     url='',
                     url_content_md5_checksum='',
                     block_number=0
@@ -123,10 +123,10 @@ async def get_reclaim_process_started_events(
         """Fetch reclaim information using reclaim_id."""
         reclaim = contract.functions.reclaims(reclaim_id).call()
         return {
-            "miner": reclaim[0],
-            "amount": reclaim[1],
-            "denyTimeout": reclaim[2],
-            "executorUuid": reclaim[3].hex(),
+            "miner": reclaim[1],
+            "amount": reclaim[2],
+            "denyTimeout": reclaim[3],
+            "executorUuid": reclaim[4].hex(),
         }
 
     formatted_events = []
