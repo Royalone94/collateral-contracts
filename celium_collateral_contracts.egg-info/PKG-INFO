@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: celium-collateral-contracts
-Version: 1.0.33
+Version: 1.0.34
 Summary: Collateral Smart Contract for Bittensor
 Author-email: Vitali <vitalishvets20@gmail.com>
 License: BSD 3-Clause License
@@ -54,10 +54,33 @@ Dynamic: license-file
 >
 > **Design**: One collateral contract per validator and subnet.
 
+This smart contract is **generic** and works with **any Bittensor subnet**.  
+
+## ⚖️ A Note on Slashing Philosophy
+
+The power to slash collateral carries weight — it protects subnet quality, but also risks abuse if unchecked.  
+This contract encourages **automated enforcement** wherever possible, ensuring consistency and fairness across validators.
+
+Manual slashing is supported for edge cases where misbehavior is clear but not yet detectable by automated logic.
+However, validators should approach this capability **with restraint and responsibility**.  
+Every manual slash must be:
+
+- **Justified** — supported by strong evidence (logs, signatures, links).
+- **Transparent** — the justification URL and content hash are stored on-chain.
+- **Proportional** — reflecting the severity and intent of the violation.
+
+Whenever possible, validators are encouraged to **automate detection and slashing logic** so that actions are data-driven and reproducible.
+Automation helps ensure miners are treated consistently across validators — and enables **retroactive enforcement** without requiring on-the-spot judgment.
+
+Slashing is a **last-resort accountability tool**, not a convenience.  
+Validators who use it impulsively risk undermining miner trust — and their own reputation.
+
+This model is designed for **trust-minimized collaboration**, not permissionless aggression.  
+Use slashing to **protect the network**, not to punish disagreement.
+
 ## Overview
 
 This contract creates a **trust-minimized interaction** between miners and validators in the Bittensor ecosystem. 
-**One contract per validator per subnet** ensures clear accountability for each validator's collateral pool.
 
 - **Miners Lock Collateral**
   
@@ -73,7 +96,7 @@ This contract creates a **trust-minimized interaction** between miners and valid
 
 - **Automatic Release**
 
-  If a validator does not respond to a miner's reclaim request within a configured deadline, the miner can reclaim their stake, preventing indefinite lock-ups. Validators can now **finalize or deny reclaim requests** based on the **executor UUID** associated with the collateral.
+  If a validator does not respond to a miner's reclaim request within a configured deadline, the miner can reclaim their stake, preventing indefinite lock-ups.
 
 - **Trustless & Auditable**
   
@@ -99,8 +122,8 @@ This contract creates a **trust-minimized interaction** between miners and valid
 >
 > All on-chain actions (deposits, slashes, reclaims, etc.) consume gas, so **both miners and validators must hold enough TAO in their Ethereum (H160) wallets** to cover transaction fees.
 > - Make sure to keep a sufficient balance to handle any deposits, reclaims, or slashes you need to perform.
-> - Convert H160 to SS58 ([`scripts/h160_to_ss58.py`](/scripts/h160_to_ss58.py) to transfer TAO to it.
-> - You can transfer TAO back to your SS58 wallet when no more contract interactions are required. See [`scripts/send_to_ss58_precompile.py`](/script/send_to_ss58_precompile.py).
+> - Convert H160 to SS58 ([`celium_collateral_contracts/h160_to_ss58.py`](/celium_collateral_contracts/h160_to_ss58.py) to transfer TAO to it.
+> - You can transfer TAO back to your SS58 wallet when no more contract interactions are required. See [`scripts/celium_collateral_contracts.py`](/celium_collateral_contracts/celium_collateral_contracts.py).
 
 ## Demo
 
@@ -117,18 +140,18 @@ Below is a typical sequence for integrating and using this collateral contract w
    - The subnet owner **updates validator software** to prioritize miners with higher collateral when assigning tasks.
    - Validators adopt this updated code and prepare to enforce collateral requirements.
 
-- **Validator Deployment**
-   - The validator **creates an Ethereum (H160) wallet**, links it to their hotkey, and funds it with enough TAO to cover transaction fees.
-   - The validator **deploys the contract**, requiring participating miners to stake collateral.
-   - The validator **publishes the contract address** on-chain, allowing miners to discover and verify it.
-   - Once ready, the validator **enables collateral-required mode** and prioritizes miners based on their locked amounts.
+- **Owner Deployment**
+   - The owner **creates an Ethereum (H160) wallet**, links it to their hotkey, and funds it with enough TAO to cover transaction fees.
+   - The owner **deploys the contract**, requiring participating miners to stake collateral.
+   - The owner **publishes the contract address** on-chain, allowing miners to discover and verify it.
+   - Once ready, the owner **enables collateral-required mode** and prioritizes miners based on their locked amounts.
 
 - **Miner Deposit**
    - Each miner **creates an Ethereum (H160) wallet**, links it to their hotkey, and funds it with enough TAO for transaction fees.
-   - Miners **retrieve** the validator's contract address from the chain or another trusted source.
-   - They **verify** the contract is indeed associated with the intended validator.
-   - Upon confirmation, miners **deposit** collateral by calling the contract's `deposit(validator, executorUuid)` function, specifying the **executor UUID** to associate the collateral with specific executors.
-   - Confirm on-chain that your collateral has been successfully locked for that validator - [`scripts/get_miners_collateral.py`](/scripts/get_miners_collateral.py)
+   - Miners **retrieve** the owner's contract address from the chain or another trusted source.
+   - Upon confirmation, miners **deposit** collateral by calling the contract's `deposit(executorUuid)` function, specifying the **executor UUID** to associate the collateral with specific executors.
+   - Confirm on-chain that your collateral has been successfully locked for that miner - [`celium_collateral_contracts/get_miners_collateral.py`](/celium_collateral_contracts/get_miners_collateral.py)
+   - Confirm on-chain that your collateral has been successfully locked for that your executor - [`celium_collateral_contracts/get_miners_collateral.py`](/celium_collateral_contracts/get_executor_collateral.py)
 
 - **Slashing Misbehaving Miners**
    - If a miner is found violating subnet rules (e.g., returning invalid responses), the validator **calls** `slashCollateral()` with the `miner`, `slashAmount`, `executorUuid`, and other details to penalize the miner by reducing their staked amount.
@@ -140,25 +163,25 @@ Below is a typical sequence for integrating and using this collateral contract w
 ## Usage Guides
 
 Below are step-by-step instructions tailored to **miners**, **validators**, and **subnet owners**.
-Refer to the repository's [`scripts/`](/scripts/) folder for sample implementations and helper scripts.
+Refer to the repository's [`celium_collateral_contracts/`](/celium_collateral_contracts/) folder for sample implementations and helper scripts.
 
 ## As a Miner, you can:
 
 - **Deposit Collateral**
   If you plan to stake for multiple validators, simply repeat these steps for each one:
   - Obtain the validator's contract address (usually via tools provided by the subnet owner).
-  - Verify that code deployed at the address is indeed the collateral smart contract, the trustee and netuid kept inside are as expected - see [`scripts/verify_contract.py`](/scripts/verify_contract.py).
-  - Run [`scripts/deposit_collateral.py`](/scripts/deposit_collateral.py) to initiate the deposit transaction with your specified amount of $TAO.
-  - Confirm on-chain that your collateral has been successfully locked for that validator - [`scripts/get_miners_collateral.py`](/scripts/get_miners_collateral.py)
+  - Verify that code deployed at the address is indeed the collateral smart contract, the trustee and netuid kept inside are as expected - see [`celium_collateral_contracts/verify_contract.py`](/celium_collateral_contracts/verify_contract.py).
+  - Run [`celium_collateral_contracts/deposit_collateral.py`](/celium_collateral_contracts/deposit_collateral.py) to initiate the deposit transaction with your specified amount of $TAO.
+  - Confirm on-chain that your collateral has been successfully locked for that validator - [`celium_collateral_contracts/get_miners_collateral.py`](/celium_collateral_contracts/get_miners_collateral.py)
 
 - **Reclaim Collateral**
-  - Initiate the reclaim process by running [`scripts/reclaim_collateral.py`](/scripts/reclaim_collateral.py) with your desired withdrawal amount.
+  - Initiate the reclaim process by running [`celium_collateral_contracts/reclaim_collateral.py`](/scripts/reclaim_collateral.py) with your desired withdrawal amount.
   - Wait for the validator's response or for the configured inactivity timeout to pass.
-  - If the validator does not deny your request by the deadline, run [`scripts/finalize_reclaim.py`](/scripts/finalize_reclaim.py) to unlock and retrieve your collateral.
+  - If the validator does not deny your request by the deadline, run [`celium_collateral_contracts/finalize_reclaim.py`](/celium_collateral_contracts/finalize_reclaim.py) to unlock and retrieve your collateral.
   - Verify on-chain that your balance has been updated accordingly.
 
 
-### As a Validator, you can:
+### As a Owner, you can:
 
 - **Deploy the Contract**
   - Install [Foundry](https://book.getfoundry.sh/).
@@ -207,7 +230,7 @@ Refer to the repository's [`scripts/`](/scripts/) folder for sample implementati
   ---
 
 - **Enable Regular Operation**
-  - Enable the deployed contract address in your validator's code (provided by the subnet owner), so that
+  - Enable the deployed contract address in your owner's code (provided by the subnet owner), so that
     - task assignment prioritizes miners with higher collateral balances.
     - misbehaviour checks causing slashing are automated.
 
@@ -228,9 +251,9 @@ Refer to the repository's [`scripts/`](/scripts/) folder for sample implementati
 
 ### As a Subnet Owner, you can
 
-- **Provide Deployment Tools for Validators**
+- **Provide Deployment Tools for contract owner**
   
-  Offer a script <!--(e.g. built on top of [`scripts/deploy.sh`](todo-link))--> to help validators:
+  Offer a script <!--(e.g. built on top of [`scripts/deploy.sh`](todo-link))--> to help contract owner:
   - Create H160 wallet & assosiate it with their SS58.
   - Transfer Tao.
   - Deploy the contract.
