@@ -48,6 +48,19 @@
   },
   {
     "type": "function",
+    "name": "TRUSTEE",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "UPGRADE_INTERFACE_VERSION",
     "inputs": [],
     "outputs": [
@@ -130,11 +143,6 @@
     "name": "deposit",
     "inputs": [
       {
-        "name": "validator",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
         "name": "executorUuid",
         "type": "bytes16",
         "internalType": "bytes16"
@@ -190,12 +198,52 @@
   },
   {
     "type": "function",
+    "name": "getReclaims",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct Collateral.Reclaim[]",
+        "components": [
+          {
+            "name": "miner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "amount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "denyTimeout",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "executorUuid",
+            "type": "bytes16",
+            "internalType": "bytes16"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "initialize",
     "inputs": [
       {
         "name": "netuid",
         "type": "uint16",
         "internalType": "uint16"
+      },
+      {
+        "name": "trustee",
+        "type": "address",
+        "internalType": "address"
       },
       {
         "name": "minCollateralIncrease",
@@ -354,24 +402,6 @@
   },
   {
     "type": "function",
-    "name": "updateValidatorForMiner",
-    "inputs": [
-      {
-        "name": "miner",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "newValidator",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "upgradeToAndCall",
     "inputs": [
       {
@@ -387,25 +417,6 @@
     ],
     "outputs": [],
     "stateMutability": "payable"
-  },
-  {
-    "type": "function",
-    "name": "validatorOfMiner",
-    "inputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
   },
   {
     "type": "event",
@@ -728,6 +739,22 @@
     "type": "error",
     "name": "ReclaimNotFound",
     "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SlashAmountTooLarge",
+    "inputs": [
+      {
+        "name": "currentCollateral",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "attemptedSlashAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
     "type": "error",

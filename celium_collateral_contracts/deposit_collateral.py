@@ -51,7 +51,7 @@ def verify_trustee(contract, expected_trustee):
 
 
 async def deposit_collateral(w3, account, amount_tao,
-                             contract_address, validator_address, executor_uuid):
+                             contract_address, executor_uuid):
     """Deposit collateral into the contract.
 
     Args:
@@ -59,14 +59,12 @@ async def deposit_collateral(w3, account, amount_tao,
         account: Account to use for the transaction
         amount_tao: Amount to deposit in TAO
         contract_address: Address of the contract
-        validator: Validator address for the deposit operation
         executor_uuid: Executor UUID for the deposit operation
 
     Returns:
         tuple: (deposit_event, receipt)
     """
     validate_address_format(contract_address)
-    validate_address_format(validator_address)
 
     contract_abi = load_contract_abi()
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
@@ -77,7 +75,7 @@ async def deposit_collateral(w3, account, amount_tao,
     executor_uuid_bytes = UUID(executor_uuid).bytes
 
     tx_hash = build_and_send_transaction(
-        w3, contract.functions.deposit(validator_address, executor_uuid_bytes), account, value=amount_wei, gas_limit=200000,  # Higher gas limit for this function
+        w3, contract.functions.deposit(executor_uuid_bytes), account, value=amount_wei, gas_limit=200000,  # Higher gas limit for this function
     )
 
     receipt = wait_for_receipt(w3, tx_hash)
@@ -105,11 +103,6 @@ async def main():
         type=float,
         help="Amount of TAO to deposit"
     )
-    parser.add_argument(
-        "--validator-address",
-        required=True,
-        help="Expected trustee/validator address to verify"
-    )
     parser.add_argument("--private-key", help="Private key of the account to use")
     parser.add_argument("--network", default="finney", help="The Subtensor Network to connect to.")
     parser.add_argument("--executor-uuid", help="Executor UUID")
@@ -124,7 +117,6 @@ async def main():
         account=account,
         amount_tao=args.amount_tao,
         contract_address=args.contract_address,
-        validator_address=args.validator_address,
         executor_uuid=args.executor_uuid,
     )
 

@@ -2,15 +2,14 @@ import argparse
 from rich.console import Console
 from rich.table import Table
 import os
+from eth_account import Account
 
 def main():
     parser = argparse.ArgumentParser(description="Generate command strings for collateral contract scripts.")
     parser.add_argument("--network", required=True, help="Network to use (e.g., local, test)")
     parser.add_argument("--contract-address", required=True, help="Address of the deployed collateral contract")
-    parser.add_argument("--validator-private-key", required=True, help="Validator's private key")
+    parser.add_argument("--owner-private-key", required=True, help="Owner's private key")
     parser.add_argument("--miner-private-key", required=True, help="Miner's private key")
-    parser.add_argument("--validator-address", required=True, help="Validator's address")
-    parser.add_argument("--miner-address", required=True, help="Miner's address")
     parser.add_argument("--executor-uuid", help="UUID of a single executor", default="72a1d228-3c8c-45cb-8b84-980071592589")
     parser.add_argument("--executor-uuids", help="Comma-separated list of executor UUIDs", default="3a5ce92a-a066-45f7-b07d-58b3b7986464,72a1d228-3c8c-45cb-8b84-980071592589")
     parser.add_argument("--reclaim-request-id", type=int, help="ID of the reclaim request", default=1)
@@ -22,8 +21,11 @@ def main():
 
     args = parser.parse_args()
 
+    # Calculate addresses from private keys
+    owner_address = Account.from_key(args.owner_private_key).address
+    miner_address = Account.from_key(args.miner_private_key).address
+
     console = Console()
-    
     commands_to_print = []
 
     # Define script paths relative to the current script
@@ -45,7 +47,6 @@ def main():
             f'python {deposit_script} '
             f'--contract-address {args.contract_address} '
             f'--amount-tao "0.001" '
-            f'--validator-address {args.validator_address} '
             f'--private-key {args.miner_private_key} '
             f'--network {args.network} '
             f'--executor-uuid {args.executor_uuid}'
@@ -56,7 +57,7 @@ def main():
     get_miners_collateral_command = (
         f'python {get_miners_collateral_script} '
         f'--contract-address {args.contract_address} '
-        f'--miner-address {args.miner_address} '
+        f'--miner-address {miner_address} '
         f'--network {args.network}'
     )
     commands_to_print.append(("get_miners_collateral", get_miners_collateral_command))
@@ -66,7 +67,7 @@ def main():
         get_eligible_executors_command = (
             f'python {get_eligible_executors_script} '
             f'--contract-address {args.contract_address} '
-            f'--miner-address {args.miner_address} '
+            f'--miner-address {miner_address} '
             f'--executor-uuids {args.executor_uuids} '
             f'--network {args.network} '
             f'--private-key {args.miner_private_key}'
@@ -105,7 +106,7 @@ def main():
             f'--reclaim-request-id {args.reclaim_request_id} '
             f'--url "deny_request_url" '
             f'--network {args.network} '
-            f'--private-key {args.validator_private_key}' # Denied by validator
+            f'--private-key {args.owner_private_key}' # Denied by owner
         )
         commands_to_print.append(("deny_request", deny_request_command))
 
@@ -116,7 +117,7 @@ def main():
             f'--contract-address {args.contract_address} '
             f'--reclaim-request-id {args.reclaim_request_id} '
             f'--network {args.network} '
-            f'--private-key {args.validator_private_key}' # Finalized by validator
+            f'--private-key {args.owner_private_key}' # Finalized by owner
         )
         commands_to_print.append(("finalize_reclaim", finalize_reclaim_command))
 
@@ -126,9 +127,9 @@ def main():
             f'python {slash_collateral_script} '
             f'--contract-address {args.contract_address} '
             f'--amount-tao "0.001" '
-            f'--miner-address {args.miner_address} '
+            f'--miner-address {miner_address} '
             f'--url "slash_url" '
-            f'--private-key {args.validator_private_key} '
+            f'--private-key {args.owner_private_key} '
             f'--network {args.network} '
             f'--executor-uuid {args.executor_uuid}'
         )
@@ -139,7 +140,7 @@ def main():
         get_executor_collateral_command = (
             f'python {get_executor_collateral_script} '
             f'--contract-address {args.contract_address} '
-            f'--miner-address {args.miner_address} '
+            f'--miner-address {miner_address} '
             f'--executor-uuid {args.executor_uuid} '
             f'--network {args.network}'
         )

@@ -21,15 +21,15 @@ from celium_collateral_contracts.update_validator_for_miner import update_valida
 from celium_collateral_contracts.get_validator_of_miner import get_validator_of_miner
 
 class CollateralContract:
-    def __init__(self, network: str, contract_address: str, validator_key=None, miner_key=None):
+    def __init__(self, network: str, contract_address: str, owner_key=None, miner_key=None):
         self.w3 = get_web3_connection(network)
         try:
-            self.validator_account = get_account(validator_key) if validator_key else None
-            self.validator_address = self.validator_account.address if self.validator_account else None
+            self.owner_account = get_account(owner_key) if owner_key else None
+            self.owner_address = self.owner_account.address if self.owner_account else None
         except Exception as e:
-            self.validator_account = None
-            self.validator_address = None
-            print(f"Warning: Failed to initialize validator account. Error: {e}")
+            self.owner_account = None
+            self.owner_address = None
+            print(f"Warning: Failed to initialize owner account. Error: {e}")
 
         try:
             self.miner_account = get_account(miner_key) if miner_key else None
@@ -48,7 +48,6 @@ class CollateralContract:
             self.miner_account,
             amount_tao,
             self.contract_address,
-            self.validator_address,
             executor_uuid,
         )
 
@@ -67,7 +66,7 @@ class CollateralContract:
         """Finalize a reclaim request."""
         return await finalize_reclaim(
             self.w3,
-            self.validator_account,
+            self.miner_account,
             reclaim_request_id,
             self.contract_address,
         )
@@ -76,7 +75,7 @@ class CollateralContract:
         """Deny a reclaim request."""
         return await deny_reclaim_request(
             self.w3,
-            self.validator_account,
+            self.owner_account,
             reclaim_request_id,
             url,
             self.contract_address,
@@ -86,7 +85,7 @@ class CollateralContract:
         """Slash collateral from a miner."""
         return await slash_collateral(
             self.w3,
-            self.validator_account,
+            self.owner_account,
             self.miner_address,
             amount_tao,
             self.contract_address,
@@ -162,21 +161,18 @@ async def main():
     # Configuration
     network = "local"
     contract_address = "0x8b6A0598898255C48Cb73B21271bB47f2EEEE7c1"
-    validator_key = "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
+    owner_key = "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
     miner_key = "259e0eded00353f71eb6be89d8749ad12bf693cbd8aeb6b80cd3a343c0dc8faf"
 
     # Initialize CollateralContract instance
-    contract = CollateralContract(network, contract_address, validator_key, miner_key)
+    contract = CollateralContract(network, contract_address, owner_key, miner_key)
 
-    print("Validator address:", contract.validator_address)
     # Verify chain ID
     chain_id = contract.w3.eth.chain_id
     print(f"Verified chain ID: {chain_id}")
 
     # Check balances
-    validator_balance = await contract.get_balance(contract.validator_address)
     miner_balance = await contract.get_balance(contract.miner_address)
-    print("Validator Balance:", validator_balance)
     print("Miner Balance:", miner_balance)
 
     # Deposit collateral (optional: uncomment to use)
@@ -242,9 +238,9 @@ async def main():
     print("[FINAL COLLATERAL]:", final_collateral)
 
     # Check final balances
-    validator_balance = await contract.get_balance(contract.validator_address)
+    owner_balance = await contract.get_balance(contract.owner_address)
     miner_balance = await contract.get_balance(contract.miner_address)
-    print("Validator Balance:", validator_balance)
+    print("Owner Balance:", owner_balance)
     print("Miner Balance:", miner_balance)
 
     # Validator lookup

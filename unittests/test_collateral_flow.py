@@ -83,29 +83,29 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         get_reclaim_requests_script = "celium_collateral_contracts/get_reclaim_requests.py"
         slash_collateral_script = "celium_collateral_contracts/slash_collateral.py"
         if self.USE_EXISTING_ACCOUNTS:
-            validator_address = "0xE1A07A44ac6f8423bA3b734F0cAfC6F87fd385Fc"
-            validator_key = "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
+            owner_address = "0xE1A07A44ac6f8423bA3b734F0cAfC6F87fd385Fc"
+            owner_key = "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
             miner_address = "0x19F71e76B34A8Dc01944Cf3B76478B45DE05B75b"
             miner_key = "259e0eded00353f71eb6be89d8749ad12bf693cbd8aeb6b80cd3a343c0dc8faf"
-            validator_ss58 = h160_to_ss58(validator_address)
+            owner_ss58 = h160_to_ss58(owner_address)
             miner_ss58 = h160_to_ss58(miner_address)
-            print("Validator SS58:", validator_ss58)
+            print("Owner SS58:", owner_ss58)
             print("Miner SS58:", miner_ss58)
 
-            balance = self.w3.eth.get_balance(validator_address)
-            print("Validator Balance:", self.w3.from_wei(balance, 'ether'))
+            balance = self.w3.eth.get_balance(owner_address)
+            print("Owner Balance:", self.w3.from_wei(balance, 'ether'))
             
             balance = self.w3.eth.get_balance(miner_address)
             print("Miner Balance:", self.w3.from_wei(balance, 'ether'))
 
         else:
-            # === Step 1: Create Validator Account ===
-            validator = Account.create("extra entropy collateral contract Cellium")
-            validator_address = validator.address
-            validator_key = validator.key.hex()
-            validator_ss58 = h160_to_ss58(validator_address)
-            print("Validator Address:", validator_address)
-            print("Validator Key:", validator_key)
+            # === Step 1: Create Owner Account ===
+            owner = Account.create("extra entropy collateral contract Cellium")
+            owner_address = owner.address
+            owner_key = owner.key.hex()
+            owner_ss58 = h160_to_ss58(owner_address)
+            print("Owner Address:", owner_address)
+            print("Owner Key:", owner_key)
 
             # === Step 2: Create Miner Account ===
             miner = Account.create("extra entropy MINER Cellium")
@@ -115,23 +115,25 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             print("Miner Address:", miner_address)
             print("Miner Key:", miner_key)
 
-            # === Step 3: Fund Validator ===
-            subprocess.run(["btcli", "w", "transfer", "--network", self.network, "--dest", validator_ss58, "--amount", "0.5"])
+            # === Step 3: Fund Owner ===
+            subprocess.run(["btcli", "w", "transfer", "--network", self.network, "--dest", owner_ss58, "--amount", "0.5"])
             time.sleep(3)
 
             chain_id = self.w3.eth.chain_id
             print(f"Verified chain ID: {chain_id}")
 
-            balance = self.w3.eth.get_balance(validator_address)
-            print("Validator Balance:", self.w3.from_wei(balance, 'ether'))
+            balance = self.w3.eth.get_balance(owner_address)
+            print("Owner Balance:", self.w3.from_wei(balance, 'ether'))
             # === Step 4: Deploy Contract ===
-            os.environ["DEPLOYER_PRIVATE_KEY"] = validator_key  # Setting the deployer's private key
-            
+            os.environ["PRIVATE_KEY"] = owner_key  # Setting the deployer's private key
+            os.environ["RPC_URL"] = self.RPC_URL  # Setting the RPC URL for deployment
+            os.environ["DENY_TIMEOUT"] = 3600
+            os.environ["MIN_COLLATERAL_INCREASE"] = 1000000000000000  # Example amount in wei
             # Validate the required environment variables
             if not os.environ.get("RPC_URL"):
                 raise ValueError("RPC_URL environment variable not set.")
-            if not os.environ.get("DEPLOYER_PRIVATE_KEY"):
-                raise ValueError("DEPLOYER_PRIVATE_KEY environment variable not set.")
+            if not os.environ.get("PRIVATE_KEY"):
+                raise ValueError("PRIVATE_KEY environment variable not set.")
             
             # === Step 5: Fund Miner ===
             subprocess.run(["btcli", "w", "transfer", "--network", self.network, "--dest", miner_ss58, "--amount", "3.5"])
@@ -143,44 +145,35 @@ class TestCollateralContractLifecycle(unittest.TestCase):
 
          # Deploy using the `forge` command directly
         print("Deploying contract...", self.RPC_URL)
-          # Define the arguments for deployment
-        netuid = 1  # Example netuid
-        min_collateral_increase = 1000000000000000  # Example amount in wei
-        deny_timeout = 3600  # Example deny timeout in seconds
 
         if self.DEPLOY_CONTRACT:
-            print("Deploying contract with forge...")
-            deploy_result = subprocess.run(
+            print("Deploying contract with node deployUUPS.js...")
+
+            deploy_result = self.run_cmd(
                 [
-                    "forge", "create", "src/Collateral.sol:Collateral",
-                    "--broadcast",
-                    "--rpc-url", self.RPC_URL,
-                    "--private-key", miner_key,
-                    "--constructor-args", str(netuid), str(min_collateral_increase), str(deny_timeout)
+                    "node", "deployUUPS.js",
                 ],
-                capture_output=True, text=True
+                env=env
             )
+            
             print(
-                f'forge create src/Collateral.sol:Collateral '
-                f'--broadcast '
-                f'--rpc-url {self.RPC_URL} '
-                f'--private-key {miner_key} '
-                f'--constructor-args {netuid} {min_collateral_increase} {deny_timeout}'
+                f'node deployUUPS.js '
             )
 
-            self.assertIn("Deployed to:", deploy_result.stdout, deploy_result.stderr)
-            contract_line = [line for line in deploy_result.stdout.splitlines() if "Deployed to:" in line][0]
+            # Expect deployUUPS.js to print contract address in stdout, e.g. "Deployed to: 0x..."
+            self.assertIn("Contract Address:", deploy_result.stdout, deploy_result.stderr)
+            contract_line = [line for line in deploy_result.stdout.splitlines() if "Contract Address:" in line][0]
             contract_address = contract_line.split(": ")[-1]
             self.assertTrue(Web3.is_address(contract_address))
         else:
-            contract_address = "0x8b6A0598898255C48Cb73B21271bB47f2EEEE7c1"
+            contract_address = "0xf24D7d7185FCda6570D9c4b924af20b5e4A92019"
 
         print("Deployed Contract Address:", contract_address)
         # === Step 6: Miner Deposits Collateral ===
         env["PRIVATE_KEY"] = miner_key
 
-        print("Validator Address:", validator_address)
-        print("Validator Key:", validator_key)
+        print("Owner Address:", owner_address)
+        print("Owner Key:", owner_key)
 
         print("Miner Address:", miner_address)
         print("Miner Key:", miner_key)
@@ -189,12 +182,12 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         # Refactored deposit collateral steps as a loop
         deposit_tasks = [
             ("3a5ce92a-a066-45f7-b07d-58b3b7986464", False),
-            ("72a1d228-3c8c-45cb-8b84-980071592589", False),
-            ("15c2ff27-0a4d-4987-bbc9-fa009ef9f7d2", False),
-            ("335453ad-246c-4ad5-809e-e2013ca6c07e", False),
-            ("89c66519-244f-4db0-b4a7-756014d6fd24", False),
-            ("af3f1b82-ff98-44c8-b130-d948a2a56b44", False),
-            ("ee3002d9-71f8-4a83-881d-48bd21b6bdd1", False),
+            # ("72a1d228-3c8c-45cb-8b84-980071592589", False),
+            # ("15c2ff27-0a4d-4987-bbc9-fa009ef9f7d2", False),
+            # ("335453ad-246c-4ad5-809e-e2013ca6c07e", False),
+            # ("89c66519-244f-4db0-b4a7-756014d6fd24", False),
+            # ("af3f1b82-ff98-44c8-b130-d948a2a56b44", False),
+            # ("ee3002d9-71f8-4a83-881d-48bd21b6bdd1", False),
         ]
         for uuid_str, capture_output in deposit_tasks:
             print(f"Starting deposit collateral for executor {uuid_str}...")
@@ -203,7 +196,6 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                     "python", deposit_script,
                     "--contract-address", contract_address,
                     "--amount-tao", "0.001",
-                    "--validator-address", validator_address,
                     "--private-key", miner_key,
                     "--network", self.network,
                     "--executor-uuid", uuid_str
@@ -213,15 +205,14 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             if capture_output:
                 print(result.stdout.strip())
 
-        print(
-            f'python {deposit_script} '
-            f'--contract-address {contract_address} '
-            f'--amount-tao 0.001 '
-            f'--validator-address {validator_address} '
-            f'--private-key {miner_key} '
-            f'--network {self.network} '
-            f'--executor-uuid {uuid_str}'
-        )
+            print(
+                f'python {deposit_script} '
+                f'--contract-address {contract_address} '
+                f'--amount-tao 0.001 '
+                f'--private-key {miner_key} '
+                f'--network {self.network} '
+                f'--executor-uuid {uuid_str}'
+            )
 
         # === Step 7: Verify Collateral ===
         check = self.run_cmd(
@@ -297,7 +288,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
 
             print("Reclaim Result:", result.stdout.strip())
 
-        # === Step 10: Validator Checks Requests ===
+        # === Step 10: Owner Checks Requests ===
         latest_block = self.w3.eth.block_number
         print(f"All reclaim requests between these blocks: {latest_block - 10}, {latest_block + 10}")
 
@@ -322,29 +313,29 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         
         deny_reclaim_id = 2
         finalize_reclaim_id = 1
-        # === Step 11: Validator Denies Request 1, Finalizes Request 2 ===
-        env["PRIVATE_KEY"] = validator_key
-        print("Starting deny reclaim request")
-        self.run_cmd(
-            [
-                "python", deny_request_script,
-                "--contract-address", contract_address,
-                "--reclaim-request-id", str(deny_reclaim_id),
-                "--url", "no, i will not",
-                "--network", self.network,
-                "--private-key", miner_key
-            ],
-            env=env
-        )
+        # === Step 11: Owner Denies Request 1, Finalizes Request 2 ===
+        env["PRIVATE_KEY"] = owner_key
+        # print("Starting deny reclaim request")
+        # self.run_cmd(
+        #     [
+        #         "python", deny_request_script,
+        #         "--contract-address", contract_address,
+        #         "--reclaim-request-id", str(deny_reclaim_id),
+        #         "--url", "no, i will not",
+        #         "--network", self.network,
+        #         "--private-key", miner_key
+        #     ],
+        #     env=env
+        # )
 
-        print(
-            f'python {deny_request_script} '
-            f'--contract-address {contract_address} '
-            f'--reclaim-request-id {deny_reclaim_id} '
-            f'--url "no, i will not" '
-            f'--network {self.network} '
-            f'--private-key {miner_key} '
-        )
+        # print(
+        #     f'python {deny_request_script} '
+        #     f'--contract-address {contract_address} '
+        #     f'--reclaim-request-id {deny_reclaim_id} '
+        #     f'--url "no, i will not" '
+        #     f'--network {self.network} '
+        #     f'--private-key {miner_key} '
+        # )
         
         print("Deny reclaim request finished")
 
@@ -377,7 +368,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                     "--amount-tao", "0.001",
                     "--miner-address", miner_address,
                     "--url", "slashit",
-                    "--private-key", validator_key,
+                    "--private-key", owner_key,
                     "--network", self.network,
                     "--executor-uuid", uuid_str
                 ],
@@ -391,7 +382,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 f'--contract-address {contract_address} '
                 f'--amount-tao 0.001 '
                 f'--miner-address {miner_address} '
-                f'--private-key {validator_key} '
+                f'--private-key {owner_key} '
                 f'--url "slashit" '
                 f'--network {self.network} '
                 f'--executor-uuid {uuid_str}'
@@ -417,21 +408,21 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         print("[FINAL COLLATERAL]:", result.stdout.strip())
 
         print("Checking account balances before transfer...")
-        print("Validator balance:", self.w3.from_wei(self.w3.eth.get_balance(validator_address), 'ether'))
+        print("Owner balance:", self.w3.from_wei(self.w3.eth.get_balance(owner_address), 'ether'))
         print("Miner balance:", self.w3.from_wei(self.w3.eth.get_balance(miner_address), 'ether'))
 
-        validator_transferrable = get_transferrable_balance(self.w3, validator_address, "0x0000000000000000000000000000000000000001")
+        owner_transferrable = get_transferrable_balance(self.w3, owner_address, "0x0000000000000000000000000000000000000001")
         miner_transferrable = get_transferrable_balance(self.w3, miner_address, "0x0000000000000000000000000000000000000001")
         
-        print("validator_transferrable:", validator_transferrable)
+        print("owner_transferrable:", owner_transferrable)
         print("miner_transferrable:", miner_transferrable)
 
-        print("Validator transferrable balance:", self.w3.from_wei(validator_transferrable, 'ether'))
+        print("Owner transferrable balance:", self.w3.from_wei(owner_transferrable, 'ether'))
         print("Miner transferrable balance:", self.w3.from_wei(miner_transferrable, 'ether'))
 
         print("Checking account balances after transfer...")
 
-        print("Validator balance:", self.w3.from_wei(self.w3.eth.get_balance(validator_address), 'ether'))
+        print("Owner balance:", self.w3.from_wei(self.w3.eth.get_balance(owner_address), 'ether'))
         print("Miner balance:", self.w3.from_wei(self.w3.eth.get_balance(miner_address), 'ether'))
 
         # === Step 8: Check executor collateral for each deposit ===

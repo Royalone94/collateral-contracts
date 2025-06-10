@@ -147,7 +147,9 @@ def get_miner_collateral(w3, contract_address, miner_address):
 
 
 def get_revert_reason(w3, tx_hash, block_number):
-    """Returns the custom Solidity error name for a failed transaction, or 'Could not parse error' if not decodable."""
+    """Returns the custom Solidity error name for a failed transaction, or 'Could not parse error' if not decodable.
+    If the error is SlashAmountTooLarge, also prints its parameters.
+    """
     tx = w3.eth.get_transaction(tx_hash)
     try:
         w3.eth.call({
@@ -172,6 +174,17 @@ def get_revert_reason(w3, tx_hash, block_number):
                     selector_bytes = eth_utils.keccak(text=sig)[:4]
                     selector_hex = '0x' + selector_bytes.hex()
                     if selector == selector_hex:
+                        # If error is SlashAmountTooLarge, decode parameters
+                        if item['name'] == "SlashAmountTooLarge":
+                            # Remove selector (4 bytes = 8 hex chars after 0x)
+                            params_data = revert_data[10:]
+                            # address (32 bytes = 64 hex chars), then two uint256 (64 hex chars each)
+                            if len(params_data) >= 192:
+                                miner_address = "0x" + params_data[:64][-40:]
+                                current_collateral = int(params_data[64:128], 16)
+                                attempted_slash = int(params_data[128:192], 16)
+                                print(f"SlashAmountTooLarge: minerAddress is {miner_address}, current collateral amount is {current_collateral} and tried slash amount is {attempted_slash}")
+                                return f"SlashAmountTooLarge(minerAddress={miner_address}, currentCollateral={current_collateral}, attemptedSlashAmount={attempted_slash})"
                         return item['name']
         return "Could not parse error"
     return "Could not parse error"

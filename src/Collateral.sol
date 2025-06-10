@@ -7,13 +7,13 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     uint16 public NETUID;
+    address public TRUSTEE;
     uint64 public DECISION_TIMEOUT;
     uint256 public MIN_COLLATERAL_INCREASE;
 
     mapping(uint256 => Reclaim) public reclaims;
     mapping(address => uint256) public collaterals;
     mapping(address => uint256) private collateralUnderPendingReclaims;
-    mapping(address => address) public validatorOfMiner;
     mapping(address => mapping(bytes16 => uint256)) public collateralPerExecutor;
     mapping(address => bytes16[]) private knownExecutorUuids;
     uint256 private nextReclaimId;
@@ -47,33 +47,36 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     error PastDenyTimeout();
     error ReclaimAmountTooLarge();
     error ReclaimAmountTooSmall();
-    error SlashAmountTooLarge();
+    error SlashAmountTooLarge(address minerAddress, uint256 currentCollateral, uint256 attemptedSlashAmount);
     error ReclaimNotFound();
     error TransferFailed();
 
     /// @notice Initializes a new Collateral contract with specified parameters
     /// @param netuid The netuid of the subnet
+    /// @param trustee H160 address of the trustee who has permissions to slash collateral or deny reclaim requests
     /// @param minCollateralIncrease The minimum amount that can be deposited or reclaimed
     /// @param decisionTimeout The time window (in seconds) for the validator to deny a reclaim request
     /// @dev Reverts if any of the arguments is zero
-    function initialize(uint16 netuid, uint256 minCollateralIncrease, uint64 decisionTimeout) public initializer {
+    function initialize(uint16 netuid, address trustee, uint256 minCollateralIncrease, uint64 decisionTimeout) public initializer {
+        require(trustee != address(0), "Trustee address must be non-zero");
         require(minCollateralIncrease > 0, "Min collateral increase must be greater than 0");
         require(decisionTimeout > 0, "Decision timeout must be greater than 0");
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
         NETUID = netuid;
+        TRUSTEE = trustee;
         MIN_COLLATERAL_INCREASE = minCollateralIncrease;
         DECISION_TIMEOUT = decisionTimeout;
     }
 
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
-
-    modifier onlyAssignedValidator(address miner) {
-        if (validatorOfMiner[miner] != msg.sender) {
+    modifier onlyTrustee() {
+        if (msg.sender != TRUSTEE) {
             revert NotTrustee();
         }
         _;
     }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // Allow deposits only via deposit() function
     receive() external payable {
@@ -89,26 +92,12 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /// @dev The deposited amount must be greater than or equal to MIN_COLLATERAL_INCREASE
     /// @dev If it's not revert with InsufficientAmount error
     /// @dev Emits a Deposit event with the sender's address and deposited amount
-    function deposit(address validator, bytes16 executorUuid) external payable {
+    function deposit(bytes16 executorUuid) external payable {
         if (msg.value < MIN_COLLATERAL_INCREASE) {
             revert InsufficientAmount();
         }
-
-        require(validator != address(0), "Validator address must be non-zero");
-
-        // Handle validator switch
-        address currentValidator = validatorOfMiner[msg.sender];
-        if (currentValidator != address(0) && currentValidator != validator) {
-            // Only allow switch if miner has no pending reclaim
-            require(collateralUnderPendingReclaims[msg.sender] == 0, "Cannot switch validator with pending reclaim");
-
-            validatorOfMiner[msg.sender] = validator;
-
-            // Optional: emit an event for validator switch
-            // emit ValidatorChanged(msg.sender, currentValidator, validator);
-        } else if (currentValidator == address(0)) {
-            // First time deposit
-            validatorOfMiner[msg.sender] = validator;
+        if (executorUuid == bytes16(0)) {
+            revert InvalidDepositMethod();
         }
 
         collaterals[msg.sender] += msg.value;
@@ -176,9 +165,6 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         if (reclaim.denyTimeout >= block.timestamp) {
             revert BeforeDenyTimeout();
         }
-        if (validatorOfMiner[reclaim.miner] != msg.sender) {
-            revert NotTrustee();
-        }
 
         // Delete reclaim and update pending reclamation amount unconditionally
         delete reclaims[reclaimRequestId];
@@ -220,14 +206,11 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /// @dev Reverts with PastDenyTimeout if the timeout has already expired
     function denyReclaimRequest(uint256 reclaimRequestId, string calldata url, bytes16 urlContentMd5Checksum)
         external
+        onlyTrustee
     {
         Reclaim memory reclaim = reclaims[reclaimRequestId];
         if (reclaim.amount == 0) {
             revert ReclaimNotFound();
-        }
-
-        if (validatorOfMiner[reclaim.miner] != msg.sender) {
-            revert NotTrustee();
         }
 
         if (reclaim.denyTimeout < block.timestamp) {
@@ -253,6 +236,7 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /// @dev Reverts with TransferFailed if the TAO transfer fails
     function slashCollateral(address miner, uint256 amount, string calldata url, bytes16 urlContentMd5Checksum, bytes16 executorUuid)
         external
+        onlyTrustee
     {
         if (amount == 0) {
             revert AmountZero();
@@ -261,13 +245,12 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
             revert InsufficientAmount();
         }
 
-        if (collateralPerExecutor[msg.sender][executorUuid] < amount) {
-            revert SlashAmountTooLarge(); // or define a new error for executor-specific limits
-        }
-
-        // Ensure only assigned validator can slash
-        if (validatorOfMiner[miner] != msg.sender) {
-            revert NotTrustee();
+        if (collateralPerExecutor[miner][executorUuid] < amount) {
+            revert SlashAmountTooLarge({
+                minerAddress: miner,
+                currentCollateral: collateralPerExecutor[miner][executorUuid],
+                attemptedSlashAmount: amount
+            });
         }
         
         collaterals[miner] -= amount;
@@ -308,22 +291,6 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         }
 
         return eligible;
-    }
-
-    /// @notice Updates the validator for a specific miner and transfers associated collateral
-    /// @dev Can only be called by the current validator of the miner
-    /// @param miner The address of the miner whose validator is being updated
-    /// @param newValidator The address of the new validator
-    function updateValidatorForMiner(address miner, address newValidator) external {
-        if (miner != msg.sender) {
-            emit ValidatorUpdateAttemptFailed(miner, msg.sender, newValidator);
-            revert NotTrustee();
-        }
-        if (newValidator == address(0)) {
-            revert InvalidDepositMethod();
-        }
-
-        validatorOfMiner[miner] = newValidator;
     }
 
     /// @notice Returns the next available reclaim request ID.
