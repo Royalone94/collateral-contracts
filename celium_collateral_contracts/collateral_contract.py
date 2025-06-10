@@ -164,7 +164,7 @@ async def main():
 
     # Configuration
     network = "local"
-    contract_address = "0x09634D633cE2A24fF6ab6386935A8a1681DEc622"
+    contract_address = "0xe2Eb8B17b01F7D457AaE3c91432d3a2a1c012991"
     owner_key = "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
     miner_key = "259e0eded00353f71eb6be89d8749ad12bf693cbd8aeb6b80cd3a343c0dc8faf"
 

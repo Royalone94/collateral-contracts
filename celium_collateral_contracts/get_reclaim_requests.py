@@ -46,7 +46,7 @@ def get_all_reclaims(w3, contract_address):
     result = []
     for idx, reclaim in enumerate(reclaims):
         # reclaim is a tuple: (miner, amount, denyTimeout, executorUuid)
-        if reclaim[1] > 0:
+        if reclaim[2] > 0:
             result.append(
                 ReclaimProcessStartedEvent(
                     reclaim_request_id=reclaim[0],  # Note: This index may not match the original reclaimRequestId
@@ -69,7 +69,7 @@ def get_miner_reclaims(w3, contract_address, miner_address):
     result = []
     for idx, reclaim in enumerate(reclaims):
         # reclaim is a tuple: (miner, amount, denyTimeout, executorUuid)
-        if reclaim[1] > 0:
+        if reclaim[2] > 0:
             result.append(
                 ReclaimProcessStartedEvent(
                     reclaim_request_id=reclaim[0],  # Index in this list, not global reclaimRequestId
