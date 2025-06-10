@@ -230,8 +230,9 @@ async def main():
         await contract.slash_collateral(amount, "slashit", uuid_str)
 
     # Verify collateral
-    collateral = await contract.get_miner_collateral()
-    print("[COLLATERAL]:", collateral)
+    for uuid_str, _ in deposit_tasks:
+        executor_collateral = await contract.get_executor_collateral(uuid_str)
+        print(f"Executor {uuid_str}: {executor_collateral} TAO")
 
     # Final collateral check
     final_collateral = await contract.get_miner_collateral()
