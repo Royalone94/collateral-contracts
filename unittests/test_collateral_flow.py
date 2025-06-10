@@ -475,6 +475,28 @@ class TestCollateralContractLifecycle(unittest.TestCase):
 
             print(f"Executor collateral for {uuid_str}: ", result.stdout.strip())
 
+        print("Listing eligible executors finally")
+        result = self.run_cmd(
+            [
+                "python", get_eligible_executors_script,
+                "--contract-address", contract_address,
+                "--miner-address", miner_address,
+                "--network", self.network,
+                "--private-key", miner_key
+            ],
+            capture=True,
+            env=env
+        )
+        print(
+            f'python {get_eligible_executors_script} '
+            f'--contract-address {contract_address} '
+            f'--miner-address {miner_address} '
+            f'--network {self.network} '
+            f'--private-key {miner_key} '
+        )
+        time.sleep(3)
+        print("Result: ", result.stdout.strip())
+
         print("✅ Contract lifecycle test completed successfully.")
 
 

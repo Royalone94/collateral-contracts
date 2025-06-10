@@ -47,7 +47,7 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     error PastDenyTimeout();
     error ReclaimAmountTooLarge();
     error ReclaimAmountTooSmall();
-    error SlashAmountTooLarge(address minerAddress, uint256 currentCollateral, uint256 attemptedSlashAmount);
+    error SlashAmountTooLarge();
     error ReclaimNotFound();
     error TransferFailed();
 
@@ -246,11 +246,7 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         }
 
         if (collateralPerExecutor[miner][executorUuid] < amount) {
-            revert SlashAmountTooLarge({
-                minerAddress: miner,
-                currentCollateral: collateralPerExecutor[miner][executorUuid],
-                attemptedSlashAmount: amount
-            });
+            revert SlashAmountTooLarge();
         }
         
         collaterals[miner] -= amount;

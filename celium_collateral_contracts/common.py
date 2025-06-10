@@ -175,16 +175,6 @@ def get_revert_reason(w3, tx_hash, block_number):
                     selector_hex = '0x' + selector_bytes.hex()
                     if selector == selector_hex:
                         # If error is SlashAmountTooLarge, decode parameters
-                        if item['name'] == "SlashAmountTooLarge":
-                            # Remove selector (4 bytes = 8 hex chars after 0x)
-                            params_data = revert_data[10:]
-                            # address (32 bytes = 64 hex chars), then two uint256 (64 hex chars each)
-                            if len(params_data) >= 192:
-                                miner_address = "0x" + params_data[:64][-40:]
-                                current_collateral = int(params_data[64:128], 16)
-                                attempted_slash = int(params_data[128:192], 16)
-                                print(f"SlashAmountTooLarge: minerAddress is {miner_address}, current collateral amount is {current_collateral} and tried slash amount is {attempted_slash}")
-                                return f"SlashAmountTooLarge(minerAddress={miner_address}, currentCollateral={current_collateral}, attemptedSlashAmount={attempted_slash})"
                         return item['name']
         return "Could not parse error"
     return "Could not parse error"
