@@ -37,30 +37,52 @@ def get_next_reclaim_id(w3, contract_address):
     next_id = contract.functions.getNextReclaimId().call()
     return next_id
 
-# Get all reclaim requests
+# Get all reclaim requests using the getReclaims() method from the contract
 def get_all_reclaims(w3, contract_address):
     contract_abi = load_contract_abi()
-
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
-    next_reclaim_id = get_next_reclaim_id(w3, contract_address)
-    print("next_reclaim_id", next_reclaim_id)
-    reclaims = []
-    for reclaim_id in range(1, next_reclaim_id + 1):
-        reclaim = contract.functions.reclaims(reclaim_id).call()
+    # getReclaims returns an array of Reclaim structs
+    reclaims = contract.functions.getReclaims().call()
+    result = []
+    for idx, reclaim in enumerate(reclaims):
         # reclaim is a tuple: (miner, amount, denyTimeout, executorUuid)
         if reclaim[1] > 0:
-            reclaims.append(
+            result.append(
                 ReclaimProcessStartedEvent(
-                    reclaim_request_id=reclaim_id,
-                    account="",
+                    reclaim_request_id=idx + 1,  # Note: This index may not match the original reclaimRequestId
+                    account=reclaim[0],
                     amount=reclaim[1],
                     expiration_time=reclaim[2],
                     executor_uuid=reclaim[3].hex(),
                     url='',
                     url_content_md5_checksum='',
                     block_number=0
-            ))
-    return reclaims
+                )
+            )
+    return result
+
+def get_miner_reclaims(w3, contract_address, miner_address):
+    contract_abi = load_contract_abi()
+    contract = w3.eth.contract(address=contract_address, abi=contract_abi)
+    # getReclaimsOfMiner returns an array of Reclaim structs for the given miner
+    reclaims = contract.functions.getReclaimsOfMiner(miner_address).call()
+    result = []
+    for idx, reclaim in enumerate(reclaims):
+        # reclaim is a tuple: (miner, amount, denyTimeout, executorUuid)
+        if reclaim[1] > 0:
+            result.append(
+                ReclaimProcessStartedEvent(
+                    reclaim_request_id=idx + 1,  # Index in this list, not global reclaimRequestId
+                    account=reclaim[0],
+                    amount=reclaim[1],
+                    expiration_time=reclaim[2],
+                    executor_uuid=reclaim[3].hex(),
+                    url='',
+                    url_content_md5_checksum='',
+                    block_number=0
+                )
+            )
+    return result
 
 async def get_reclaim_process_started_events(
     w3, contract_address, block_num_low, block_num_high

@@ -233,6 +233,47 @@
   },
   {
     "type": "function",
+    "name": "getReclaimsOfMiner",
+    "inputs": [
+      {
+        "name": "miner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct Collateral.Reclaim[]",
+        "components": [
+          {
+            "name": "miner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "amount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "denyTimeout",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "executorUuid",
+            "type": "bytes16",
+            "internalType": "bytes16"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "initialize",
     "inputs": [
       {
@@ -743,23 +784,7 @@
   {
     "type": "error",
     "name": "SlashAmountTooLarge",
-    "inputs": [
-      {
-        "name": "minerAddress",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "currentCollateral",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "attemptedSlashAmount",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
+    "inputs": []
   },
   {
     "type": "error",

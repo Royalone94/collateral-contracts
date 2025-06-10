@@ -323,4 +323,30 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
         return eligibleReclaims;
     }
+
+    /// @notice Returns all reclaim requests for a specific miner.
+    /// @param miner The address of the miner.
+    /// @return An array of Reclaim structs belonging to the miner.
+    function getReclaimsOfMiner(address miner) external view returns (Reclaim[] memory) {
+        uint256 totalReclaims = nextReclaimId;
+        uint256 count = 0;
+
+        // First pass: count reclaims belonging to the miner
+        for (uint256 i = 1; i <= totalReclaims; i++) {
+            if (reclaims[i].amount > 0 && reclaims[i].miner == miner) {
+                count++;
+            }
+        }
+
+        // Second pass: collect reclaims
+        Reclaim[] memory minerReclaims = new Reclaim[](count);
+        uint256 idx = 0;
+        for (uint256 i = 1; i <= totalReclaims; i++) {
+            if (reclaims[i].amount > 0 && reclaims[i].miner == miner) {
+                minerReclaims[idx++] = reclaims[i];
+            }
+        }
+
+        return minerReclaims;
+    }
 }

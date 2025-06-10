@@ -15,7 +15,7 @@ from celium_collateral_contracts.deny_request import deny_reclaim_request
 from celium_collateral_contracts.slash_collateral import slash_collateral
 from celium_collateral_contracts.get_collaterals import get_deposit_events
 from celium_collateral_contracts.get_reclaim_requests import get_reclaim_process_started_events
-from celium_collateral_contracts.get_reclaim_requests import get_next_reclaim_id, get_all_reclaims
+from celium_collateral_contracts.get_reclaim_requests import get_next_reclaim_id, get_all_reclaims, get_miner_reclaims
 from celium_collateral_contracts.get_eligible_executors import get_eligible_executors
 from celium_collateral_contracts.update_validator_for_miner import update_validator_for_miner
 from celium_collateral_contracts.get_validator_of_miner import get_validator_of_miner
@@ -152,7 +152,11 @@ class CollateralContract:
 
     async def get_reclaim_requests(self):
         return get_all_reclaims(self.w3, self.contract_address)
-        
+
+    async def get_miner_reclaim_requests(self, miner_address=None):
+        if miner_address is None:
+            miner_address = self.miner_address
+        return get_miner_reclaims(self.w3, self.contract_address, miner_address)
 
 async def main():
     import os
@@ -160,7 +164,7 @@ async def main():
 
     # Configuration
     network = "local"
-    contract_address = "0xF97CBd8Ce110348601938c1890f159026290d419"
+    contract_address = "0x09634D633cE2A24fF6ab6386935A8a1681DEc622"
     owner_key = "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
     miner_key = "259e0eded00353f71eb6be89d8749ad12bf693cbd8aeb6b80cd3a343c0dc8faf"
 
@@ -214,7 +218,7 @@ async def main():
         print(f"Reclaiming collateral for executor {uuid_str}...")
         await contract.reclaim_collateral(amount, f"Reclaim collateral from executor: {uuid_str}", uuid_str)
  
-    reclaim_requests = await contract.get_reclaim_requests()
+    reclaim_requests = await contract.get_miner_reclaim_requests()
     print("reclaim_requests", reclaim_requests)
     for reclaim_event in reclaim_requests:
         reclaim_request_id = getattr(reclaim_event, "reclaim_request_id", None)

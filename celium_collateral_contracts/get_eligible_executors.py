@@ -45,7 +45,6 @@ async def get_eligible_executors(w3, contract_address, miner_address):
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
     # Convert executor_uuids from strings to bytes16
-    print("get eligible executors")
     try:
         executors = await asyncio.to_thread(
             contract.functions.getEligibleExecutors(miner_address).call
