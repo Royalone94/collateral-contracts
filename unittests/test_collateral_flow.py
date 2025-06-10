@@ -228,6 +228,31 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         print("[COLLATERAL]:", check.stdout.strip())
         print("Deposit collateral finished")
 
+        get_executor_collateral_script = "celium_collateral_contracts/get_executor_collateral.py"
+        for uuid_str, _ in deposit_tasks:
+            print(f"Checking executor collateral for executor {uuid_str}...")
+            result = self.run_cmd(
+                [
+                    "python", get_executor_collateral_script,
+                    "--contract-address", contract_address,
+                    "--miner-address", miner_address,
+                    "--executor-uuid", uuid_str,
+                    "--network", self.network
+                ],
+                capture=True, env=env
+            )
+
+            print(
+                f'python {get_executor_collateral_script} '
+                f'--contract-address {contract_address} '
+                f'--miner-address {miner_address} '
+                f'--executor-uuid {uuid_str} '
+                f'--network {self.network}'
+            )
+
+            print(f"Executor collateral for {uuid_str}: ", result.stdout.strip())
+
+
         print("Listing eligible executors before penalty...")
 
         executors = []

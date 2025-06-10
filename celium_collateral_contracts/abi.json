@@ -745,6 +745,11 @@
     "name": "SlashAmountTooLarge",
     "inputs": [
       {
+        "name": "minerAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
         "name": "currentCollateral",
         "type": "uint256",
         "internalType": "uint256"

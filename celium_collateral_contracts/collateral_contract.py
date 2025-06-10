@@ -160,7 +160,7 @@ async def main():
 
     # Configuration
     network = "local"
-    contract_address = "0x8b6A0598898255C48Cb73B21271bB47f2EEEE7c1"
+    contract_address = "0xF97CBd8Ce110348601938c1890f159026290d419"
     owner_key = "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
     miner_key = "259e0eded00353f71eb6be89d8749ad12bf693cbd8aeb6b80cd3a343c0dc8faf"
 
@@ -242,31 +242,6 @@ async def main():
     miner_balance = await contract.get_balance(contract.miner_address)
     print("Owner Balance:", owner_balance)
     print("Miner Balance:", miner_balance)
-
-    # Validator lookup
-    try:
-        validator = await contract.get_validator_of_miner()
-        print(f"Validator for miner {contract.miner_address}: {validator}")
-    except Exception as e:
-        print(f"Error retrieving validator for miner: {e}")
-
-    # Update validator
-    # new_validator = "0x94C54725D6c8500aFf59716F33EdE6AA1FaD86CF"
-    new_validator = "0xE1A07A44ac6f8423bA3b734F0cAfC6F87fd385Fc"
-    
-    print(f"Updating validator for miner to {new_validator}...")
-    try:
-        update_result = await contract.update_validator_for_miner(new_validator)
-        print("Update Validator Result:", update_result)
-    except Exception as e:
-        print(f"Error updating validator for miner: {e}")
-
-    # Confirm updated validator
-    try:
-        validator = await contract.get_validator_of_miner()
-        print(f"Validator for miner {contract.miner_address}: {validator}")
-    except Exception as e:
-        print(f"Error retrieving validator for miner: {e}")
 
     print("✅ Contract lifecycle completed successfully.")
 
