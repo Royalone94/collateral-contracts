@@ -207,6 +207,11 @@
         "internalType": "struct Collateral.Reclaim[]",
         "components": [
           {
+            "name": "id",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
             "name": "miner",
             "type": "address",
             "internalType": "address"
@@ -247,6 +252,11 @@
         "type": "tuple[]",
         "internalType": "struct Collateral.Reclaim[]",
         "components": [
+          {
+            "name": "id",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
           {
             "name": "miner",
             "type": "address",
@@ -365,6 +375,11 @@
       }
     ],
     "outputs": [
+      {
+        "name": "id",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
       {
         "name": "miner",
         "type": "address",
