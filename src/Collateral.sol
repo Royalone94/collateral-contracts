@@ -143,15 +143,16 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         }
 
         uint64 expirationTime = uint64(block.timestamp) + DECISION_TIMEOUT;
-        uint256 reclaimId = ++nextReclaimId;
-        reclaims[reclaimId] = Reclaim(
-            reclaimId,
-            msg.sender,
-            amount,
-            expirationTime,
-            executorUuid
-        );
+
         collateralUnderPendingReclaims[msg.sender] += amount;
+
+        uint256 reclaimId = ++nextReclaimId;
+        Reclaim storage r = reclaims[reclaimId];
+        r.miner = msg.sender;
+        r.amount = amount;
+        r.denyTimeout = expirationTime;
+        r.executorUuid = executorUuid;
+        r.id = reclaimId;
 
         emit ReclaimProcessStarted(reclaimId, msg.sender, amount, expirationTime, url, urlContentMd5Checksum);
     }
