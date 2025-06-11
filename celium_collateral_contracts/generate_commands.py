@@ -13,8 +13,8 @@ def main():
     parser.add_argument("--executor-uuid", help="UUID of a single executor", default="72a1d228-3c8c-45cb-8b84-980071592589")
     parser.add_argument("--executor-uuids", help="Comma-separated list of executor UUIDs", default="3a5ce92a-a066-45f7-b07d-58b3b7986464,72a1d228-3c8c-45cb-8b84-980071592589")
     parser.add_argument("--reclaim-request-id", type=int, help="ID of the reclaim request", default=1)
-    parser.add_argument("--start-block", type=int, help="Starting block for reclaim requests", default=12345)
-    parser.add_argument("--end-block", type=int, help="Ending block for reclaim requests", default=12355)
+    parser.add_argument("--block-start", type=int, help="Starting block for reclaim requests", default=12345)
+    parser.add_argument("--block-end", type=int, help="Ending block for reclaim requests", default=12355)
     parser.add_argument("--raw", action='store_true', help="Output raw command strings, one per line")
     # Amount is hardcoded for now as per test script example
     # URL is hardcoded for now as per test script example
@@ -88,12 +88,12 @@ def main():
         commands_to_print.append(("reclaim_collateral", reclaim_collateral_command))
 
     # 5. get_reclaim_requests command
-    if args.start_block is not None and args.end_block is not None:
+    if args.block_start is not None and args.block_end is not None:
          get_reclaim_requests_command = (
             f'python {get_reclaim_requests_script} '
             f'--contract-address {args.contract_address} '
-            f'--start-block {args.start_block} '
-            f'--end-block {args.end_block} '
+            f'--block-start {args.block_start} '
+            f'--block-end {args.block_end} '
             f'--network {args.network}'
         )
          commands_to_print.append(("get_reclaim_requests", get_reclaim_requests_command))
