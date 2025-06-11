@@ -61,6 +61,7 @@ async def deny_reclaim_request(
             reclaim_request_id, url, bytes.fromhex(md5_checksum)
         ),
         account,
+        gas_limit=200000,
     )
 
     receipt = wait_for_receipt(w3, tx_hash)

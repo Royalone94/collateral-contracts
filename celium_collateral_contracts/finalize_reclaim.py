@@ -54,6 +54,7 @@ async def finalize_reclaim(w3, account, reclaim_request_id, contract_address):
         w3,
         contract.functions.finalizeReclaim(reclaim_request_id),
         account,
+        gas_limit=200000,
     )
     receipt = wait_for_receipt(w3, tx_hash)
 
