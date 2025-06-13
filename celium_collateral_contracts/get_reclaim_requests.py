@@ -14,6 +14,7 @@ import argparse
 from dataclasses import dataclass
 import bittensor.utils
 from celium_collateral_contracts.common import get_web3_connection, load_contract_abi
+import uuid
 
 
 @dataclass
@@ -53,7 +54,7 @@ def get_all_reclaims(w3, contract_address):
                     account=reclaim[1],
                     amount=reclaim[2],
                     expiration_time=reclaim[3],
-                    executor_uuid=reclaim[4].hex(),
+                    executor_uuid=str(uuid.UUID(bytes=reclaim[4])),
                     url='',
                     url_content_md5_checksum='',
                     block_number=0
@@ -76,7 +77,7 @@ def get_miner_reclaims(w3, contract_address, miner_address):
                     account=reclaim[1],
                     amount=reclaim[2],
                     expiration_time=reclaim[3],
-                    executor_uuid=reclaim[4].hex(),
+                    executor_uuid=str(uuid.UUID(bytes=reclaim[4])),
                     url='',
                     url_content_md5_checksum='',
                     block_number=0
@@ -146,7 +147,7 @@ async def get_reclaim_process_started_events(
                 account=account,
                 amount=reclaim_info["amount"],
                 expiration_time=reclaim_info["denyTimeout"],
-                executor_uuid=reclaim_info["executorUuid"],
+                executor_uuid=str(uuid.UUID(bytes=reclaim_info["executorUuid"])),
                 url=decoded_event['args']['url'],
                 url_content_md5_checksum=decoded_event['args']['urlContentMd5Checksum'].hex(),
                 block_number=log["blockNumber"],
