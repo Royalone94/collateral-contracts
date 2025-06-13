@@ -22,7 +22,11 @@ from celium_collateral_contracts.get_validator_of_miner import get_validator_of_
 
 class CollateralContract:
     def __init__(self, network: str, contract_address: str, owner_key=None, miner_key=None):
-        self.w3 = get_web3_connection(network)
+        try:
+            self.w3 = get_web3_connection(network)
+        except Exception as e:
+            print(f"Warning: Failed to connect bittensor network. Error: {e}")
+
         try:
             self.owner_account = get_account(owner_key) if owner_key else None
             self.owner_address = self.owner_account.address if self.owner_account else None
