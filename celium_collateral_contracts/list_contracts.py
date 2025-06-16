@@ -7,7 +7,7 @@ import sys
 import bittensor.utils
 import bittensor_wallet
 from bittensor import rao
-from celium_collateral_contracts.common import get_miner_collateral, get_web3_connection
+from celium_collateral_contracts.common import get_web3_connection
 
 
 async def main():
@@ -130,16 +130,6 @@ async def main():
                 print(f"HotKey {hotkey}")
                 print(f"- EVM Address: {evm_address}")
                 print(f"- Contract Address: {contract_address}")
-
-                # collateral checking is a blocking function so we make it optional
-                if args.check_collateral:
-                    collateral = get_miner_collateral(
-                        w3,
-                        contract_address,
-                        keypair["address"],
-                    )
-
-                    print(f"- My Collateral: {w3.from_wei(collateral, 'ether')} TAO")
 
     except Exception as e:
         print(f"An error occurred: {e}")

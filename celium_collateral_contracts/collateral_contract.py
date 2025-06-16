@@ -15,7 +15,6 @@ from celium_collateral_contracts.slash_collateral import slash_collateral
 from celium_collateral_contracts.get_collaterals import get_deposit_events
 from celium_collateral_contracts.get_reclaim_requests import get_reclaim_process_started_events
 from celium_collateral_contracts.get_reclaim_requests import get_next_reclaim_id, get_all_reclaims
-from celium_collateral_contracts.get_eligible_executors import get_eligible_executors
 
 class CollateralContract:
     def __init__(self, network: str, contract_address: str, owner_key=None, miner_key=None):

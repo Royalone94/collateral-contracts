@@ -122,7 +122,7 @@ async def main():
 
     print(f"Successfully deposited {args.amount_tao} TAO")
     print("Event details:")
-    print(f"  Account: {deposit_event['args']['account']}")
+    print(f"  Executor Id: {deposit_event['args']['executorId']}")
     print(
         f"  Amount: {w3.from_wei(deposit_event['args']['amount'], 'ether')} TAO")
     print(f"  Transaction hash: {receipt['transactionHash'].hex()}")

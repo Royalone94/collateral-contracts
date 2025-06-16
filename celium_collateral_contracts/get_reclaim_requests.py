@@ -163,16 +163,20 @@ async def main():
         "--contract-address", required=True, help="Address of the deployed Collateral contract"
     )
     parser.add_argument(
-        "--network",
-        default="finney",
-        help="The Subtensor Network to connect to.",
+        "--block-start", required=True, type=int, help="Starting block number (inclusive)"
     )
-
+    parser.add_argument(
+        "--block-end", required=True, type=int, help="Ending block number (inclusive)"
+    )
+    parser.add_argument(
+        "--network",
+        default="finney")
+    
     args = parser.parse_args()
 
     w3 = get_web3_connection(args.network)
-    events = get_all_reclaims(
-        w3, args.contract_address
+    events = await get_reclaim_process_started_events(
+        w3, args.contract_address, args.block_start, args.block_end
     )
 
     fieldnames = [

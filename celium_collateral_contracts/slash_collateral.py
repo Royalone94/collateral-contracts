@@ -121,9 +121,10 @@ async def main():
             args.executor_uuid
         )
 
-        print(f"Successfully slashed {args.amount_tao} TAO from {args.miner_address}")
+        print(f"Successfully slashed for executor {args.executor_uuid}")
         print("Event details:")
-        print(f"  Account: {event['args']['account']}")
+        print(f"  Executor ID: {event['args']['executorId']}")
+        print(f"  Miner address: {event['args']['miner']}")
         print(
             f"  Amount: "
             f"{w3.from_wei(event['args']['amount'], 'ether')} TAO",

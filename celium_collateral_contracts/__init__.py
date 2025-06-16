@@ -7,8 +7,6 @@ from .send_to_ss58_precompile import *
 from .reclaim_collateral import *
 from .list_contracts import *
 from .get_reclaim_requests import *
-from .get_miners_collateral import *
-from .get_eligible_executors import *
 from .get_collaterals import *
 from .get_all_associations import *
 from .generate_keypair import *

@@ -5,8 +5,6 @@ import subprocess
 import unittest
 from eth_account import Account
 from web3 import Web3
-import uuid
-import re
 
 # Update import to use the scripts package
 from celium_collateral_contracts.address_conversion import h160_to_ss58
@@ -178,7 +176,6 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         print("Miner Address:", miner_address)
         print("Miner Key:", miner_key)
 
-        executor_uuid = "72a1d228-3c8c-45cb-8b84-980071592589"  # Example UUID
         # Refactored deposit collateral steps as a loop
         deposit_tasks = [
             ("3a5ce92a-a066-45f7-b07d-58b3b7986464", False),
@@ -214,18 +211,6 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 f'--executor-uuid {uuid_str}'
             )
 
-        # === Step 7: Verify Collateral ===
-        check = self.run_cmd(
-            [
-                "python", get_miners_collateral_script,
-                "--contract-address", contract_address,
-                "--miner-address", miner_address,
-                "--network", self.network
-            ],
-            capture=True, env=env
-        )
-
-        print("[COLLATERAL]:", check.stdout.strip())
         print("Deposit collateral finished")
 
         get_executor_collateral_script = "celium_collateral_contracts/get_executor_collateral.py"
@@ -252,39 +237,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
 
             print(f"Executor collateral for {uuid_str}: ", result.stdout.strip())
 
-
-        print("Listing eligible executors before penalty...")
-
-        executors = []
-        for uuid_str, capture_output in deposit_tasks:
-            executors.append(uuid_str)  # Keep original UUID strings
-
-        result = self.run_cmd(
-            [
-                "python", get_eligible_executors_script,
-                "--contract-address", contract_address,
-                "--miner-address", miner_address,
-                "--network", self.network,
-                "--private-key", miner_key
-            ],
-            capture=True,
-            env=env
-        )
-        print(
-            f'python {get_eligible_executors_script} '
-            f'--contract-address {contract_address} '
-            f'--miner-address {miner_address} '
-            f'--network {self.network} '
-            f'--private-key {miner_key} '
-        )
         time.sleep(3)
-        print("Result: ", result.stdout.strip())
-        # Extract UUIDs from the result log
-        result_output = result.stdout.strip()
-        if "Eligible Executors:" in result_output:
-            eligible_executors = result_output.split("Eligible Executors: ")[1].split(",")
-            print("Eligible Executors as list:", eligible_executors)
-
         # === Step 9: Miner Reclaims Collateral ===
         print("Starting reclaim collateral...")
         for uuid_str, _ in deposit_tasks:
@@ -293,7 +246,6 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 [
                     "python", reclaim_collateral_script,
                     "--contract-address", contract_address,
-                    "--amount-tao", '"0.001"',
                     "--private-key", miner_key,
                     "--url", f"Reclaiming for executor {uuid_str}",
                     "--executor-uuid", uuid_str,
@@ -304,7 +256,6 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             print(
                 f'python {reclaim_collateral_script} '
                 f'--contract-address {contract_address} '
-                f'--amount-tao "0.001" '
                 f'--private-key {miner_key} '
                 f'--url "Reclaiming for executor {uuid_str}" '
                 f'--executor-uuid {uuid_str} '
@@ -390,8 +341,6 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 [
                     "python", slash_collateral_script,
                     "--contract-address", contract_address,
-                    "--amount-tao", "0.001",
-                    "--miner-address", miner_address,
                     "--url", "slashit",
                     "--private-key", owner_key,
                     "--network", self.network,
@@ -405,8 +354,6 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             print(
                 f'python {slash_collateral_script} '
                 f'--contract-address {contract_address} '
-                f'--amount-tao 0.001 '
-                f'--miner-address {miner_address} '
                 f'--private-key {owner_key} '
                 f'--url "slashit" '
                 f'--network {self.network} '
@@ -414,24 +361,6 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             )
 
         # === Step 12: Final Collateral Check ===
-        result = self.run_cmd(
-            [
-                "python", get_miners_collateral_script,
-                "--contract-address", contract_address,
-                "--miner-address", miner_address,
-                "--network", self.network
-            ],
-            capture=True, env=env
-        )
-
-        print(
-            f'python {get_miners_collateral_script} '
-            f'--contract-address {contract_address} '
-            f'--miner-address {miner_address} '
-            f'--network {self.network}'
-        )
-        print("[FINAL COLLATERAL]:", result.stdout.strip())
-
         print("Checking account balances before transfer...")
         print("Owner balance:", self.w3.from_wei(self.w3.eth.get_balance(owner_address), 'ether'))
         print("Miner balance:", self.w3.from_wei(self.w3.eth.get_balance(miner_address), 'ether'))
@@ -475,25 +404,6 @@ class TestCollateralContractLifecycle(unittest.TestCase):
 
             print(f"Executor collateral for {uuid_str}: ", result.stdout.strip())
 
-        print("Listing eligible executors finally")
-        result = self.run_cmd(
-            [
-                "python", get_eligible_executors_script,
-                "--contract-address", contract_address,
-                "--miner-address", miner_address,
-                "--network", self.network,
-                "--private-key", miner_key
-            ],
-            capture=True,
-            env=env
-        )
-        print(
-            f'python {get_eligible_executors_script} '
-            f'--contract-address {contract_address} '
-            f'--miner-address {miner_address} '
-            f'--network {self.network} '
-            f'--private-key {miner_key} '
-        )
         time.sleep(3)
         print("Result: ", result.stdout.strip())
 

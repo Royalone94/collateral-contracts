@@ -78,8 +78,8 @@
     "inputs": [
       {
         "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
+        "type": "bytes16",
+        "internalType": "bytes16"
       }
     ],
     "outputs": [

@@ -11,7 +11,7 @@ import csv
 import sys
 from collections import defaultdict
 import bittensor.utils
-from celium_collateral_contracts.common import load_contract_abi, get_web3_connection, get_miner_collateral
+from celium_collateral_contracts.common import load_contract_abi, get_web3_connection, get_executor_collateral
 from dataclasses import dataclass
 
 
@@ -98,19 +98,19 @@ async def main():
 
     cumulative_deposits = defaultdict(int)
     for event in deposit_events:
-        cumulative_deposits[event.account] += event.amount
+        cumulative_deposits[event.executorId] += event.amount
 
-    miner_addresses = set(event.account for event in deposit_events)
+    executor_ids = set(event.executorId for event in deposit_events)
     results = []
-    for miner_address in miner_addresses:
+    for executor_id in executor_ids:
         collateral = get_miner_collateral(
-            w3, args.contract_address, miner_address)
+            w3, args.contract_address, executor_id)
         results.append(
-            [miner_address, w3.from_wei(cumulative_deposits[miner_address], 'ether'), w3.from_wei(collateral, 'ether')])
+            [executor_id, w3.from_wei(cumulative_deposits[executor_id], 'ether'), w3.from_wei(collateral, 'ether')])
 
     writer = csv.writer(sys.stdout)
     writer.writerow(
-        ["miner_address", "cumulative_amount_of_deposits_tao", "total_collateral_amount_tao"]
+        ["executor_id", "cumulative_amount_of_deposits_tao", "total_collateral_amount_tao"]
     )
     writer.writerows(results)
 

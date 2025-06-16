@@ -12,7 +12,7 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     uint256 public MIN_COLLATERAL_INCREASE;
 
     mapping(bytes16 => address) public executorToMiner;
-    mapping(bytes32 => uint256) public collaterals;
+    mapping(bytes16 => uint256) public collaterals;
     mapping(uint256 => Reclaim) public reclaims;
 
     mapping(bytes32 => uint256) private collateralUnderPendingReclaims;
