@@ -82,7 +82,10 @@ async def deposit_collateral(w3, account, amount_tao,
     if receipt['status'] == 0:
         revert_reason = get_revert_reason(w3, tx_hash, receipt['blockNumber'])
         raise DepositCollateralError(f"Transaction failed for depositing collateral. Revert reason: {revert_reason}")
-    deposit_event = contract.events.Deposit().process_receipt(receipt)[0]
+    deposit_events = contract.events.Deposit().process_receipt(receipt)
+    if not deposit_events:
+        return None, receipt
+    deposit_event = deposit_events[0]
 
     return deposit_event, receipt
 
