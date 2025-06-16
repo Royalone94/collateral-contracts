@@ -126,8 +126,6 @@ def main():
         slash_collateral_command = (
             f'python {slash_collateral_script} '
             f'--contract-address {args.contract_address} '
-            f'--amount-tao "0.001" '
-            f'--miner-address {miner_address} '
             f'--url "slash_url" '
             f'--private-key {args.owner_private_key} '
             f'--network {args.network} '
