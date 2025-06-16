@@ -10,7 +10,6 @@ with associated URLs for verification purposes.
 
 import sys
 import argparse
-import bittensor.utils
 from uuid import UUID
 from celium_collateral_contracts.common import (
     load_contract_abi,
@@ -83,6 +82,25 @@ async def reclaim_collateral(
         receipt,
     )[0]
 
+    print("Event details:")
+    print(f"  Reclaim ID: {reclaim_event['args']['reclaimRequestId']}")
+    print(f"  Executor ID: {reclaim_event['args']['executorId']}")
+    print(f"  Miner Address: {reclaim_event['args']['miner']}")
+    print(
+        f"  Amount: "
+        f"{w3.from_wei(reclaim_event['args']['amount'], 'ether')} TAO",
+    )
+    print(
+        f"  Expiration Time: {reclaim_event['args']['expirationTime']}")
+    print(f"  URL: {reclaim_event['args']['url']}")
+    print(
+        f"  URL Content MD5: "
+        f"{reclaim_event['args']['urlContentMd5Checksum'].hex()}",
+    )
+    print(
+        f"  Transaction hash: {receipt['transactionHash'].hex()}")
+    print(f"  Block number: {receipt['blockNumber']}")
+
     return receipt, reclaim_event
 
 
@@ -122,26 +140,6 @@ async def main():
         receipt, event = await reclaim_collateral(
             w3, account, args.contract_address, args.url, args.executor_uuid
         )
-
-        print(f"Successfully initiated reclaim for this executor {args.executor_uuid}")
-        print("Event details:")
-        print(f"  Reclaim ID: {event['args']['reclaimRequestId']}")
-        print(f"  Executor ID: {event['args']['executorId']}")
-        print(f"  Miner Address: {event['args']['miner']}")
-        print(
-            f"  Amount: "
-            f"{w3.from_wei(event['args']['amount'], 'ether')} TAO",
-        )
-        print(
-            f"  Expiration Time: {event['args']['expirationTime']}")
-        print(f"  URL: {event['args']['url']}")
-        print(
-            f"  URL Content MD5: "
-            f"{event['args']['urlContentMd5Checksum'].hex()}",
-        )
-        print(
-            f"  Transaction hash: {receipt['transactionHash'].hex()}")
-        print(f"  Block number: {receipt['blockNumber']}")
     except Exception as e:
         print(f"Error during collateral reclaim: {str(e)}", file=sys.stderr)
 

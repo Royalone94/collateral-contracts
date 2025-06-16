@@ -10,7 +10,6 @@ the collateral to the user's address.
 
 import sys
 import argparse
-import bittensor.utils
 from celium_collateral_contracts.common import (
     load_contract_abi,
     get_web3_connection,
@@ -20,8 +19,6 @@ from celium_collateral_contracts.common import (
     wait_for_receipt,
     get_revert_reason,
 )
-import json
-from web3.exceptions import ContractLogicError
 import asyncio
 
 
@@ -71,6 +68,19 @@ async def finalize_reclaim(w3, account, reclaim_request_id, contract_address):
         print(f"Finalize reclaim transaction successful for request {reclaim_request_id}, but no Reclaimed event emitted. This likely means the miner was slashed and the reclaim was cancelled.")
         return None, receipt
     reclaim_event = reclaim_events[0]
+
+    if reclaim_event:
+        print("Event details:")
+        print(f"  Reclaim ID: {reclaim_event['args']['reclaimRequestId']}")
+        print(f"  Executor ID: {reclaim_event['args']['executorId']}")
+        print(
+            f"  Amount: {w3.from_wei(reclaim_event['args']['amount'], 'ether')} TAO")
+        print(f"  Transaction hash: {receipt['transactionHash'].hex()}")
+        print(f"  Block number: {receipt['blockNumber']}")
+    else:
+        print(f"Transaction hash: {receipt['transactionHash'].hex()}")
+        print(f"Block number: {receipt['blockNumber']}")
+
     return reclaim_event, receipt
 
 
@@ -98,19 +108,7 @@ async def main():
             reclaim_request_id=args.reclaim_request_id,
             contract_address=args.contract_address,
         )
-
-        if reclaim_event:
-            print(f"Successfully finalized reclaim request {args.reclaim_request_id}")
-            print("Event details:")
-            print(f"  Reclaim ID: {reclaim_event['args']['reclaimRequestId']}")
-            print(f"  Executor ID: {reclaim_event['args']['executorId']}")
-            print(
-                f"  Amount: {w3.from_wei(reclaim_event['args']['amount'], 'ether')} TAO")
-            print(f"  Transaction hash: {receipt['transactionHash'].hex()}")
-            print(f"  Block number: {receipt['blockNumber']}")
-        else:
-            print(f"Transaction hash: {receipt['transactionHash'].hex()}")
-            print(f"Block number: {receipt['blockNumber']}")
+        print(f"Successfully finalized reclaim request {args.reclaim_request_id}")
     except FinalizeReclaimError as e:
         print(f"Error: {str(e)}", file=sys.stderr)
         sys.exit(1)
