@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: celium-collateral-contracts
-Version: 1.0.48
+Version: 1.0.49
 Summary: Collateral Smart Contract for Bittensor
 Author-email: Vitali <vitalishvets20@gmail.com>
 License: BSD 3-Clause License
@@ -37,7 +37,7 @@ Project-URL: Source, https://github.com/Datura-ai/celium-collateral-contracts
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: BSD License
 Classifier: Operating System :: OS Independent
-Requires-Python: >=3.11.11
+Requires-Python: >=3.11
 Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: web3>=6.0.0
