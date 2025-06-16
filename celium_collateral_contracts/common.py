@@ -125,27 +125,6 @@ def calculate_md5_checksum(url):
     return hashlib.md5(response.content).hexdigest()
 
 
-def get_miner_collateral(w3, contract_address, miner_address):
-    """Query the collateral amount for a given miner address.
-
-    Args:
-        w3: Web3 instance
-        contract_address: Address of the Collateral contract
-        miner_address: Address of the miner to query
-
-    Returns:
-        number: Collateral amount in Wei
-
-    Raises:
-        SystemExit: If there's an error querying the collateral
-    """
-    contract_abi = load_contract_abi()
-    contract = w3.eth.contract(address=contract_address, abi=contract_abi)
-
-    miner_collateral = contract.functions.collaterals(miner_address).call()
-    return w3.from_wei(miner_collateral, "ether")
-
-
 def get_revert_reason(w3, tx_hash, block_number):
     """Returns the custom Solidity error name for a failed transaction, or 'Could not parse error' if not decodable.
     If the error is SlashAmountTooLarge, also prints its parameters.
@@ -222,5 +201,5 @@ def get_executor_collateral(w3, contract_address, miner_address, executor_uuid):
         uuid_bytes = uuid_bytes[:16] if len(uuid_bytes) > 16 else uuid_bytes.ljust(16, b'\0')
     else:
         uuid_bytes = executor_uuid
-    executor_collateral =  contract.functions.collateralPerExecutor(miner_address, uuid_bytes).call()
+    executor_collateral =  contract.functions.collaterals(uuid_bytes).call()
     return w3.from_wei(executor_collateral, "ether")
