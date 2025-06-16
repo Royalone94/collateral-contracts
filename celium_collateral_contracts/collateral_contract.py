@@ -127,7 +127,7 @@ async def main():
 
     # Configuration
     network = "local"
-    contract_address = "0x7566e8C3dA34B1d2be224798535e8E74016618E5"
+    contract_address = "0x91d1b1BF9539Cd535402FDE0FC30417CaF8CC631"
     owner_key = "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
     miner_key = "259e0eded00353f71eb6be89d8749ad12bf693cbd8aeb6b80cd3a343c0dc8faf"
 
@@ -188,7 +188,10 @@ async def main():
 
     for uuid_str, _ in deposit_tasks:
         print(f"Slashing collateral for executor {uuid_str}...")
-        await contract.slash_collateral("slashit", uuid_str)
+        try:
+            await contract.slash_collateral("slashit", uuid_str)
+        except Exception as e:
+            print("Slash Error:", str(e))
 
     # Verify collateral
     for uuid_str, _ in deposit_tasks:
