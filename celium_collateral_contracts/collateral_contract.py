@@ -145,19 +145,19 @@ async def main():
     # Deposit collateral (optional: uncomment to use)
     deposit_tasks = [
         ("3a5ce92a-a066-45f7-b07d-58b3b7986464", 0.005),
-        # ("72a1d228-3c8c-45cb-8b84-980071592589", 0.005),
-        # ("15c2ff27-0a4d-4987-bbc9-fa009ef9f7d2", 0.005),
-        # ("335453ad-246c-4ad5-809e-e2013ca6c07e", 0.005),
-        # ("89c66519-244f-4db0-b4a7-756014d6fd24", 0.005),
-        # ("af3f1b82-ff98-44c8-b130-d948a2a56b44", 0.005),
-        # ("ee3002d9-71f8-4a83-881d-48bd21b6bdd1", 0.005),
-        # ("4f42de60-3a41-4d76-9a19-d6d2644eb57f", 0.005),
-        # ("7ac4184e-e84f-40cb-b6a0-9cf79a1a573c", 0.005),
-        # ("9d14f803-dc8c-405f-99b5-80f12207d4e5", 0.005),
-        # ("2a61e295-fd0f-4568-b01c-1c38c21573ac", 0.005),
-        # ("e7fd0b3f-4a42-4a5d-bda6-8e2f4b5cb92a", 0.005),
-        # ("f2c2a71d-5c44-4ab9-a87e-0ac1f278b6d6", 0.005),
-        # ("1ec29b47-3d6b-4cc3-b71d-6c97fcbf1e89", 0.005),
+        ("72a1d228-3c8c-45cb-8b84-980071592589", 0.005),
+        ("15c2ff27-0a4d-4987-bbc9-fa009ef9f7d2", 0.005),
+        ("335453ad-246c-4ad5-809e-e2013ca6c07e", 0.005),
+        ("89c66519-244f-4db0-b4a7-756014d6fd24", 0.005),
+        ("af3f1b82-ff98-44c8-b130-d948a2a56b44", 0.005),
+        ("ee3002d9-71f8-4a83-881d-48bd21b6bdd1", 0.005),
+        ("4f42de60-3a41-4d76-9a19-d6d2644eb57f", 0.005),
+        ("7ac4184e-e84f-40cb-b6a0-9cf79a1a573c", 0.005),
+        ("9d14f803-dc8c-405f-99b5-80f12207d4e5", 0.005),
+        ("2a61e295-fd0f-4568-b01c-1c38c21573ac", 0.005),
+        ("e7fd0b3f-4a42-4a5d-bda6-8e2f4b5cb92a", 0.005),
+        ("f2c2a71d-5c44-4ab9-a87e-0ac1f278b6d6", 0.005),
+        ("1ec29b47-3d6b-4cc3-b71d-6c97fcbf1e89", 0.005),
     ]
 
     # Example deposit (uncomment to perform deposits)
@@ -171,7 +171,7 @@ async def main():
         executor_collateral = await contract.get_executor_collateral(uuid_str)
         print(f"Executor {uuid_str}: {executor_collateral} TAO")
 
-    for uuid_str in deposit_tasks:
+    for uuid_str, _ in deposit_tasks:
         print(f"Reclaiming collateral for executor {uuid_str}...")
         await contract.reclaim_collateral(f"Reclaim collateral from executor: {uuid_str}", uuid_str)
  

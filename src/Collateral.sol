@@ -15,7 +15,7 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     mapping(bytes16 => uint256) public collaterals;
     mapping(uint256 => Reclaim) public reclaims;
 
-    mapping(bytes32 => uint256) private collateralUnderPendingReclaims;
+    mapping(bytes16 => uint256) private collateralUnderPendingReclaims;
     uint256 private nextReclaimId;
 
     struct Reclaim {

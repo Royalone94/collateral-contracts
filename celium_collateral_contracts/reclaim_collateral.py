@@ -126,7 +126,8 @@ async def main():
         print(f"Successfully initiated reclaim for this executor {args.executor_uuid}")
         print("Event details:")
         print(f"  Reclaim ID: {event['args']['reclaimRequestId']}")
-        print(f"  Account: {event['args']['account']}")
+        print(f"  Executor ID: {event['args']['executorId']}")
+        print(f"  Miner Address: {event['args']['miner']}")
         print(
             f"  Amount: "
             f"{w3.from_wei(event['args']['amount'], 'ether')} TAO",
