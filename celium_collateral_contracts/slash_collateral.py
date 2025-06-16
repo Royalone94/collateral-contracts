@@ -94,11 +94,6 @@ async def main():
         help="Address of the collateral contract"
     )
     parser.add_argument(
-        "--miner-address",
-        required=True,
-        help="Address of the miner to slash"
-    )
-    parser.add_argument(
         "--url",
         required=True,
         help="URL containing information about the slash"

@@ -5,7 +5,6 @@ from celium_collateral_contracts.common import (
     get_web3_connection,
     get_account,
     validate_address_format,
-    get_miner_collateral,
     get_executor_collateral,
 )
 from celium_collateral_contracts.deposit_collateral import deposit_collateral
@@ -15,10 +14,8 @@ from celium_collateral_contracts.deny_request import deny_reclaim_request
 from celium_collateral_contracts.slash_collateral import slash_collateral
 from celium_collateral_contracts.get_collaterals import get_deposit_events
 from celium_collateral_contracts.get_reclaim_requests import get_reclaim_process_started_events
-from celium_collateral_contracts.get_reclaim_requests import get_next_reclaim_id, get_all_reclaims, get_miner_reclaims
+from celium_collateral_contracts.get_reclaim_requests import get_next_reclaim_id, get_all_reclaims
 from celium_collateral_contracts.get_eligible_executors import get_eligible_executors
-from celium_collateral_contracts.update_validator_for_miner import update_validator_for_miner
-from celium_collateral_contracts.get_validator_of_miner import get_validator_of_miner
 
 class CollateralContract:
     def __init__(self, network: str, contract_address: str, owner_key=None, miner_key=None):
@@ -55,12 +52,11 @@ class CollateralContract:
             executor_uuid,
         )
 
-    async def reclaim_collateral(self, amount_tao, url, executor_uuid):
+    async def reclaim_collateral(self, url, executor_uuid):
         """Initiate reclaiming collateral."""
         return await reclaim_collateral(
             self.w3,
-            self.miner_account,
-            amount_tao,
+            self.miner_account,            
             self.contract_address,
             url,
             executor_uuid,
@@ -85,21 +81,15 @@ class CollateralContract:
             self.contract_address,
         )
 
-    async def slash_collateral(self, amount_tao, url, executor_uuid):
+    async def slash_collateral(self, url, executor_uuid):
         """Slash collateral from a miner."""
         return await slash_collateral(
             self.w3,
             self.owner_account,
-            self.miner_address,
-            amount_tao,
             self.contract_address,
             url,
             executor_uuid,
         )
-
-    async def get_miner_collateral(self):
-        """Get the collateral amount for a miner."""
-        return get_miner_collateral(self.w3, self.contract_address, self.miner_address)
 
     async def get_deposit_events(self, block_start, block_end):
         """Fetch deposit events within a block range."""
@@ -108,14 +98,6 @@ class CollateralContract:
             self.contract_address,
             block_start,
             block_end,
-        )
-
-    async def get_eligible_executors(self):
-        """Get the list of eligible executors for a miner."""
-        return await get_eligible_executors(
-            self.w3,
-            self.contract_address,
-            self.miner_address,
         )
 
     async def get_balance(self, address):
@@ -130,24 +112,7 @@ class CollateralContract:
         return await get_reclaim_process_started_events(
             self.w3, self.contract_address, latest_block-1000, latest_block
         )
-
-    async def update_validator_for_miner(self, new_validator):
-        return await update_validator_for_miner(
-            self.w3,
-            self.miner_account,
-            self.contract_address,
-            self.miner_address,
-            new_validator,
-        )
-
-    async def get_validator_of_miner(self):
-        """Retrieve the validator associated with the miner."""
-        return await get_validator_of_miner(self.w3, self.contract_address, self.miner_address)
-        
-    async def get_latest_reclaim_id(self):
-        """Retrieve the validator associated with the miner."""
-        return get_next_reclaim_id(self.w3, self.contract_address)
-
+    
     async def get_executor_collateral(self, executor_uuid, miner_address=None):
         """Get the collateral amount for a miner and executor UUID."""
         if miner_address is None:
@@ -156,12 +121,7 @@ class CollateralContract:
 
     async def get_reclaim_requests(self):
         return get_all_reclaims(self.w3, self.contract_address)
-
-    async def get_miner_reclaim_requests(self, miner_address=None):
-        if miner_address is None:
-            miner_address = self.miner_address
-        return get_miner_reclaims(self.w3, self.contract_address, miner_address)
-
+    
 async def main():
     import os
     import time
@@ -206,23 +166,17 @@ async def main():
         print(f"Depositing collateral for executor {uuid_str}...")
         await contract.deposit_collateral(amount, uuid_str)
 
-    eligible_executors = await contract.get_eligible_executors()
-    print("Eligible Executors:", eligible_executors)
-
     # Print executor collateral for each UUID after deposits
     print("\n[EXECUTOR COLLATERAL AFTER DEPOSITS]:")
     for uuid_str, _ in deposit_tasks:
         executor_collateral = await contract.get_executor_collateral(uuid_str)
         print(f"Executor {uuid_str}: {executor_collateral} TAO")
 
-    collateral = await contract.get_miner_collateral()
-    print("[COLLATERAL]:", collateral)
-
-    for uuid_str, amount in deposit_tasks:
+    for uuid_str in deposit_tasks:
         print(f"Reclaiming collateral for executor {uuid_str}...")
-        await contract.reclaim_collateral(amount, f"Reclaim collateral from executor: {uuid_str}", uuid_str)
+        await contract.reclaim_collateral(f"Reclaim collateral from executor: {uuid_str}", uuid_str)
  
-    reclaim_requests = await contract.get_miner_reclaim_requests()
+    reclaim_requests = await contract.get_reclaim_events()
     print("reclaim_requests", reclaim_requests)
     for reclaim_event in reclaim_requests:
         reclaim_request_id = getattr(reclaim_event, "reclaim_request_id", None)
@@ -241,10 +195,6 @@ async def main():
     for uuid_str, _ in deposit_tasks:
         executor_collateral = await contract.get_executor_collateral(uuid_str)
         print(f"Executor {uuid_str}: {executor_collateral} TAO")
-
-    # Final collateral check
-    final_collateral = await contract.get_miner_collateral()
-    print("[FINAL COLLATERAL]:", final_collateral)
 
     # Check final balances
     owner_balance = await contract.get_balance(contract.owner_address)
