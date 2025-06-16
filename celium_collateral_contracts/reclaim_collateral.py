@@ -33,7 +33,6 @@ class ReclaimCollateralError(Exception):
 async def reclaim_collateral(
     w3,
     account,
-    amount_tao,
     contract_address,
     url,
     executor_uuid,
@@ -43,7 +42,6 @@ async def reclaim_collateral(
     Args:
         w3 (Web3): Web3 instance
         account: The account to use for the transaction
-        amount_tao (float): Amount of TAO to reclaim
         contract_address (str): Address of the collateral contract
         url (str): URL for reclaim information
         executor_uuid (str): Executor UUID for the reclaim operation
@@ -57,8 +55,6 @@ async def reclaim_collateral(
     contract_abi = load_contract_abi()
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
-    amount_wei = w3.to_wei(amount_tao, "ether")
-
     # Calculate MD5 checksum if URL is valid
     md5_checksum = "0" * 32
     if url.startswith(("http://", "https://")):
@@ -70,11 +66,10 @@ async def reclaim_collateral(
 
     tx_hash = build_and_send_transaction(
         w3,
-        contract.functions.reclaimCollateral(
-            amount_wei,
+        contract.functions.reclaimCollateral(            
+            executor_uuid_bytes,
             url,
-            bytes.fromhex(md5_checksum),
-            executor_uuid_bytes
+            bytes.fromhex(md5_checksum)
         ),
         account,
         gas_limit=200000,  # Higher gas limit for this function
@@ -101,12 +96,6 @@ async def main():
         help="Address of the collateral contract"
     )
     parser.add_argument(
-        "--amount-tao",
-        required=True,
-        type=float,
-        help="Amount of TAO to reclaim"
-    )
-    parser.add_argument(
         "--url",
         required=True,
         help="URL for reclaim information"
@@ -131,10 +120,10 @@ async def main():
 
     try:
         receipt, event = await reclaim_collateral(
-            w3, account, args.amount_tao, args.contract_address, args.url, args.executor_uuid
+            w3, account, args.contract_address, args.url, args.executor_uuid
         )
 
-        print(f"Successfully initiated reclaim of {args.amount_tao} TAO")
+        print(f"Successfully initiated reclaim for this executor {args.executor_uuid}")
         print("Event details:")
         print(f"  Reclaim ID: {event['args']['reclaimRequestId']}")
         print(f"  Account: {event['args']['account']}")

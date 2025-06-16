@@ -33,8 +33,6 @@ class SlashCollateralError(Exception):
 async def slash_collateral(
     w3,
     account,
-    miner_address,
-    amount_tao,
     contract_address,
     url,
     executor_uuid,
@@ -44,8 +42,6 @@ async def slash_collateral(
     Args:
         w3 (Web3): Web3 instance
         account: The account to use for the transaction
-        miner_address (str): Address of the miner to slash
-        amount_tao (float): Amount of TAO to slash
         contract_address (str): Address of the collateral contract
         url (str): URL containing information about the slash
         executor_uuid (str): Executor UUID for the slashing operation
@@ -71,11 +67,9 @@ async def slash_collateral(
     tx_hash = build_and_send_transaction(
         w3,
         contract.functions.slashCollateral(
-            miner_address,
-            w3.to_wei(amount_tao, "ether"),
+            executor_uuid_bytes,
             url,
             bytes.fromhex(md5_checksum),
-            executor_uuid_bytes
         ),
         account,
         gas_limit=200000,  # Higher gas limit for this function
@@ -105,12 +99,6 @@ async def main():
         help="Address of the miner to slash"
     )
     parser.add_argument(
-        "--amount-tao",
-        required=True,
-        type=float,
-        help="Amount of TAO to slash"
-    )
-    parser.add_argument(
         "--url",
         required=True,
         help="URL containing information about the slash"
@@ -125,7 +113,6 @@ async def main():
     args = parser.parse_args()
 
     validate_address_format(args.contract_address)
-    validate_address_format(args.miner_address)
 
     w3 = get_web3_connection(args.network)
     account = get_account(args.private_key)
@@ -134,8 +121,6 @@ async def main():
         receipt, event = await slash_collateral(
             w3,
             account,
-            args.miner_address,
-            args.amount_tao,
             args.contract_address,
             args.url,
             args.executor_uuid

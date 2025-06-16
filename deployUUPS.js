@@ -20,8 +20,8 @@ const proxyBytecode = ERC1967ProxyArtifact.bytecode;
 const ethers = require("ethers"); // Or assumes global `ethers` from Hardhat environment
 
 // Config
-// const RPC_URL = process.env.RPC_URL || "http://127.0.0.1:9944"; 
-const RPC_URL = process.env.RPC_URL || "https://test.finney.opentensor.ai";
+const RPC_URL = process.env.RPC_URL || "http://127.0.0.1:9944"; 
+// const RPC_URL = process.env.RPC_URL || "https://test.finney.opentensor.ai";
 const PRIVATE_KEY = process.env.PRIVATE_KEY || "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"; // Your deployer private key
 const DEPLOYMENTS_FILE = path.join(__dirname, "deployments.json");
 
