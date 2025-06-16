@@ -103,7 +103,7 @@ async def main():
     executor_ids = set(event.executorId for event in deposit_events)
     results = []
     for executor_id in executor_ids:
-        collateral = get_miner_collateral(
+        collateral = get_executor_collateral(
             w3, args.contract_address, executor_id)
         results.append(
             [executor_id, w3.from_wei(cumulative_deposits[executor_id], 'ether'), w3.from_wei(collateral, 'ether')])
