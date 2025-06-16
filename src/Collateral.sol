@@ -6,12 +6,12 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
-    uint16 public immutable NETUID;
-    address public immutable TRUSTEE;
-    uint64 public immutable DECISION_TIMEOUT;
-    uint256 public immutable MIN_COLLATERAL_INCREASE;
+    uint16 public NETUID;
+    address public TRUSTEE;
+    uint64 public DECISION_TIMEOUT;
+    uint256 public MIN_COLLATERAL_INCREASE;
 
-    mapping(bytes32 => address) public executorToMiner;
+    mapping(bytes16 => address) public executorToMiner;
     mapping(bytes32 => uint256) public collaterals;
     mapping(uint256 => Reclaim) public reclaims;
 
@@ -19,26 +19,26 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     uint256 private nextReclaimId;
 
     struct Reclaim {
-        bytes32 executorId;
+        bytes16 executorId;
         address miner;
         uint256 amount;
         uint64 denyTimeout;
     }
 
-    event Deposit(bytes32 indexed executorId, address indexed miner, uint256 amount);
+    event Deposit(bytes16 indexed executorId, address indexed miner, uint256 amount);
     event ReclaimProcessStarted(
         uint256 indexed reclaimRequestId,
-        bytes32 indexed executorId,
+        bytes16 indexed executorId,
         address indexed miner,
         uint256 amount,
         uint64 expirationTime,
         string url,
         bytes16 urlContentMd5Checksum
     );
-    event Reclaimed(uint256 indexed reclaimRequestId, bytes32 indexed executorId, address indexed miner, uint256 amount);
+    event Reclaimed(uint256 indexed reclaimRequestId, bytes16 indexed executorId, address indexed miner, uint256 amount);
     event Denied(uint256 indexed reclaimRequestId, string url, bytes16 urlContentMd5Checksum);
     event Slashed(
-        bytes32 indexed executorId,
+        bytes16 indexed executorId,
         address indexed miner,
         uint256 amount,
         string url,
@@ -61,12 +61,14 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /// @param minCollateralIncrease The minimum amount that can be deposited or reclaimed
     /// @param decisionTimeout The time window (in seconds) for the trustee to deny a reclaim request
     /// @dev Reverts if any of the arguments is zero
-    constructor(uint16 netuid, address trustee, uint256 minCollateralIncrease, uint64 decisionTimeout) {
+    function initialize(uint16 netuid, address trustee, uint256 minCollateralIncrease, uint64 decisionTimeout) public initializer {
         // custom errors are not used here because it's a 1-time setup
         require(trustee != address(0), "Trustee address must be non-zero");
         require(minCollateralIncrease > 0, "Min collateral increase must be greater than 0");
         require(decisionTimeout > 0, "Decision timeout must be greater than 0");
 
+        __Ownable_init(msg.sender);
+        __UUPSUpgradeable_init();
         NETUID = netuid;
         TRUSTEE = trustee;
         MIN_COLLATERAL_INCREASE = minCollateralIncrease;
@@ -96,7 +98,7 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /// @dev The deposited amount must be greater than or equal to MIN_COLLATERAL_INCREASE
     /// @dev If it's not revert with InsufficientAmount error
     /// @dev Emits a Deposit event with the executorId, sender's address and deposited amount
-    function deposit(bytes32 executorId) external payable {
+    function deposit(bytes16 executorId) external payable {
         if (msg.value < MIN_COLLATERAL_INCREASE) {
             revert InsufficientAmount();
         }
@@ -120,7 +122,7 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /// @dev Emits ReclaimProcessStarted event with reclaim details and timeout
     /// @dev Reverts with ExecutorNotOwned if caller is not the owner of the executor
     /// @dev Reverts with AmountZero if there is no available collateral to reclaim
-    function reclaimCollateral(bytes32 executorId, string calldata url, bytes16 urlContentMd5Checksum)
+    function reclaimCollateral(bytes16 executorId, string calldata url, bytes16 urlContentMd5Checksum)
         external
     {
         if (executorToMiner[executorId] != msg.sender) {
@@ -160,7 +162,7 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
             revert BeforeDenyTimeout();
         }
 
-        bytes32 executorId = reclaim.executorId;
+        bytes16 executorId = reclaim.executorId;
         address miner = reclaim.miner;
         uint256 amount = reclaim.amount;
 
@@ -221,7 +223,7 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /// @dev Reverts with AmountZero if amount is 0
     /// @dev Reverts with InsufficientAmount if the executor has less collateral than the amount to slash
     /// @dev Reverts with TransferFailed if the TAO transfer fails
-    function slashCollateral(bytes32 executorId, uint256 amount, string calldata url, bytes16 urlContentMd5Checksum)
+    function slashCollateral(bytes16 executorId, uint256 amount, string calldata url, bytes16 urlContentMd5Checksum)
         external
         onlyTrustee
     {
