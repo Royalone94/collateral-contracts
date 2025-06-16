@@ -105,7 +105,7 @@ async def get_reclaim_process_started_events(
 
     checksum_address = w3.to_checksum_address(contract_address)
 
-    event_signature = "ReclaimProcessStarted(uint256,address,uint256,uint64,string,bytes16)"
+    event_signature = "ReclaimProcessStarted(uint256,bytes16,address,uint256,uint64,string,bytes16)"
     event_topic = w3.keccak(text=event_signature).hex()
 
     filter_params = {
@@ -119,7 +119,6 @@ async def get_reclaim_process_started_events(
         ]
     }
     logs = w3.eth.get_logs(filter_params)
-
     def get_reclaim_by_id(reclaim_id):
         """Fetch reclaim information using reclaim_id."""
         reclaim = contract.functions.reclaims(reclaim_id).call()
@@ -127,7 +126,7 @@ async def get_reclaim_process_started_events(
             "miner": reclaim[1],
             "amount": reclaim[2],
             "denyTimeout": reclaim[3],
-            "executorUuid": reclaim[4].hex(),
+            "executorUuid": reclaim[0].hex(),
         }
 
     formatted_events = []
@@ -140,14 +139,15 @@ async def get_reclaim_process_started_events(
         decoded_event = contract.events.ReclaimProcessStarted().process_log(log)
 
         reclaim_info = get_reclaim_by_id(reclaim_request_id)
-
+        # Convert executorUuid hex string to bytes before creating UUID
+        executor_uuid_bytes = bytes.fromhex(reclaim_info["executorUuid"])
         formatted_events.append(
             ReclaimProcessStartedEvent(
                 reclaim_request_id=reclaim_request_id,
                 account=account,
                 amount=reclaim_info["amount"],
                 expiration_time=reclaim_info["denyTimeout"],
-                executor_uuid=str(uuid.UUID(bytes=reclaim_info["executorUuid"])),
+                executor_uuid=str(uuid.UUID(bytes=executor_uuid_bytes)),
                 url=decoded_event['args']['url'],
                 url_content_md5_checksum=decoded_event['args']['urlContentMd5Checksum'].hex(),
                 block_number=log["blockNumber"],
@@ -187,6 +187,7 @@ async def main():
         "url",
         "url_content_md5_checksum",
         "block_number",
+        "executor_uuid"
     ]
 
     writer = csv.DictWriter(sys.stdout, fieldnames=fieldnames)
@@ -202,6 +203,7 @@ async def main():
                 "url": event.url,
                 "url_content_md5_checksum": event.url_content_md5_checksum,
                 "block_number": event.block_number,
+                "executor_uuid": event.executor_uuid
             }
         )
 
