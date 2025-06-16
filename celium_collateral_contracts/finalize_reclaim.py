@@ -58,12 +58,19 @@ async def finalize_reclaim(w3, account, reclaim_request_id, contract_address):
     )
     receipt = wait_for_receipt(w3, tx_hash)
 
+
     if receipt['status'] == 0:
         # Try to get revert reason
         revert_reason = get_revert_reason(w3, tx_hash, receipt['blockNumber'])
         raise FinalizeReclaimError(f"Transaction failed for finalizing reclaim request {reclaim_request_id}. Revert reason: {revert_reason}")
 
-    reclaim_event = contract.events.Reclaimed().process_receipt(receipt)[0]
+    reclaim_events = contract.events.Reclaimed().process_receipt(receipt)
+    if not reclaim_events:
+        # This case happens if the miner was slashed and couldn't withdraw.
+        # The transaction itself is successful, but no Reclaimed event is emitted.
+        print(f"Finalize reclaim transaction successful for request {reclaim_request_id}, but no Reclaimed event emitted. This likely means the miner was slashed and the reclaim was cancelled.")
+        return None, receipt
+    reclaim_event = reclaim_events[0]
     return reclaim_event, receipt
 
 
@@ -92,14 +99,18 @@ async def main():
             contract_address=args.contract_address,
         )
 
-        print(f"Successfully finalized reclaim request {args.reclaim_request_id}")
-        print("Event details:")
-        print(f"  Reclaim ID: {reclaim_event['args']['reclaimRequestId']}")
-        print(f"  Account: {reclaim_event['args']['account']}")
-        print(
-            f"  Amount: {w3.from_wei(reclaim_event['args']['amount'], 'ether')} TAO")
-        print(f"  Transaction hash: {receipt['transactionHash'].hex()}")
-        print(f"  Block number: {receipt['blockNumber']}")
+        if reclaim_event:
+            print(f"Successfully finalized reclaim request {args.reclaim_request_id}")
+            print("Event details:")
+            print(f"  Reclaim ID: {reclaim_event['args']['reclaimRequestId']}")
+            print(f"  Executor ID: {reclaim_event['args']['executorId']}")
+            print(
+                f"  Amount: {w3.from_wei(reclaim_event['args']['amount'], 'ether')} TAO")
+            print(f"  Transaction hash: {receipt['transactionHash'].hex()}")
+            print(f"  Block number: {receipt['blockNumber']}")
+        else:
+            print(f"Transaction hash: {receipt['transactionHash'].hex()}")
+            print(f"Block number: {receipt['blockNumber']}")
     except FinalizeReclaimError as e:
         print(f"Error: {str(e)}", file=sys.stderr)
         sys.exit(1)
