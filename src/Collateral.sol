@@ -75,6 +75,8 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         DECISION_TIMEOUT = decisionTimeout;
     }
 
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+
     modifier onlyTrustee() {
         if (msg.sender != TRUSTEE) {
             revert NotTrustee();
