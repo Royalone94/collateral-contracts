@@ -4,14 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "celium-collateral-contracts"
-version = "1.0.47"
+version = "1.0.48"
 description = "Collateral Smart Contract for Bittensor"
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [
     { name = "Vitali", email = "vitalishvets20@gmail.com" }
 ]
-requires-python = "==3.11.11"
+requires-python = ">=3.11.11"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: BSD License",
