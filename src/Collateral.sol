@@ -54,6 +54,7 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     error PastDenyTimeout();
     error ReclaimNotFound();
     error TransferFailed();
+    error InsufficientCollateralForReclaim();
 
     /// @notice Initializes a new Collateral contract with specified parameters
     /// @param netuid The netuid of the subnet
@@ -173,7 +174,7 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
         if (collaterals[executorId] < amount) {
             // miner got slashed and can't withdraw
-            return;
+            revert InsufficientCollateralForReclaim();
         }
 
         collaterals[executorId] -= amount;
