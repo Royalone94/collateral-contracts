@@ -1,9 +1,0 @@
-LICENSE
-MANIFEST.in
-README.md
-pyproject.toml
-src/celium_collateral_contracts.egg-info/PKG-INFO
-src/celium_collateral_contracts.egg-info/SOURCES.txt
-src/celium_collateral_contracts.egg-info/dependency_links.txt
-src/celium_collateral_contracts.egg-info/requires.txt
-src/celium_collateral_contracts.egg-info/top_level.txt
