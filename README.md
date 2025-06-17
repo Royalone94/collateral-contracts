@@ -166,9 +166,53 @@ Refer to the repository's [`celium_collateral_contracts/`](/celium_collateral_co
       ```
 
   2. **Deploy or upgrade the contract:**
+
+    ## Deploy on localnet
       ```bash
-      node deployUUPS.js
+      bash build.sh
+      rm -rf developments.json
+      export RPC_URL="http://127.0.0.1:9944"
+      export PRIVATE_KEY="434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
+      export MIN_COLLATERAL_INCREASE=1000000000000000
+      export DENY_TIMEOUT=3600
+      bash deploy.sh
       ```
+
+    ## Deploy on testnet
+      ```bash
+      bash build.sh
+      rm -rf developments.json
+      export RPC_URL="https://test.finney.opentensor.ai"
+      export PRIVATE_KEY="434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
+      export MIN_COLLATERAL_INCREASE=1000000000000000
+      export DENY_TIMEOUT=3600
+      bash deploy.sh
+      ```
+
+     ## Deploy on mainnet
+      ```bash
+      bash build.sh
+      rm -rf developments.json
+      export RPC_URL="https://lite.chain.opentensor.ai"
+      export PRIVATE_KEY="434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
+      export MIN_COLLATERAL_INCREASE=1000000000000000
+      export DENY_TIMEOUT=3600
+      bash deploy.sh
+      ```
+
+    ### Result
+
+    ```bash
+      New Collateral implementation deployed at: 0x25AA43D78bB3F6EE3bBB906554033358E5D0a3af
+      Owner check before upgrade: Proxy owner = 0xE1A07A44ac6f8423bA3b734F0cAfC6F87fd385Fc, Wallet = 0xE1A07A44ac6f8423bA3b734F0cAfC6F87fd385Fc
+      Attempting to upgrade proxy...
+      Proxy at 0x91d1b1BF9539Cd535402FDE0FC30417CaF8CC631 upgraded to new implementation: 0x25AA43D78bB3F6EE3bBB906554033358E5D0a3af
+      Contract Address: 0x91d1b1BF9539Cd535402FDE0FC30417CaF8CC631
+      Proxy owner after upgrade: 0xE1A07A44ac6f8423bA3b734F0cAfC6F87fd385Fc
+      Proxy NETUID value: 1
+    ```
+
+    Final contract address is 0x91d1b1BF9539Cd535402FDE0FC30417CaF8CC631
 
   This script will:
   - Deploy the implementation contract if needed.
