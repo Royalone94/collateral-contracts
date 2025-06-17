@@ -170,7 +170,7 @@ Refer to the repository's [`celium_collateral_contracts/`](/celium_collateral_co
     ## Deploy on localnet
       ```bash
       bash build.sh
-      rm -rf developments.json
+      rm -rf deployments.json
       export RPC_URL="http://127.0.0.1:9944"
       export PRIVATE_KEY="434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
       export MIN_COLLATERAL_INCREASE=1000000000000000
@@ -181,7 +181,7 @@ Refer to the repository's [`celium_collateral_contracts/`](/celium_collateral_co
     ## Deploy on testnet
       ```bash
       bash build.sh
-      rm -rf developments.json
+      rm -rf deployments.json
       export RPC_URL="https://test.finney.opentensor.ai"
       export PRIVATE_KEY="434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
       export MIN_COLLATERAL_INCREASE=1000000000000000
@@ -192,7 +192,7 @@ Refer to the repository's [`celium_collateral_contracts/`](/celium_collateral_co
      ## Deploy on mainnet
       ```bash
       bash build.sh
-      rm -rf developments.json
+      rm -rf deployments.json
       export RPC_URL="https://lite.chain.opentensor.ai"
       export PRIVATE_KEY="434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
       export MIN_COLLATERAL_INCREASE=1000000000000000
