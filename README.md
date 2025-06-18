@@ -174,7 +174,7 @@ Refer to the repository's [`celium_collateral_contracts/`](/celium_collateral_co
       export PRIVATE_KEY="434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
       export MIN_COLLATERAL_INCREASE=1000000000000000
       export DENY_TIMEOUT=3600
-      export NET_UID=51
+      export NET_UID=1
       bash deploy.sh
       ```
 
@@ -186,7 +186,7 @@ Refer to the repository's [`celium_collateral_contracts/`](/celium_collateral_co
       export PRIVATE_KEY="434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
       export MIN_COLLATERAL_INCREASE=1000000000000000
       export DENY_TIMEOUT=3600
-      export NET_UID=51
+      export NET_UID=1
       bash deploy.sh
       ```
 
@@ -198,7 +198,7 @@ Refer to the repository's [`celium_collateral_contracts/`](/celium_collateral_co
       export PRIVATE_KEY="434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"
       export MIN_COLLATERAL_INCREASE=1000000000000000
       export DENY_TIMEOUT=3600
-      export NET_UID=51
+      export NET_UID=1
       bash deploy.sh
       ```
 
