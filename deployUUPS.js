@@ -25,7 +25,7 @@ const RPC_URL = process.env.RPC_URL || "http://127.0.0.1:9944";
 const PRIVATE_KEY = process.env.PRIVATE_KEY || "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"; // Your deployer private key
 const DEPLOYMENTS_FILE = path.join(__dirname, "deployments.json");
 
-const netuid = 1;
+const netuid = process.env.NET_UID || 51;
 const minCollateralIncrease = process.env.MIN_COLLATERAL_INCREASE ? BigInt(process.env.MIN_COLLATERAL_INCREASE) : BigInt("1000000000000000"); // 1 ether
 const decisionTimeout = process.env.DENY_TIMEOUT || 20;
 

@@ -5,6 +5,8 @@ import subprocess
 import unittest
 from eth_account import Account
 from web3 import Web3
+import random
+import re
 
 # Update import to use the scripts package
 from celium_collateral_contracts.address_conversion import h160_to_ss58
@@ -240,7 +242,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
         time.sleep(3)
         # === Step 9: Miner Reclaims Collateral ===
         print("Starting reclaim collateral...")
-        for uuid_str, _ in deposit_tasks:
+        for uuid_str, capture_output in deposit_tasks:
             print(f"Reclaiming collateral for executor UUID: {uuid_str}")
             result = self.run_cmd(
                 [
@@ -263,6 +265,56 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             )
 
             print("Reclaim Result:", result.stdout.strip())
+
+            # Extract Reclaim ID from result.stdout
+            match = re.search(r"Reclaim ID:\s*(\d+)", result.stdout)
+            if match:
+                reclaim_id = int(match.group(1))
+                action = random.choice(["finalize", "deny"])
+                if action == "finalize":
+                    print(f"Randomly finalizing reclaim request {reclaim_id}")
+                    finalize_result = self.run_cmd(
+                        [
+                            "python", finalize_reclaim_script,
+                            "--contract-address", contract_address,
+                            "--reclaim-request-id", str(reclaim_id),
+                            "--network", self.network,
+                            "--private-key", miner_key
+                        ],
+                        env=env,
+                    )
+                    print(
+                        f'python {finalize_reclaim_script} '
+                        f'--contract-address {contract_address} '
+                        f'--reclaim-request-id {reclaim_id} '
+                        f'--network {self.network} '
+                        f'--private-key {miner_key} '
+                    )
+                    print("finalize_result", finalize_result)
+                else:
+                    print(f"Randomly denying reclaim request {reclaim_id}")
+                    deny_result = self.run_cmd(
+                        [
+                            "python", deny_request_script,
+                            "--contract-address", contract_address,
+                            "--reclaim-request-id", str(reclaim_id),
+                            "--url", f"Denied for executor {uuid_str}",
+                            "--network", self.network,
+                            "--private-key", miner_key
+                        ],
+                        env=env,
+                    )
+                    print(
+                        f'python {deny_request_script} '
+                        f'--contract-address {contract_address} '
+                        f'--reclaim-request-id {reclaim_id} '
+                        f'--url "Denied for executor {uuid_str}" '
+                        f'--network {self.network} '
+                        f'--private-key {miner_key} '
+                    )
+                    print("deny_result", deny_result)
+            else:
+                print("Could not extract Reclaim ID from reclaim result output.")
 
         # === Step 10: Owner Checks Requests ===
         latest_block = self.w3.eth.block_number
