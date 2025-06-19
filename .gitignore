@@ -9,7 +9,7 @@ out/
 
 # Docs
 docs/
-
+celium_collateral_contracts.egg-info
 # Dotenv file
 .env
 node_modules/
