@@ -184,7 +184,7 @@ async def get_evm_key_associations(
     return uid_evm_address_map
 
 
-def get_executor_collateral(w3, contract_address, miner_address, executor_uuid):
+def get_executor_collateral(w3, contract_address, executor_uuid):
     """Query the collateral amount for a given miner and executor UUID."""
     contract_abi = load_contract_abi()
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)

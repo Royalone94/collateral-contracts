@@ -106,17 +106,15 @@ class CollateralContract:
         return self.w3.from_wei(balance, "ether")
 
     async def get_reclaim_events(self):
-        """Fetch claim requests from the latest 100 blocks."""
+        """Fetch claim requests from the latest 1000 blocks."""
         latest_block = self.w3.eth.block_number
         return await get_reclaim_process_started_events(
             self.w3, self.contract_address, latest_block-1000, latest_block
         )
     
-    async def get_executor_collateral(self, executor_uuid, miner_address=None):
-        """Get the collateral amount for a miner and executor UUID."""
-        if miner_address is None:
-            miner_address = self.miner_address
-        return get_executor_collateral(self.w3, self.contract_address, miner_address, executor_uuid)
+    async def get_executor_collateral(self, executor_uuid):
+        """Get the collateral amount for executor UUID."""
+        return get_executor_collateral(self.w3, self.contract_address, executor_uuid)
 
     async def get_reclaim_requests(self):
         return get_all_reclaims(self.w3, self.contract_address)
