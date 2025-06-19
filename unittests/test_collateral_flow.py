@@ -58,10 +58,10 @@ class TestCollateralContractLifecycle(unittest.TestCase):
 
     def setUp(self):
         # Use the local RPC URL here
-        # self.RPC_URL = "https://test.finney.opentensor.ai"
-        # self.network = "test"
-        self.RPC_URL = "http://127.0.0.1:9944"
-        self.network = "local"
+        self.RPC_URL = "https://test.finney.opentensor.ai"
+        self.network = "test"
+        # self.RPC_URL = "http://127.0.0.1:9944"
+        # self.network = "local"
         self.w3 = Web3(Web3.HTTPProvider(self.RPC_URL))
         self.assertTrue(self.w3.is_connected(), "Cannot connect to Bittensor RPC")
         print("Connected to Bittensor RPC")
@@ -75,8 +75,6 @@ class TestCollateralContractLifecycle(unittest.TestCase):
 
         # Update script paths to match the updated folder structure
         deposit_script = "celium_collateral_contracts/deposit_collateral.py"
-        get_miners_collateral_script = "celium_collateral_contracts/get_miners_collateral.py"
-        get_eligible_executors_script = "celium_collateral_contracts/get_eligible_executors.py"
         reclaim_collateral_script = "celium_collateral_contracts/reclaim_collateral.py"
         deny_request_script = "celium_collateral_contracts/deny_request.py"
         finalize_reclaim_script = "celium_collateral_contracts/finalize_reclaim.py"
@@ -222,7 +220,6 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 [
                     "python", get_executor_collateral_script,
                     "--contract-address", contract_address,
-                    "--miner-address", miner_address,
                     "--executor-uuid", uuid_str,
                     "--network", self.network
                 ],
@@ -232,7 +229,6 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             print(
                 f'python {get_executor_collateral_script} '
                 f'--contract-address {contract_address} '
-                f'--miner-address {miner_address} '
                 f'--executor-uuid {uuid_str} '
                 f'--network {self.network}'
             )
@@ -439,7 +435,6 @@ class TestCollateralContractLifecycle(unittest.TestCase):
                 [
                     "python", get_executor_collateral_script,
                     "--contract-address", contract_address,
-                    "--miner-address", miner_address,
                     "--executor-uuid", uuid_str,
                     "--network", self.network
                 ],
@@ -449,7 +444,6 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             print(
                 f'python {get_executor_collateral_script} '
                 f'--contract-address {contract_address} '
-                f'--miner-address {miner_address} '
                 f'--executor-uuid {uuid_str} '
                 f'--network {self.network}'
             )

@@ -26,11 +26,6 @@ def main():
         help="The address of the smart contract"
     )
     parser.add_argument(
-        "--miner-address",
-        required=True,
-        help="The address of the miner to query"
-    )
-    parser.add_argument(
         "--executor-uuid",
         required=True,
         help="The UUID of the executor (as a string or hex)"
@@ -42,9 +37,8 @@ def main():
     )
     args = parser.parse_args()
     validate_address_format(args.contract_address)
-    validate_address_format(args.miner_address)
     w3 = get_web3_connection(args.network)
-    collateral = get_executor_collateral(w3, args.contract_address, args.miner_address, args.executor_uuid)
+    collateral = get_executor_collateral(w3, args.contract_address, args.executor_uuid)
     print(
         f"Collateral for miner {args.miner_address}, executor {args.executor_uuid}: {collateral} TAO"
     )
