@@ -597,6 +597,11 @@
   },
   {
     "type": "error",
+    "name": "InsufficientCollateralForReclaim",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "InvalidDepositMethod",
     "inputs": []
   },
@@ -645,6 +650,11 @@
   {
     "type": "error",
     "name": "ReclaimNotFound",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ReentrancyGuardReentrantCall",
     "inputs": []
   },
   {
