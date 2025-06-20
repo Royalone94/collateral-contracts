@@ -14,6 +14,7 @@ from celium_collateral_contracts.common import (
     get_web3_connection,
     get_executor_collateral,
     validate_address_format,
+    get_miner_address_of_executor
 )
 
 def main():
@@ -39,8 +40,10 @@ def main():
     validate_address_format(args.contract_address)
     w3 = get_web3_connection(args.network)
     collateral = get_executor_collateral(w3, args.contract_address, args.executor_uuid)
+    miner_address = get_miner_address_of_executor(w3, args.contract_address, args.executor_uuid)
+
     print(
-        f"Collateral for miner {args.miner_address}, executor {args.executor_uuid}: {collateral} TAO"
+        f"Collateral for miner {miner_address}, executor {args.executor_uuid}: {collateral} TAO"
     )
 
 if __name__ == "__main__":

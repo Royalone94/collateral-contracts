@@ -221,5 +221,5 @@ def get_miner_address_of_executor(w3, contract_address, executor_uuid):
         uuid_bytes = uuid_bytes[:16] if len(uuid_bytes) > 16 else uuid_bytes.ljust(16, b'\0')
     else:
         uuid_bytes = executor_uuid
-    miner_address =  contract.functions.executorToMiner(uuid_bytes).call()
-    return w3.from_wei(miner_address, "ether")
+    miner_address = contract.functions.executorToMiner(uuid_bytes).call()
+    return miner_address
