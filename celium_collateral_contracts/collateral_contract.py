@@ -6,6 +6,7 @@ from celium_collateral_contracts.common import (
     get_account,
     validate_address_format,
     get_executor_collateral,
+    get_miner_address_of_executor
 )
 from celium_collateral_contracts.deposit_collateral import deposit_collateral
 from celium_collateral_contracts.reclaim_collateral import reclaim_collateral
@@ -14,7 +15,6 @@ from celium_collateral_contracts.deny_request import deny_reclaim_request
 from celium_collateral_contracts.slash_collateral import slash_collateral
 from celium_collateral_contracts.get_collaterals import get_deposit_events
 from celium_collateral_contracts.get_reclaim_requests import get_reclaim_process_started_events
-from celium_collateral_contracts.get_reclaim_requests import get_next_reclaim_id, get_all_reclaims
 
 class CollateralContract:
     def __init__(self, network: str, contract_address: str, owner_key=None, miner_key=None):
@@ -116,13 +116,12 @@ class CollateralContract:
         """Get the collateral amount for executor UUID."""
         return get_executor_collateral(self.w3, self.contract_address, executor_uuid)
 
-    async def get_reclaim_requests(self):
-        return get_all_reclaims(self.w3, self.contract_address)
-    
-async def main():
-    import os
-    import time
 
+    async def get_miner_address_of_executor(self, executor_uuid):
+        return get_miner_address_of_executor(self.w3, self.contract_address, executor_uuid)
+    
+
+async def main():
     # Configuration
     network = "local"
     contract_address = "0x91d1b1BF9539Cd535402FDE0FC30417CaF8CC631"

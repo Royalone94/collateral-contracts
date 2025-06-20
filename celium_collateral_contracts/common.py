@@ -203,3 +203,23 @@ def get_executor_collateral(w3, contract_address, executor_uuid):
         uuid_bytes = executor_uuid
     executor_collateral =  contract.functions.collaterals(uuid_bytes).call()
     return w3.from_wei(executor_collateral, "ether")
+
+def get_miner_address_of_executor(w3, contract_address, executor_uuid):
+    """Query the collateral amount for a given miner and executor UUID."""
+    contract_abi = load_contract_abi()
+    contract = w3.eth.contract(address=contract_address, abi=contract_abi)
+    # executor_uuid must be bytes16
+    if isinstance(executor_uuid, str):
+        import uuid
+        try:
+            # Try to parse as UUID string
+            uuid_bytes = uuid.UUID(executor_uuid).bytes
+        except Exception:
+            # If not a UUID, try to decode as hex
+            uuid_bytes = bytes.fromhex(executor_uuid.replace('0x', ''))
+        # Pad or trim to 16 bytes
+        uuid_bytes = uuid_bytes[:16] if len(uuid_bytes) > 16 else uuid_bytes.ljust(16, b'\0')
+    else:
+        uuid_bytes = executor_uuid
+    miner_address =  contract.functions.executorToMiner(uuid_bytes).call()
+    return w3.from_wei(miner_address, "ether")
