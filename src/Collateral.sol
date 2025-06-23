@@ -188,6 +188,7 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reent
         if (!success) {
             revert TransferFailed();
         }
+        executorToMiner[executorId] = address(0);
     }
 
     /// @notice Allows the trustee to deny a pending reclaim request before the timeout expires
@@ -247,7 +248,7 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reent
         if (!success) {
             revert TransferFailed();
         }
-
+        executorToMiner[executorId] = address(0);
         emit Slashed(executorId, miner, amount, url, urlContentMd5Checksum);
     }
 }
