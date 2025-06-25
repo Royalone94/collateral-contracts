@@ -12,7 +12,6 @@ import sys
 import csv
 import argparse
 from dataclasses import dataclass
-import bittensor.utils
 from celium_collateral_contracts.common import get_web3_connection, load_contract_abi
 import uuid
 
@@ -30,60 +29,6 @@ class ReclaimProcessStartedEvent:
     block_number: int
     executor_uuid: str
 
-def get_next_reclaim_id(w3, contract_address):
-    contract_abi = load_contract_abi()
-
-    contract = w3.eth.contract(address=contract_address, abi=contract_abi)
-    # Call the new public getter function
-    next_id = contract.functions.getNextReclaimId().call()
-    return next_id
-
-# Get all reclaim requests using the getReclaims() method from the contract
-def get_all_reclaims(w3, contract_address):
-    contract_abi = load_contract_abi()
-    contract = w3.eth.contract(address=contract_address, abi=contract_abi)
-    # getReclaims returns an array of Reclaim structs
-    reclaims = contract.functions.getReclaims().call()
-    result = []
-    for idx, reclaim in enumerate(reclaims):
-        # reclaim is a tuple: (miner, amount, denyTimeout, executorUuid)
-        if reclaim[2] > 0:
-            result.append(
-                ReclaimProcessStartedEvent(
-                    reclaim_request_id=reclaim[0],  # Note: This index may not match the original reclaimRequestId
-                    account=reclaim[1],
-                    amount=reclaim[2],
-                    expiration_time=reclaim[3],
-                    executor_uuid=str(uuid.UUID(bytes=reclaim[4])),
-                    url='',
-                    url_content_md5_checksum='',
-                    block_number=0
-                )
-            )
-    return result
-
-def get_miner_reclaims(w3, contract_address, miner_address):
-    contract_abi = load_contract_abi()
-    contract = w3.eth.contract(address=contract_address, abi=contract_abi)
-    # getReclaimsOfMiner returns an array of Reclaim structs for the given miner
-    reclaims = contract.functions.getReclaimsOfMiner(miner_address).call()
-    result = []
-    for idx, reclaim in enumerate(reclaims):
-        # reclaim is a tuple: (miner, amount, denyTimeout, executorUuid)
-        if reclaim[2] > 0:
-            result.append(
-                ReclaimProcessStartedEvent(
-                    reclaim_request_id=reclaim[0],  # Index in this list, not global reclaimRequestId
-                    account=reclaim[1],
-                    amount=reclaim[2],
-                    expiration_time=reclaim[3],
-                    executor_uuid=str(uuid.UUID(bytes=reclaim[4])),
-                    url='',
-                    url_content_md5_checksum='',
-                    block_number=0
-                )
-            )
-    return result
 
 async def get_reclaim_process_started_events(
     w3, contract_address, block_num_low, block_num_high

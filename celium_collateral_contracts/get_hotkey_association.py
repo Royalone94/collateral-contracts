@@ -1,7 +1,6 @@
 import argparse
-import sys
-
 import bittensor
+import sys
 
 from celium_collateral_contracts.common import get_evm_key_associations
 

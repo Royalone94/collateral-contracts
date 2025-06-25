@@ -1,7 +1,7 @@
 import argparse
+import os
 from rich.console import Console
 from rich.table import Table
-import os
 from eth_account import Account
 
 def main():

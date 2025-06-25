@@ -10,6 +10,7 @@ the collateral to the user's address.
 
 import sys
 import argparse
+import asyncio
 from celium_collateral_contracts.common import (
     load_contract_abi,
     get_web3_connection,
@@ -19,7 +20,6 @@ from celium_collateral_contracts.common import (
     wait_for_receipt,
     get_revert_reason,
 )
-import asyncio
 
 
 class FinalizeReclaimError(Exception):

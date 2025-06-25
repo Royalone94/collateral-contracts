@@ -8,10 +8,8 @@ It handles validation of minimum collateral amounts, trustee verification, and
 executes the deposit transaction on the blockchain.
 """
 import asyncio
-import sys
 import argparse
 from web3 import Web3
-import bittensor.utils
 from uuid import UUID
 from celium_collateral_contracts.common import (
     load_contract_abi,

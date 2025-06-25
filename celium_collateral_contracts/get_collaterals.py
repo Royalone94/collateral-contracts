@@ -10,7 +10,6 @@ import argparse
 import csv
 import sys
 from collections import defaultdict
-import bittensor.utils
 from celium_collateral_contracts.common import load_contract_abi, get_web3_connection, get_executor_collateral
 from dataclasses import dataclass
 

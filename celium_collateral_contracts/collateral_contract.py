@@ -1,6 +1,4 @@
 import asyncio
-from web3 import Web3
-from uuid import UUID
 from celium_collateral_contracts.common import (
     get_web3_connection,
     get_account,

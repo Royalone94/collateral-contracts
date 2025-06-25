@@ -9,8 +9,8 @@ URLs for verification purposes.
 """
 
 import sys
+import asyncio
 import argparse
-import bittensor.utils
 from uuid import UUID
 from celium_collateral_contracts.common import (
     load_contract_abi,
@@ -22,7 +22,6 @@ from celium_collateral_contracts.common import (
     calculate_md5_checksum,
     get_revert_reason,
 )
-import asyncio
 
 
 class SlashCollateralError(Exception):

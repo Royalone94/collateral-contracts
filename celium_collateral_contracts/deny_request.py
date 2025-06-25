@@ -11,7 +11,6 @@ transparency and accountability.
 import sys
 import argparse
 import asyncio
-import bittensor.utils
 from celium_collateral_contracts.common import (
     load_contract_abi,
     get_web3_connection,
