@@ -49,7 +49,7 @@ async def get_reclaim_process_started_events(
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
     checksum_address = w3.to_checksum_address(contract_address)
-
+    
     event_signature = "ReclaimProcessStarted(uint256,bytes16,address,uint256,uint64,string,bytes16)"
     event_topic = w3.keccak(text=event_signature).hex()
 
@@ -69,7 +69,7 @@ async def get_reclaim_process_started_events(
         reclaim = contract.functions.reclaims(reclaim_id).call()
         return {
             "miner": reclaim[1],
-            "amount": reclaim[2],
+            "amount": w3.from_wei(reclaim[2], "ether"),
             "denyTimeout": reclaim[3],
             "executorUuid": reclaim[0].hex(),
         }
