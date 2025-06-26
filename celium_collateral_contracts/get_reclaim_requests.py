@@ -14,6 +14,7 @@ import argparse
 from dataclasses import dataclass
 from celium_collateral_contracts.common import get_web3_connection, load_contract_abi
 import uuid
+import datetime
 
 
 @dataclass
@@ -21,7 +22,6 @@ class ReclaimProcessStartedEvent:
     """Represents a ReclaimProcessStarted event emitted by the Collateral contract."""
 
     reclaim_request_id: int
-    account: str
     amount: int
     expiration_time: int
     url: str
@@ -70,16 +70,13 @@ async def get_reclaim_process_started_events(
         return {
             "miner": reclaim[1],
             "amount": w3.from_wei(reclaim[2], "ether"),
-            "denyTimeout": reclaim[3],
+            "denyTimeout": datetime.datetime.utcfromtimestamp(reclaim[3]).strftime('%Y-%m-%d %H:%M:%S UTC'),
             "executorUuid": reclaim[0].hex(),
         }
 
     formatted_events = []
     for log in logs:
         reclaim_request_id = int(log["topics"][1].hex(), 16)
-
-        account_address = "0x" + log["topics"][2].hex()[-40:]
-        account = w3.to_checksum_address(account_address)
 
         decoded_event = contract.events.ReclaimProcessStarted().process_log(log)
 
@@ -89,7 +86,6 @@ async def get_reclaim_process_started_events(
         formatted_events.append(
             ReclaimProcessStartedEvent(
                 reclaim_request_id=reclaim_request_id,
-                account=account,
                 amount=reclaim_info["amount"],
                 expiration_time=reclaim_info["denyTimeout"],
                 executor_uuid=str(uuid.UUID(bytes=executor_uuid_bytes)),
@@ -126,7 +122,6 @@ async def main():
 
     fieldnames = [
         "reclaim_request_id",
-        "account",
         "amount",
         "expiration_time",
         "url",
@@ -142,7 +137,6 @@ async def main():
         writer.writerow(
             {
                 "reclaim_request_id": event.reclaim_request_id,
-                "account": event.account,
                 "amount": event.amount,
                 "expiration_time": event.expiration_time,
                 "url": event.url,
