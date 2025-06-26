@@ -69,7 +69,7 @@ async def get_reclaim_process_started_events(
         reclaim = contract.functions.reclaims(reclaim_id).call()
         return {
             "miner": reclaim[1],
-            "amount": w3.from_wei(reclaim[2], "ether"),
+            "amount": float(w3.from_wei(reclaim[2], "ether")),
             "denyTimeout": datetime.datetime.utcfromtimestamp(reclaim[3]).strftime('%Y-%m-%d %H:%M:%S UTC'),
             "executorUuid": reclaim[0].hex(),
         }
