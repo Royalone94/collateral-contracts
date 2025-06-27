@@ -251,4 +251,9 @@ contract Collateral is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reent
         executorToMiner[executorId] = address(0);
         emit Slashed(executorId, miner, amount, url, urlContentMd5Checksum);
     }
+
+    function setTrustee(address newTrustee) external onlyOwner {
+        require(newTrustee != address(0), "Trustee address must be non-zero");
+        TRUSTEE = newTrustee;
+    }
 }

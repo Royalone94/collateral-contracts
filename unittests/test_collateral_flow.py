@@ -48,7 +48,7 @@ def get_transferrable_balance(w3: Web3, sender: str, recipient: str):
     
 class TestCollateralContractLifecycle(unittest.TestCase):
     USE_EXISTING_ACCOUNTS = True
-    DEPLOY_CONTRACT = True
+    DEPLOY_CONTRACT = False
 
     # Add a helper to run subprocess commands with a sleep delay
     def run_cmd(self, cmd, env, capture=True, sleep_time=1):
@@ -58,10 +58,10 @@ class TestCollateralContractLifecycle(unittest.TestCase):
 
     def setUp(self):
         # Use the local RPC URL here
-        self.RPC_URL = "https://test.finney.opentensor.ai"
-        self.network = "test"
-        # self.RPC_URL = "http://127.0.0.1:9944"
-        # self.network = "local"
+        # self.RPC_URL = "https://test.finney.opentensor.ai"
+        # self.network = "test"
+        self.RPC_URL = "http://127.0.0.1:9944"
+        self.network = "local"
         self.w3 = Web3(Web3.HTTPProvider(self.RPC_URL))
         self.assertTrue(self.w3.is_connected(), "Cannot connect to Bittensor RPC")
         print("Connected to Bittensor RPC")
@@ -164,7 +164,7 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             contract_address = contract_line.split(": ")[-1]
             self.assertTrue(Web3.is_address(contract_address))
         else:
-            contract_address = "0xf24D7d7185FCda6570D9c4b924af20b5e4A92019"
+            contract_address = "0x4e37B54F732e53668b7f593E617C98e3C60Bd6E5"
 
         print("Deployed Contract Address:", contract_address)
         # === Step 6: Miner Deposits Collateral ===
@@ -186,6 +186,29 @@ class TestCollateralContractLifecycle(unittest.TestCase):
             ("af3f1b82-ff98-44c8-b130-d948a2a56b44", False),
             ("ee3002d9-71f8-4a83-881d-48bd21b6bdd1", False),
         ]
+
+        get_executor_collateral_script = "celium_collateral_contracts/get_executor_collateral.py"
+        for uuid_str, _ in deposit_tasks:
+            print(f"Checking executor collateral for executor {uuid_str}...")
+            result = self.run_cmd(
+                [
+                    "python", get_executor_collateral_script,
+                    "--contract-address", contract_address,
+                    "--executor-uuid", uuid_str,
+                    "--network", self.network
+                ],
+                capture=True, env=env
+            )
+
+            print(
+                f'python {get_executor_collateral_script} '
+                f'--contract-address {contract_address} '
+                f'--executor-uuid {uuid_str} '
+                f'--network {self.network}'
+            )
+
+            print(f"Executor collateral for {uuid_str}: ", result.stdout.strip())
+
         for uuid_str, capture_output in deposit_tasks:
             print(f"Starting deposit collateral for executor {uuid_str}...")
             result = self.run_cmd(

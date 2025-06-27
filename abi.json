@@ -279,6 +279,19 @@
   },
   {
     "type": "function",
+    "name": "setTrustee",
+    "inputs": [
+      {
+        "name": "newTrustee",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "slashCollateral",
     "inputs": [
       {

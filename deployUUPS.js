@@ -1,6 +1,7 @@
 const { JsonRpcProvider, Wallet, ContractFactory, Contract } = require("ethers");
 const fs = require("fs");
 const path = require("path");
+const { Command } = require("commander");
 
 // Load compiled artifacts
 const CollateralArtifact = require("./out/Collateral.sol/Collateral.json");
@@ -20,14 +21,13 @@ const proxyBytecode = ERC1967ProxyArtifact.bytecode;
 const ethers = require("ethers"); // Or assumes global `ethers` from Hardhat environment
 
 // Config
-const RPC_URL = process.env.RPC_URL || "http://127.0.0.1:9944"; 
-// const RPC_URL = process.env.RPC_URL || "https://test.finney.opentensor.ai";
-const PRIVATE_KEY = process.env.PRIVATE_KEY || "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3"; // Your deployer private key
 const DEPLOYMENTS_FILE = path.join(__dirname, "deployments.json");
 
 const netuid = process.env.NET_UID || 1;
 const minCollateralIncrease = process.env.MIN_COLLATERAL_INCREASE ? BigInt(process.env.MIN_COLLATERAL_INCREASE) : BigInt("1000000000000000"); // 1 ether
 const decisionTimeout = process.env.DENY_TIMEOUT || 20;
+const NEW_OWNER_PRIVATE_KEY = process.env.NEW_OWNER_PRIVATE_KEY;
+const NEW_TRUSTEE_ADDRESS = process.env.NEW_TRUSTEE_ADDRESS;
 
 function loadDeployments() {
     if (fs.existsSync(DEPLOYMENTS_FILE)) {
@@ -49,7 +49,7 @@ async function deployImplementation(wallet) {
     return newImplAddress;
 }
 
-async function deployProxy(wallet, implAddress) {
+async function deployProxy(wallet, implAddress, netuid, minCollateralIncrease, decisionTimeout) {
     const CollateralFactory = new ContractFactory(collateralAbi, collateralBytecode, wallet);
     const initData = CollateralFactory.interface.encodeFunctionData(
         "initialize",
@@ -112,58 +112,98 @@ async function upgradeProxy(proxyAddress, newImplAddress, wallet) {
     }
 }
 
-async function main() {
-    const provider = new JsonRpcProvider(RPC_URL);
-    const wallet = new Wallet(PRIVATE_KEY, provider);
-    let deployments = loadDeployments();
+async function transferOwnershipAndSetTrustee(proxyAddress, currentWallet, newOwnerPrivateKey) {
+    if (!newOwnerPrivateKey) {
+        console.log("NEW_OWNER_PRIVATE_KEY not set. Skipping ownership transfer and trustee update.");
+        return;
+    }
+    const provider = currentWallet.provider;
+    const proxyAsCollateral = new Contract(proxyAddress, collateralAbi, currentWallet);
+    const newOwnerWallet = new Wallet(newOwnerPrivateKey, provider);
+    const newOwnerAddress = newOwnerWallet.address;
 
-    // 1. Deploy new implementation
-    const newImplAddress = await deployImplementation(wallet);
+    // 1. Transfer ownership to new owner
+    console.log(`Transferring ownership to new owner: ${newOwnerAddress} ...`);
+    const tx1 = await proxyAsCollateral.transferOwnership(newOwnerAddress);
+    await tx1.wait();
+    console.log(`Ownership transferred to: ${newOwnerAddress}`);
 
-    // 2. Deploy proxy if needed, else upgrade
-    let proxyAddress = deployments.proxy;
-    if (!proxyAddress) {
-        proxyAddress = await deployProxy(wallet, newImplAddress);
+    // 2. From new owner, set the new trustee to the new owner's address
+    const proxyAsCollateralNewOwner = new Contract(proxyAddress, collateralAbi, newOwnerWallet);
+    console.log(`Setting new trustee: ${newOwnerAddress} from new owner...`);
+    const tx2 = await proxyAsCollateralNewOwner.setTrustee(newOwnerAddress);
+    await tx2.wait();
+    console.log(`Trustee updated to: ${newOwnerAddress}`);
+}
+
+// CLI logic
+const program = new Command();
+program
+    .name("deployUUPS")
+    .description("Deploy or upgrade UUPS proxy for Collateral contract")
+    .version("1.0.0");
+
+program
+    .command("deploy-proxy")
+    .description("Deploy a new implementation and proxy")
+    .requiredOption("--rpc-url <url>", "RPC URL", process.env.RPC_URL || "http://127.0.0.1:9944")
+    .requiredOption("--private-key <key>", "Deployer private key", process.env.PRIVATE_KEY || "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3")
+    .requiredOption("--netuid <netuid>", "Netuid", process.env.NET_UID ? parseInt(process.env.NET_UID) : 1)
+    .requiredOption("--min-collateral <amount>", "Minimum collateral increase (wei)", process.env.MIN_COLLATERAL_INCREASE ? BigInt(process.env.MIN_COLLATERAL_INCREASE) : BigInt("1000000000000000"))
+    .requiredOption("--decision-timeout <timeout>", "Decision timeout (seconds)", process.env.DENY_TIMEOUT ? parseInt(process.env.DENY_TIMEOUT) : 20)
+    .action(async (opts) => {
+        const provider = new JsonRpcProvider(opts.rpcUrl);
+        const wallet = new Wallet(opts.privateKey, provider);
+        const deployments = loadDeployments();
+        const newImplAddress = await deployImplementation(wallet);
+        const proxyAddress = await deployProxy(wallet, newImplAddress, opts.netuid, opts.minCollateral, opts.decisionTimeout);
         deployments.proxy = proxyAddress;
         deployments.collateralImpl = newImplAddress;
         saveDeployments(deployments);
-    } else {
-        // Check current implementation using storage slot
-        const implSlot = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc"; // Standard UUPS storage slot
-        const currentImpl = await provider.getStorage(proxyAddress, implSlot);
-        const formattedCurrentImpl = "0x" + currentImpl.slice(26).toLowerCase();
+        console.log("Deployment complete.");
+    });
 
-        if (formattedCurrentImpl !== newImplAddress.toLowerCase()) {
-            try {
-                await upgradeProxy(proxyAddress, newImplAddress, wallet);
-                deployments.collateralImpl = newImplAddress;
-                saveDeployments(deployments);
-            } catch (e) {
-                console.error("Upgrade failed:", e.message);
-                // Print diagnostics
-                const owner = await getProxyOwner(proxyAddress, wallet);
-                console.error(`Proxy owner diagnostic: Proxy owner = ${owner}, Wallet = ${wallet.address}`);
-                process.exit(1);
-            }
-        } else {
-            console.log("Proxy already uses the latest implementation.");
-        }
-    }
+program
+    .command("upgrade-proxy")
+    .description("Upgrade proxy to new implementation")
+    .requiredOption("--rpc-url <url>", "RPC URL", process.env.RPC_URL || "http://127.0.0.1:9944")
+    .requiredOption("--private-key <key>", "Current owner private key", process.env.PRIVATE_KEY || "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3")
+    .requiredOption("--proxy <address>", "Proxy contract address", process.env.PROXY_ADDRESS)
+    .action(async (opts) => {
+        const provider = new JsonRpcProvider(opts.rpcUrl);
+        const wallet = new Wallet(opts.privateKey, provider);
+        const deployments = loadDeployments();
+        const newImplAddress = await deployImplementation(wallet);
+        await upgradeProxy(opts.proxy, newImplAddress, wallet);
+        deployments.collateralImpl = newImplAddress;
+        saveDeployments(deployments);
+        console.log("Upgrade complete.");
+    });
 
-    // 3. Interact with the contract via the proxy
-    const proxyToUse = deployments.proxy;
-    // Interact with the proxy using the latest implementation ABI
-    const collateral = new Contract(proxyToUse, collateralAbi, wallet);
+program
+    .command("upgrade-proxy-with-new-owner")
+    .description("Upgrade proxy, transfer ownership, and set trustee to new owner")
+    .requiredOption("--rpc-url <url>", "RPC URL", process.env.RPC_URL || "http://127.0.0.1:9944")
+    .requiredOption("--private-key <key>", "Current owner private key", process.env.PRIVATE_KEY || "434469242ece0d04889fdfa54470c3685ac226fb3756f5eaf5ddb6991e1698a3")
+    .requiredOption("--proxy <address>", "Proxy contract address", process.env.PROXY_ADDRESS)
+    .requiredOption("--new-owner-key <key>", "New owner private key", process.env.NEW_OWNER_PRIVATE_KEY || "259e0eded00353f71eb6be89d8749ad12bf693cbd8aeb6b80cd3a343c0dc8faf")
+    .action(async (opts) => {
+        const provider = new JsonRpcProvider(opts.rpcUrl);
+        const wallet = new Wallet(opts.privateKey, provider);
+        const deployments = loadDeployments();
+        const newImplAddress = await deployImplementation(wallet);
+        await upgradeProxy(opts.proxy, newImplAddress, wallet);
+        deployments.collateralImpl = newImplAddress;
+        saveDeployments(deployments);
+        await transferOwnershipAndSetTrustee(opts.proxy, wallet, opts.newOwnerKey);
+        console.log("Upgrade, ownership transfer, and trustee update complete.");
+    });
 
-    try {
-        const netuidValue = await collateral.NETUID();
-        console.log("Proxy NETUID value:", netuidValue.toString());
-    } catch (e) {
-        console.error("Error reading NETUID from proxy:", e.message);
-    }
+program.showHelpAfterError();
+
+if (!process.argv.slice(2).some(arg => !arg.startsWith('-'))) {
+  // No command specified, default to deploy-proxy
+  program.parse(['deploy-proxy', ...process.argv.slice(2)], { from: 'user' });
+} else {
+  program.parseAsync(process.argv);
 }
-
-main().catch((error) => {
-    console.error(error);
-    process.exit(1);
-});
